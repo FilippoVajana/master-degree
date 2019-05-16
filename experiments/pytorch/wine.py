@@ -1,3 +1,6 @@
+#%% [markdown]
+# # Handmade classification of wines
+
 #%%
 # init
 import csv
