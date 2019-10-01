@@ -133,4 +133,4 @@ dmypy.json
 papers/*
 theory/*
 thesis/*
-data/*
+data/*/
