@@ -23,13 +23,6 @@ def get_cifar10():
 
     return trainloader, testloader
 
-def imshow(img):
-    # img = img / 2 + 0.5     # unnormalize
-    npimg = img.numpy()
-    plt.imshow(np.transpose(npimg, (1, 2, 0)))
-    plt.show()
-    pass
-
 def saveimg(img_data, filename, images_dir, label):
     img_path = os.path.join(images_dir, f"{filename}.png")
     label_path = os.path.join(images_dir, "labels", f"{filename}.txt")
