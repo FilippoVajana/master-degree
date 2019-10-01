@@ -15,8 +15,8 @@ def get_cifar10():
         transforms.ToTensor()
         ])
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    trainset = torchvision.datasets.CIFAR10(root='./data/cifar10/archive', train=True, download=True, transform=transform)
+    testset = torchvision.datasets.CIFAR10(root='./data/cifar10/archive', train=False, download=True, transform=transform)
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=0)
     testloader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=0)   
