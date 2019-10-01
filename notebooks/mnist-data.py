@@ -15,8 +15,8 @@ def get_cifar10():
         transforms.ToTensor()
         ])
 
-    trainset = torchvision.datasets.CIFAR10(root='./data/cifar10/archive', train=True, download=True, transform=transform)
-    testset = torchvision.datasets.CIFAR10(root='./data/cifar10/archive', train=False, download=True, transform=transform)
+    trainset = torchvision.datasets.MNIST(root='./data/mnist/archive', train=True, download=True, transform=transform)
+    testset = torchvision.datasets.MNIST(root='./data/mnist/archive', train=False, download=True, transform=transform)
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=0)
     testloader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=0)   
@@ -37,21 +37,12 @@ def saveimg(img_data, filename, images_dir, label):
     
     pass
 
-# # get some random training images
-# dataiter = iter(trainloader)
-# images, labels = dataiter.next()
-
-# # show images
-# imshow(torchvision.utils.make_grid(images))
-
-# # print labels
-# print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 if __name__ == "__main__":
-    classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    classes = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
     # make dirs
-    cifar10_data_path = "./data/cifar10"
+    cifar10_data_path = "./data/mnist"
     train_dir = os.path.join(cifar10_data_path, "train")
     test_dir = os.path.join(cifar10_data_path, "test")
     if not os.path.exists(train_dir) : os.makedirs(train_dir)
@@ -69,7 +60,7 @@ if __name__ == "__main__":
         i = i + 1
         # if i > 1 : break
 
-        saveimg(image.squeeze(), f"img_{i}", train_dir, i_class)
+        saveimg(image.squeeze(dim=0), f"img_{i}", train_dir, i_class)
 
     # iterate over test data
     i = 0
@@ -80,7 +71,7 @@ if __name__ == "__main__":
         i = i + 1
         # if i > 1 : break
 
-        saveimg(image.squeeze(), f"img_{i}", test_dir, i_class)
+        saveimg(image.squeeze(dim=0), f"img_{i}", test_dir, i_class)
 
 
 
