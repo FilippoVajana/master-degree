@@ -1,4 +1,7 @@
 import logging
+import time
+from engine import trainer, tester
+
 # create logger
 logger = logging.getLogger(name="engine.logger")
 logger.setLevel(lvl=logging.INFO)

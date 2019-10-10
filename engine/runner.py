@@ -1,10 +1,7 @@
-from engine import logger
+from engine import *
 import configparser
-import time
-from imports import *
+import numpy as np
 from data.dataset import *
-from engine import trainer, tester
-
 
 class Runner():
     def __init__(self, config):
@@ -73,32 +70,9 @@ class Runner():
             report = self.build_report(model.name, psnr, ssim, cpu_time)
             report.write(f)
 
-
-        from benchmarks import plot        
         ############
         # DEBUG
-        # single model performance images
-        # count = 0
-        # for e,l in self.test_dl:
-        #     if count >= 1:
-        #         break
-        #     plot.plot_model_perf(model, e, l, True)
-        #     count += 1
-        #############
-
-        ############
-        # DEBUG
-        # 3 models performance images
-        # count = 0  
-        # for e,l in self.test_dl:
-        #     if count >= 1:
-        #         break
-        #     plot.plot_models_comparison(e, l, [model, model, model], True)
-        #     count += 1
-        #############
-
-        ############
-        # DEBUG
+        # from benchmarks import plot      
         # plot.plot_train_performance(df_train.as_dataframe(), True)
         #############
 
