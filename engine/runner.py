@@ -1,4 +1,4 @@
-import logging
+from engine import logger
 import configparser
 import time
 from imports import *
@@ -9,18 +9,15 @@ from engine import trainer, tester
 class Runner():
     def __init__(self, config):
         self.cfg = config
-
-        # set logging
-        logging.basicConfig(level=logging.WARNING, format='[%(asctime)s]  %(levelname)s: %(message)s', datefmt='%I:%M:%S')
         
         # prepare datasets and dataloader
         builder = DatasetBuilder()
 
-        logging.warning("Initializing datasets.")
+        logger.info("Initializing datasets.")
         train_ds , validation_ds = builder.build_splitted(self.cfg.train_data)
         test_ds = builder.build(self.cfg.test_data)
 
-        logging.warning("Creating dataloaders.")
+        logger.info("Creating dataloaders.")
         self.train_dl = tdata.DataLoader(train_ds, self.cfg.batch_size, shuffle=True)        
         self.validation_dl = tdata.DataLoader(validation_ds, 1, shuffle=False) 
         self.test_dl = tdata.DataLoader(test_ds, batch_size=1, shuffle=False)
@@ -50,12 +47,12 @@ class Runner():
         t_start = time.time()
 
         # train phase
-        logging.warning("Starting train phase.")
+        logger.info("Starting train phase.")
         m_trainer = trainer.Trainer(model, self.cfg.device)
         df_train = m_trainer.run(self.cfg.epochs, self.train_dl, self.validation_dl)
 
         # test phase
-        logging.warning("Starting test phase.")
+        logger.info("Starting test phase.")
         m_tester = tester.Tester(model, self.cfg.device)
         df_test = m_tester.test(self.test_dl)
 

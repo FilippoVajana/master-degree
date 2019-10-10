@@ -1,10 +1,10 @@
 import logging
 # create logger
 logger = logging.getLogger(name="engine.logger")
-logger.setLevel(lvl=logging.WARNING)
+logger.setLevel(lvl=logging.INFO)
 # create console handler
 ch = logging.StreamHandler()
-ch.setLevel(lvl=logging.WARNING)
+ch.setLevel(lvl=logging.INFO)
 # create formatter
 formatter = logging.Formatter('[%(asctime)s]  %(levelname)s: %(message)s', datefmt='%I:%M:%S')
 ch.setFormatter(form=formatter)
