@@ -1,9 +1,112 @@
-from imports import *
-from engine.logger import Logger
-from tqdm import tqdm
-from data.metrics import Metrics
+import torch
 
-class Trainer():
+from engine import *
+
+
+class AbstractTrainer():
+    def __init__(self, model, device):
+        self.device = device
+        self.model = model
+        self.optimizer = None
+        self.loss_fn = None
+        # define run logger objects        
+        self.log = Logger("train_log", ["t_loss", "v_loss"]) # TODO: use MLflow
+
+    def train(self, epochs = 0, train_dataloader=None, validation_dataloader=None):
+        """
+        Starts the train-validation loop.
+        """        
+
+        #########
+        # DEBUG #
+        ######### 
+        logger.info(f"Epochs: {epochs}")
+        logger.info(f"Batches: {len(train_dataloader)}")
+        logger.info(f"Batch size: {train_dataloader.batch_size}")
+
+        for epoch in tqdm(range(epochs)):            
+            # train loop
+            tmp_loss = torch.zeros(len(train_dataloader), device=self.device)            
+
+            self.model.train()
+            for idx, batch in enumerate(train_dataloader):
+                b_loss = self.__train_batch(batch)
+                tmp_loss[idx] = b_loss                
+
+            # update train log
+            self.log.add("t_loss", tmp_loss.mean())                
+
+            # validation loop
+            if validation_dataloader == None : 
+                continue
+
+            tmp_loss = torch.zeros(len(validation_dataloader), device=self.device)            
+
+            self.model.eval()
+            with torch.no_grad():
+                for idx, batch in enumerate(validation_dataloader):
+                    b_loss = self.__validate_batch(batch)
+                    tmp_loss[idx] = b_loss                    
+            
+            # update validation log
+            self.log.add("v_loss", tmp_loss.mean())
+           
+            # save checkpoint
+            # TODO: use loss value
+
+        return self.log
+
+
+    def __train_batch(self, batch):
+        """
+        Train a batch of data.
+        """                 
+
+        examples, targets = batch     
+
+        # move data to device
+        examples = examples.to(self.device)
+        targets = targets.to(self.device)
+
+        # reset gradient computation
+        self.optimizer.zero_grad()
+
+        # forward
+        predictions = self.model(examples)
+
+        # compute loss
+        loss = self.loss_fn(predictions, targets)
+
+        # backpropagation and gradients computation
+        loss.backward()
+
+        # update weights
+        self.optimizer.step()
+        
+        return loss.detach()
+
+
+    def __validate_batch(self, batch):
+        """
+        Validate a batch of data. Usually for validation batch_size=1.
+        """
+        
+        examples, targets = batch
+
+        # move data to device
+        examples = examples.to(self.device)
+        targets = targets.to(self.device)
+
+        # forward
+        predictions = self.model(examples)
+
+        # compute loss
+        loss = self.loss_fn(predictions, targets)
+        
+        return loss.detach()
+
+
+class Trainer_v1():
     def __init__(self, model, device):
         self.device = device
 

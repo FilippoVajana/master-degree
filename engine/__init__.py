@@ -1,6 +1,9 @@
 import logging
 import time
+from tqdm import tqdm
+
 from engine import trainer, tester
+from engine.logger import Logger
 
 # create logger
 logger = logging.getLogger(name="engine.logger")
