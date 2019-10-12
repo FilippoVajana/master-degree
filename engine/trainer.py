@@ -1,16 +1,19 @@
 import torch
+import torch.nn as nn
 
 from engine import *
 
 
-class AbstractTrainer():
+class GenericTrainer():
     def __init__(self, model, device):
         self.device = device
         self.model = model
         self.optimizer = None
         self.loss_fn = None
-        # define run logger objects        
+
+        # run metrics
         self.log = Logger("train_log", ["t_loss", "v_loss"]) # TODO: use MLflow
+
 
     def train(self, epochs = 0, train_dataloader=None, validation_dataloader=None):
         """
@@ -23,6 +26,9 @@ class AbstractTrainer():
         logger.info(f"Epochs: {epochs}")
         logger.info(f"Batches: {len(train_dataloader)}")
         logger.info(f"Batch size: {train_dataloader.batch_size}")
+
+        best_model = self.model.state_dict()
+        best_loss = None
 
         for epoch in tqdm(range(epochs)):            
             # train loop
@@ -52,9 +58,11 @@ class AbstractTrainer():
             self.log.add("v_loss", tmp_loss.mean())
            
             # save checkpoint
-            # TODO: use loss value
+            if best_loss == None or tmp_loss.mean() < best_loss:
+                best_loss = tmp_loss.mean()
+                best_model = self.model.state_dict()
 
-        return self.log
+        return self.log, best_model
 
 
     def __train_batch(self, batch):
