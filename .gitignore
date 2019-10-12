@@ -130,8 +130,5 @@ dmypy.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-papers/*
-theory/*
-thesis/*
-code/*.png
-code/*.ini
+*.png
+*.ini
