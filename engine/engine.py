@@ -5,6 +5,8 @@ from data.dataset import *
 
 
 class Engine():
+    MODELS = {'LeNet5': lenet.LeNet5()}
+
     def __init__(self, root_dir, config_file):
         self.root_dir = root_dir
 
@@ -13,11 +15,17 @@ class Engine():
         if self.config == None: 
             self.__save_dummy_config(config_file)
 
-        # build training/testing dataloaders
-
         # init model object
+        self.model = self.MODELS[self.config.get('info', 'model')]
+
+        # build training dataloader
+        
 
         # init model trainer
+
+        # build testing dataloader
+
+        # init model tester
 
         raise NotImplementedError()
 
@@ -31,21 +39,20 @@ class Engine():
             return None
         else:
             return parser    
-        
 
     def __save_dummy_config(self, path):
         logger.info(f'Saving dummy config file at {path}')
 
         parser = SafeConfigParser()
-        parser.add_section('training')
-        parser.set('training', 'model', 'LeNet5')
-        parser.set('training', 'device', 'cpu')
+        parser.add_section('info')
+        parser.set('info', 'model', 'LeNet5')
+        parser.set('info', 'device', 'cpu')
+
+        parser.add_section('training')        
         parser.set('training', 'data', './data/')
         parser.set('training', 'epochs', '1')
 
-        parser.add_section('testing')
-        parser.set('testing', 'model', 'LeNet5')
-        parser.set('testing', 'device', 'cpu')
+        parser.add_section('testing')        
         parser.set('testing', 'data', './data/')
 
         with open(path, 'w') as file:
