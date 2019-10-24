@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from engine import *
 
+# TODO: follow the new project design
 
 class GenericTrainer():
     def __init__(self, model, device):
@@ -11,8 +12,9 @@ class GenericTrainer():
         self.optimizer = None
         self.loss_fn = None
 
-        # run metrics
-        self.log = Logger("train_log", ["t_loss", "v_loss"]) # TODO: use MLflow
+        # metrics
+        # TODO: implement MLflow
+        self.log = Logger("train_log", ["t_loss", "v_loss"]) 
 
 
     def train(self, epochs = 0, train_dataloader=None, validation_dataloader=None):

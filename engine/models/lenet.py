@@ -24,3 +24,8 @@ class LeNet5(torch.nn.Module):
         x = self.fc3(x)
 
         return x # softmax values must be evaluated during inference.
+
+    # TODO: add train() method
+
+
+# TODO: implement trainer class

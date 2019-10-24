@@ -1,6 +1,8 @@
-from engine import *
 from configparser import SafeConfigParser
 import numpy as np
+from torch.utils.data import DataLoader
+
+from engine import *
 from data.dataset import *
 
 
@@ -19,9 +21,15 @@ class Engine():
         self.model = self.MODELS[self.config.get('info', 'model')]
 
         # build training dataloader
-        
 
         # init model trainer
+        model_trainer = trainer.GenericTrainer(self.model, self.config.get('info', 'device'))
+
+
+
+        # build testing dataloader
+
+        # init model tester
 
         # build testing dataloader
 
@@ -50,6 +58,7 @@ class Engine():
 
         parser.add_section('training')        
         parser.set('training', 'data', './data/')
+        parser.set('training', 'batch_size', '10')
         parser.set('training', 'epochs', '1')
 
         parser.add_section('testing')        
