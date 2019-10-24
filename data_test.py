@@ -2,6 +2,7 @@ import unittest
 import os
 
 from data.dataset import CustomDataset
+from data.dataloader import *
 
 
 class TestCustomDataset(unittest.TestCase):
@@ -39,6 +40,26 @@ class TestCustomDataset(unittest.TestCase):
         t2 = ds.__getitem__(1)
         self.assertEqual((1,28,28), t2[0].size())
         self.assertEqual("0", t2[1])
+
+
+class ImageDataLoaderTest(unittest.TestCase):
+    MNIST_DATA = r"./data/mnist"
+    CIFAR10 = r"./data/cifar10"
+    TEST_CFG = r"./data/test_dataloader_cfg.json"
+
+    def test_save_and_load_config(self):
+        cfg = DataLoaderConfig()
+        cfg_path = cfg.save(self.TEST_CFG)
+        loaded_cfg = DataLoaderConfig().load(cfg_path)
+        self.assertEqual(cfg.id, loaded_cfg.id)
+
+    def test_dataloader_build(self):
+        dataloader = ImageDataLoader(self.TEST_CFG).dataloader      
+        count = 0
+        for img, label in iter(dataloader):
+            count += 1
+        self.assertEqual(count, len(dataloader.dataset))
+
 
 
 if __name__ == "__main__":
