@@ -9,8 +9,7 @@ import imageio
 
 
 class CustomDataset(Dataset):
-    def __init__(self, name, root, train_data=True):
-        self.id = name
+    def __init__(self, root, train_data=True):
         self.root = root
 
         if train_data:
