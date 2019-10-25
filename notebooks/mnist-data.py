@@ -53,6 +53,9 @@ if __name__ == "__main__":
 
     # iterate over train data
     i = 0
+    labels_folder = os.path.join(train_dir, "labels")
+    os.mkdir(labels_folder)
+
     for data in iter(trainloader):
         image, label = data
         i_class = classes[label.item()]
@@ -64,6 +67,9 @@ if __name__ == "__main__":
 
     # iterate over test data
     i = 0
+    labels_folder = os.path.join(test_dir, "labels")
+    os.mkdir(labels_folder)
+    
     for data in iter(testloader):
         image, label = data
         i_class = classes[label.item()]
