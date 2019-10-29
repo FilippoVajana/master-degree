@@ -1,6 +1,6 @@
 import torch
-import torch.nn   
-import torch.optim 
+import torch.nn
+import torch.optim
 import torch.nn.functional as F
 
 from ..trainer import GenericTrainer
@@ -30,13 +30,13 @@ class LeNet5(torch.nn.Module):
 
         return x # softmax values must be evaluated during inference.
 
-    def train(self, cfg : RunConfig):
+    def train(self, cfg: RunConfig):
         # init dataloader
         dataloader = ImageDataLoader(
-            data_folder = cfg.data_folder,
-            batch_size = cfg.batch_size,
-            shuffle = cfg.shuffle,
-            train_mode = True
+            data_folder=cfg.data_folder,
+            batch_size=cfg.batch_size,
+            shuffle=cfg.shuffle,
+            train_mode=True
         )
 
         # init model trainer
@@ -44,31 +44,32 @@ class LeNet5(torch.nn.Module):
 
         # run training
         trainer.train(
-            epochs=cfg.epochs, 
-            train_dataloader=dataloader, 
+            epochs=cfg.epochs,
+            train_dataloader=dataloader,
             validation_dataloader=None
             )
 
 
 
-"""
-LeNet and MLP were trained for 20 epochs using the Adam optimizer (Kingma &
-Ba, 2014) and used ReLU activation functions. For stochastic methods, we averaged 300 sample
-predictions to yield a predictive distribution, and the ensemble model used 10 instances trained from
-independent random initializations. The LeNet architecture (LeCun et al.,
-1998) applies two convolutional layers 3x3 kernels of 32 and 64 filters respectively) followed by two
-fully-connected layers with one hidden layer of 128 activations; dropout was applied before each
-fully-connected layer. We employed hyperparameter tuning (See Section A.7) to select the training
-batch size, learning rate, and dropout rate.
-"""
+
 
 class LeNet5Trainer(GenericTrainer):
-    def __init__(self, cfg : RunConfig):
+    """
+    LeNet and MLP were trained for 20 epochs using the Adam optimizer (Kingma &
+    Ba, 2014) and used ReLU activation functions. For stochastic methods, we averaged 300 sample
+    predictions to yield a predictive distribution, and the ensemble model used 10 instances trained from
+    independent random initializations. The LeNet architecture (LeCun et al.,
+    1998) applies two convolutional layers 3x3 kernels of 32 and 64 filters respectively) followed by two
+    fully-connected layers with one hidden layer of 128 activations; dropout was applied before each
+    fully-connected layer. We employed hyperparameter tuning (See Section A.7) to select the training
+    batch size, learning rate, and dropout rate.
+    """
+    def __init__(self, cfg: RunConfig):
         super().__init__(cfg)
-
         self.device = cfg.device
         self.model = cfg.model
         self.optimizer = torch.optim.Adam(
+            self.model.parameters(),
             lr=cfg.optimizer_args['lr'],
             weight_decay=cfg.optimizer_args['weight_decay'],
             betas=cfg.optimizer_args['betas'],
