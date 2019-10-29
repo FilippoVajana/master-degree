@@ -1,7 +1,7 @@
 import os
 from torch.utils.data import DataLoader as TorchDataLoader
 
-from data.dataset import CustomDataset
+from .dataset import CustomDataset
 
 
 class ImageDataLoader():

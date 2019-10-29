@@ -1,6 +1,5 @@
 import os
 
-import torch
 import torchvision
 from torch.utils.data import Dataset
 
@@ -63,6 +62,6 @@ class CustomDataset(Dataset):
         # load label value
         lab = open(d[1], "r").read()
 
-        return (transform(img), lab)
+        return (transform(img), int(lab))
         
         
