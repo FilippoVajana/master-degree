@@ -4,7 +4,7 @@ import jsonpickle
 class RunConfig():
     def __init__(self):
         # dataloaders params
-        self.data_folder = "./data/mnist/train"
+        self.data_folder = "./data/mnist/"
         self.batch_size = 1
         self.shuffle = True
 
