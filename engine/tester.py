@@ -1,6 +1,5 @@
-from imports import *
-from engine.logger import Logger
-from data.metrics import Metrics
+import torch
+import time
 from tqdm import tqdm
 
 
@@ -9,10 +8,13 @@ class Tester():
         self.device = device
         self.model = model.to(device)
         self.loss_fn = torch.nn.MSELoss()
-        self.log = Logger("test_log", ["loss", "psnr", "ssim", "inference_time"])
+
+        # metrics
+        # TODO: implement MLflow
+        self.log = None
 
 
-    def test(self, test_dataloader : tdata.DataLoader):
+    def test(self, test_dataloader=None):
         """
         Tests the model.
         """
@@ -32,13 +34,9 @@ class Tester():
 
                 # compute metrics
                 loss = self.loss_fn(predictions, targets)
-                psnr = torch.tensor([Metrics.psnr(targets[idx], p) for idx, p in enumerate(predictions)]).mean()
-                ssim = torch.tensor([Metrics.ssim(targets[idx], p) for idx, p in enumerate(predictions)]).mean()
 
                 # update test log
                 self.log.add("loss", loss)
-                self.log.add("psnr", psnr)
-                self.log.add("ssim", ssim)
                 self.log.add("inference_time", f_time - s_time)
                 
         return self.log
