@@ -5,32 +5,33 @@ import torch.nn.functional as F
 
 from ..trainer import GenericTrainer
 from ..runconfig import RunConfig
-from ...data.dataloader import ImageDataLoader
+from ..dataloader import ImageDataLoader
 
 
 class LeNet5(torch.nn.Module):
     def __init__(self):
         super(LeNet5, self).__init__()
         self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
-        self.avg_pool1 = torch.nn.AvgPool2d(kernel_size=2, stride=2, padding=0)
+        self.max_pool1 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.conv2 = torch.nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1, padding=0)
-        self.avg_pool2 = torch.nn.AvgPool2d(kernel_size=2, stride=2, padding=0)
+        self.max_pool2 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.fc1 = torch.nn.Linear(in_features=16*5*5, out_features=120)
-        self.fc2 = torch.nn.Linear(in_features=120, out_features=86)
-        self.fc3 = torch.nn.Linear(in_features=86, out_features=10)
+        self.fc2 = torch.nn.Linear(in_features=120, out_features=84)
+        self.fc3 = torch.nn.Linear(in_features=84, out_features=10)
 
-    def forward(self, x):
+    def forward(self, x): 
         x = F.relu(self.conv1(x))
-        x = F.relu(self.avg_pool1(x))
+        x = F.relu(self.max_pool1(x))
         x = F.relu(self.conv2(x))
-        x = F.relu(self.avg_pool2(x))
+        x = F.relu(self.max_pool2(x))
+        x = x.view(-1, 16*5*5)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
 
         return x # softmax values must be evaluated during inference.
 
-    def train(self, cfg: RunConfig):
+    def start_training(self, cfg: RunConfig):
         # init dataloader
         dataloader = ImageDataLoader(
             data_folder=cfg.data_folder,
@@ -45,7 +46,7 @@ class LeNet5(torch.nn.Module):
         # run training
         trainer.train(
             epochs=cfg.epochs,
-            train_dataloader=dataloader,
+            train_dataloader=dataloader.dataloader,
             validation_dataloader=None
             )
 
