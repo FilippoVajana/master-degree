@@ -16,8 +16,7 @@ class GenericTrainer():
 
         # metrics
         # TODO: implement MLflow
-        self.log = Logger("train_log", ["t_loss", "v_loss"])
-
+        self.log = None
 
     def train(self, epochs = 0, train_dataloader=None, validation_dataloader=None):
         """
