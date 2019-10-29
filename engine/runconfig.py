@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import jsonpickle
 
 class RunConfig():
@@ -7,16 +6,16 @@ class RunConfig():
         # dataloaders params
         self.data_folder = "./data/mnist/train"
         self.batch_size = 1
-        self.shuffle = True         
+        self.shuffle = True
 
-        # trainer params        
+        # trainer params
         self.model = torch.nn.Module()
         self.device = "cpu"
         self.epochs = 10
         self.optimizer_args = {
-            'lr': 0.1, 
-            'weight_decay':1e-4, 
-            'betas':(0.9, 0.999), 
+            'lr': 0.1,
+            'weight_decay':1e-4,
+            'betas':(0.9, 0.999),
             'eps':1e-08
             }
 

@@ -1,32 +1,31 @@
 import torch
-import torch.nn as nn
+from tqdm import tqdm
 
-from engine import *
 from engine.runconfig import RunConfig
 
 
 
 # TODO: follow the new project design
 class GenericTrainer():
-    def __init__(self, cfg : RunConfig):
+    def __init__(self, cfg: RunConfig):
         self.device = None
-        self.model = None
-        self.optimizer = None
-        self.loss_fn = None
+        self.model = torch.nn.Module()
+        self.optimizer = torch.optim.SGD(self.model.parameters())
+        self.loss_fn = torch.nn.MSELoss()
 
         # metrics
         # TODO: implement MLflow
         self.log = None
 
-    def train(self, epochs = 0, train_dataloader=None, validation_dataloader=None):
+    def train(self, epochs=0, train_dataloader=None, validation_dataloader=None):
         """
         Starts the train-validation loop.
-        """        
+        """
 
         best_model = self.model.state_dict()
         best_loss = None
 
-        for epoch in tqdm(range(epochs)):            
+        for epoch in tqdm(range(epochs)):
             # train loop
             tmp_loss = torch.zeros(len(train_dataloader), device=self.device)            
 
