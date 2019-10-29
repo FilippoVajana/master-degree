@@ -2,7 +2,9 @@ import logging
 import time
 from tqdm import tqdm
 
-from engine.models import lenet5
+from engine.dataloader import *
+from engine.dataset import *
+from engine.models import *
 
 # create logger
 logger = logging.getLogger(name="engine.logger")

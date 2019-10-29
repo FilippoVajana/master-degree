@@ -9,8 +9,14 @@ from engine.runconfig import RunConfig
 class GenericTrainer():
     def __init__(self, cfg: RunConfig):
         self.device = None
-        self.model = torch.nn.Module()
-        self.optimizer = torch.optim.SGD(self.model.parameters())
+        self.model = cfg.model
+        self.optimizer = torch.optim.Adam(
+            self.model.parameters(),
+            lr=cfg.optimizer_args['lr'],
+            weight_decay=cfg.optimizer_args['weight_decay'],
+            betas=cfg.optimizer_args['betas'],
+            eps=cfg.optimizer_args['eps']
+        )
         self.loss_fn = torch.nn.MSELoss()
 
         # metrics
@@ -27,18 +33,18 @@ class GenericTrainer():
 
         for _ in tqdm(range(epochs)):
             # train loop
-            tmp_loss = torch.zeros(len(train_dataloader), device=self.device)            
+            tmp_loss = torch.zeros(len(train_dataloader), device=self.device)
 
             self.model.train()
             for idx, batch in enumerate(train_dataloader):
                 b_loss = self.__train_batch(batch)
-                tmp_loss[idx] = b_loss                
+                tmp_loss[idx] = b_loss
 
             # update train log
-            self.log.add("t_loss", tmp_loss.mean())                
+            self.log.add("t_loss", tmp_loss.mean())
 
             # validation loop
-            if validation_dataloader == None : 
+            if validation_dataloader == None:
                 continue
 
             tmp_loss = torch.zeros(len(validation_dataloader), device=self.device)            
@@ -65,7 +71,7 @@ class GenericTrainer():
         Train a batch of data.
         """                 
 
-        examples, targets = batch     
+        examples, targets = batch
 
         # move data to device
         examples = examples.to(self.device)

@@ -1,15 +1,14 @@
-import torch
 import jsonpickle
 
 class RunConfig():
     def __init__(self):
         # dataloaders params
         self.data_folder = "./data/mnist/"
-        self.batch_size = 1
+        self.batch_size = 50
         self.shuffle = True
 
         # trainer params
-        self.model = torch.nn.Module()
+        self.model = 'LeNet5'
         self.device = "cpu"
         self.epochs = 10
         self.optimizer_args = {
