@@ -2,7 +2,7 @@ import logging
 import time
 from tqdm import tqdm
 
-from engine import trainer
+from engine import *
 from engine.logger import Logger
 from engine.models import lenet
 
