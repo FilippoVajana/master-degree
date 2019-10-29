@@ -11,5 +11,8 @@
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
     "autoDocstring.docstringFormat": "numpy",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintArgs": ["--generated-members=numpy.*,torch.*,Variable"]
 }
