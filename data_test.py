@@ -1,5 +1,6 @@
 import unittest
 
+import engine
 from engine.dataset import CustomDataset
 from engine.dataloader import *
 
@@ -43,19 +44,15 @@ class TestCustomDataset(unittest.TestCase):
 
 class ImageDataLoaderTest(unittest.TestCase):
     MNIST_DATA = r"./data/mnist"
-    CIFAR10 = r"./data/cifar10"
-    TEST_CFG = r"./data/test_dataloader_cfg.json"
 
-    def test_save_and_load_config(self):
-        cfg = DataLoaderConfig()
-        cfg_path = cfg.save(self.TEST_CFG)
-        loaded_cfg = DataLoaderConfig().load(cfg_path)
-        self.assertEqual(cfg.id, loaded_cfg.id)
-
-    def test_dataloader_build(self):
-        dataloader = ImageDataLoader(self.TEST_CFG).dataloader      
+    def test_dataloader_build(self):       
+        dataloader = ImageDataLoader(
+            data_folder=self.MNIST_DATA,
+            batch_size=1,
+            shuffle=False,
+            train_mode=True).dataloader      
         count = 0
-        for img, label in iter(dataloader):
+        for _ in iter(dataloader):
             count += 1
         self.assertEqual(count, len(dataloader.dataset))
 
