@@ -2,6 +2,8 @@ import torch
 import torch.nn
 import torch.optim
 import torch.nn.functional as F
+import mlflow.pytorch
+from mlflow import log_param
 
 from ..trainer import GenericTrainer
 from ..runconfig import RunConfig
@@ -31,7 +33,7 @@ class LeNet5(torch.nn.Module):
 
         return x # softmax values must be evaluated during inference.
 
-    def start_training(self, cfg: RunConfig):
+    def start_training(self, cfg: RunConfig):   
         # init dataloader
         dataloader = ImageDataLoader(
             data_folder=cfg.data_folder,
@@ -50,6 +52,15 @@ class LeNet5(torch.nn.Module):
             train_dataloader=dataloader.dataloader,
             validation_dataloader=None
             )
+
+        # MLflow log
+        log_param('data_folder', cfg.data_folder)
+        log_param('batch_size', cfg.batch_size)
+        log_param('shuffle', cfg.shuffle)
+        log_param('max_items', cfg.max_items)
+        log_param('epochs', cfg.epochs)
+        mlflow.pytorch.log_model(self, "engine/models")
+        
 
 
 
@@ -78,3 +89,9 @@ class LeNet5Trainer(GenericTrainer):
             eps=cfg.optimizer_args['eps']
         )
         self.loss_fn = torch.nn.CrossEntropyLoss()
+
+        # MLflow log parameters
+        log_param('lr', cfg.optimizer_args['lr'])
+        log_param('weight_decay', cfg.optimizer_args['weight_decay'])
+        log_param('betas', cfg.optimizer_args['betas'])
+        log_param('eps', cfg.optimizer_args['eps'])

@@ -1,11 +1,10 @@
 import torch
 from tqdm import tqdm
+from mlflow import log_metric
 
 from engine.runconfig import RunConfig
 
 
-
-# TODO: follow the new project design
 class GenericTrainer():
     def __init__(self, cfg: RunConfig):
         self.device = None
@@ -18,10 +17,6 @@ class GenericTrainer():
             eps=cfg.optimizer_args['eps']
         )
         self.loss_fn = torch.nn.MSELoss()
-
-        # metrics
-        # TODO: implement MLflow
-        self.log = None
 
     def train(self, epochs=0, train_dataloader=None, validation_dataloader=None):
         """
@@ -41,8 +36,10 @@ class GenericTrainer():
                 tmp_loss[idx] = b_loss
 
             # update train log
-            # self.log.add("t_loss", tmp_loss.mean())
-            tqdm.write("Train Loss: {}".format(tmp_loss.mean()))
+            loss = tmp_loss.mean().item()
+            tqdm.write("Train Loss: {}".format(loss))
+            log_metric('train loss', loss)
+
 
             # validation loop
             if validation_dataloader == None:
@@ -57,14 +54,16 @@ class GenericTrainer():
                     tmp_loss[idx] = b_loss                    
             
             # update validation log
-            # self.log.add("v_loss", tmp_loss.mean())
+            loss = tmp_loss.mean().item()
+            tqdm.write("Validation Loss: {}".format(loss))
+            log_metric('validation loss', loss)
            
             # save checkpoint
             if best_loss == None or tmp_loss.mean() < best_loss:
                 best_loss = tmp_loss.mean()
                 best_model = self.model.state_dict()
 
-        return self.log, best_model
+        return best_model
 
 
     def __train_batch(self, batch):

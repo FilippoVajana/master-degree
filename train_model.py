@@ -1,3 +1,5 @@
+import mlflow
+
 import engine
 
 MODELS = {
@@ -19,4 +21,6 @@ if __name__ == '__main__':
     run_cfg.model = model # swaps model classname with model instance
 
     # train model
+    mlflow.start_run(run_name='LeNet5-dev')
     model.start_training(run_cfg)
+    
