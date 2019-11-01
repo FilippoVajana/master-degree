@@ -19,7 +19,7 @@ class LeNet5(torch.nn.Module):
         self.fc2 = torch.nn.Linear(in_features=120, out_features=84)
         self.fc3 = torch.nn.Linear(in_features=84, out_features=10)
 
-    def forward(self, x): 
+    def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.max_pool1(x))
         x = F.relu(self.conv2(x))
@@ -37,7 +37,8 @@ class LeNet5(torch.nn.Module):
             data_folder=cfg.data_folder,
             batch_size=cfg.batch_size,
             shuffle=cfg.shuffle,
-            train_mode=True
+            train_mode=True,
+            max_items=cfg.max_items
         )
 
         # init model trainer

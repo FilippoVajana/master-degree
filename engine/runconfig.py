@@ -4,7 +4,8 @@ class RunConfig():
     def __init__(self):
         # dataloaders params
         self.data_folder = "./data/mnist/"
-        self.batch_size = 50
+        self.max_items = -1
+        self.batch_size = 256
         self.shuffle = True
 
         # trainer params
