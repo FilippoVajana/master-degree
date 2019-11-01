@@ -41,7 +41,8 @@ class GenericTrainer():
                 tmp_loss[idx] = b_loss
 
             # update train log
-            self.log.add("t_loss", tmp_loss.mean())
+            # self.log.add("t_loss", tmp_loss.mean())
+            tqdm.write("Train Loss: {}".format(tmp_loss.mean()))
 
             # validation loop
             if validation_dataloader == None:
@@ -56,7 +57,7 @@ class GenericTrainer():
                     tmp_loss[idx] = b_loss                    
             
             # update validation log
-            self.log.add("v_loss", tmp_loss.mean())
+            # self.log.add("v_loss", tmp_loss.mean())
            
             # save checkpoint
             if best_loss == None or tmp_loss.mean() < best_loss:
@@ -71,11 +72,11 @@ class GenericTrainer():
         Train a batch of data.
         """                 
 
-        examples, targets = batch
+        examples, labels = batch
 
         # move data to device
         examples = examples.to(self.device)
-        targets = targets.to(self.device)
+        labels = labels.to(self.device)
 
         # reset gradient computation
         self.optimizer.zero_grad()
@@ -84,7 +85,7 @@ class GenericTrainer():
         predictions = self.model(examples)
 
         # compute loss
-        loss = self.loss_fn(predictions, targets)
+        loss = self.loss_fn(predictions, labels)
 
         # backpropagation and gradients computation
         loss.backward()
