@@ -1,6 +1,8 @@
 import torch
 from tqdm import tqdm
 from mlflow import log_metric
+import pandas as pd
+import itertools
 
 from engine.runconfig import RunConfig
 
@@ -25,8 +27,10 @@ class GenericTrainer():
 
         best_model = self.model.state_dict()
         best_loss = None
+        train_loss = list()
+        validation_loss = list()
 
-        for _ in tqdm(range(epochs)):
+        for epoch in tqdm(range(epochs)):
             # train loop
             tmp_loss = torch.zeros(len(train_dataloader), device=self.device)
 
@@ -36,34 +40,37 @@ class GenericTrainer():
                 tmp_loss[idx] = b_loss
 
             # update train log
-            loss = tmp_loss.mean().item()
-            tqdm.write("Train Loss: {}".format(loss))
-            log_metric('train loss', loss)
+            t_loss = tmp_loss.mean().item()
+            tqdm.write("Train Loss: {}".format(t_loss))
+            log_metric('train loss', t_loss, step=epoch)
+            train_loss.append(t_loss)
 
 
             # validation loop
-            if validation_dataloader == None:
-                continue
+            if validation_dataloader is not None:
+                tmp_loss = torch.zeros(len(validation_dataloader), device=self.device) 
+                self.model.eval()
+                with torch.no_grad():
+                    for idx, batch in enumerate(validation_dataloader):
+                        b_loss = self.__validate_batch(batch)
+                        tmp_loss[idx] = b_loss                    
+                
+                # update validation log
+                v_loss = tmp_loss.mean().item()
+                tqdm.write("Validation Loss: {}".format(v_loss))
+                log_metric('validation loss', v_loss, step=epoch)
+                validation_loss.append(v_loss)
 
-            tmp_loss = torch.zeros(len(validation_dataloader), device=self.device)            
-
-            self.model.eval()
-            with torch.no_grad():
-                for idx, batch in enumerate(validation_dataloader):
-                    b_loss = self.__validate_batch(batch)
-                    tmp_loss[idx] = b_loss                    
-            
-            # update validation log
-            loss = tmp_loss.mean().item()
-            tqdm.write("Validation Loss: {}".format(loss))
-            log_metric('validation loss', loss)
-           
             # save checkpoint
-            if best_loss == None or tmp_loss.mean() < best_loss:
-                best_loss = tmp_loss.mean()
+            if best_loss is None or t_loss < best_loss:
+                best_loss = t_loss
                 best_model = self.model.state_dict()
 
-        return best_model
+        # record train data
+        t_data = list(itertools.zip_longest(train_loss, validation_loss, fillvalue=0))
+        df = pd.DataFrame(data=t_data, columns=['train loss', 'validation loss'])
+
+        return best_model, df
 
 
     def __train_batch(self, batch):

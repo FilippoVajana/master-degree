@@ -33,7 +33,7 @@ class LeNet5(torch.nn.Module):
 
         return x # softmax values must be evaluated during inference.
 
-    def start_training(self, cfg: RunConfig):   
+    def start_training(self, cfg: RunConfig):
         # init dataloader
         dataloader = ImageDataLoader(
             data_folder=cfg.data_folder,
@@ -47,11 +47,11 @@ class LeNet5(torch.nn.Module):
         trainer = LeNet5Trainer(cfg)
 
         # run training
-        trainer.train(
-            epochs=cfg.epochs,
-            train_dataloader=dataloader.dataloader,
-            validation_dataloader=None
-            )
+        model, data = trainer.train(
+                        epochs=cfg.epochs,
+                        train_dataloader=dataloader.dataloader,
+                        validation_dataloader=None
+                        )
 
         # MLflow log
         log_param('data_folder', cfg.data_folder)
@@ -59,8 +59,9 @@ class LeNet5(torch.nn.Module):
         log_param('shuffle', cfg.shuffle)
         log_param('max_items', cfg.max_items)
         log_param('epochs', cfg.epochs)
-        mlflow.pytorch.log_model(self, "engine/models")
-        
+         
+        return model, data
+
 
 
 
