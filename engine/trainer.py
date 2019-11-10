@@ -8,6 +8,7 @@ from engine.runconfig import RunConfig
 
 
 class GenericTrainer():
+    # TODO: target device as constructor parameter
     def __init__(self, cfg: RunConfig):
         self.device = None
         self.model = cfg.model
@@ -25,6 +26,7 @@ class GenericTrainer():
         Starts the train-validation loop.
         """
 
+        self.model = self.model.to(self.device)
         best_model = self.model.state_dict()
         best_loss = None
         train_loss = list()
