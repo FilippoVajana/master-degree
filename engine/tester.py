@@ -1,13 +1,16 @@
 import torch
-import time
 from tqdm import tqdm
 from engine.runconfig import RunConfig
 
 
 class Tester():
-    def __init__(self, cfg : RunConfig):
-        self.device = cfg.device
-        self.model = model.to(device)        
+    def __init__(self, cfg: RunConfig):
+        self.device = "cpu"
+        self.model = cfg.model.to(self.device)
+        self.log = {
+            "nll_loss" : [],
+            "accuracy" : 0.0,
+            "accuracy_onehot" : []}
 
     def test(self, test_dataloader=None):
         """
@@ -15,8 +18,9 @@ class Tester():
         """
         self.model.eval()
         with torch.no_grad():
+            accuracy_count = 0
+
             for data in tqdm(test_dataloader):
-                s_time = time.time()
                 examples, targets = data
 
                 # move data to device
@@ -25,13 +29,16 @@ class Tester():
 
                 # predict
                 predictions = self.model(examples)
-                f_time = time.time()
 
-                # compute metrics
-                loss = self.loss_fn(predictions, targets)
+                # NLL loss
+                self.log["nll_loss"].append(torch.nn.NLLLoss()(predictions, targets))
 
-                # update test log
-                self.log.add("loss", loss)
-                self.log.add("inference_time", f_time - s_time)
+                # Accuracy
+                for idx, p in enumerate(predictions):
+                    if p == targets[idx]:
+                        accuracy_count += 1 / len(test_dataloader.dataset)
+                        self.log["accuracy_onehot"].append(1)
+                    else:
+                        self.log["accuracy_onehot"].append(0)
                 
         return self.log
