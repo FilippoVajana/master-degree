@@ -1,30 +1,25 @@
 import torch
 import time
 from tqdm import tqdm
+from engine.runconfig import RunConfig
 
 
 class Tester():
-    def __init__(self, model, device):
-        self.device = device
-        self.model = model.to(device)
-        self.loss_fn = torch.nn.MSELoss()
-
-        # metrics
-        # TODO: implement MLflow
-        self.log = None
-
+    def __init__(self, cfg : RunConfig):
+        self.device = cfg.device
+        self.model = model.to(device)        
 
     def test(self, test_dataloader=None):
         """
         Tests the model.
         """
         self.model.eval()
-        with torch.no_grad():            
+        with torch.no_grad():
             for data in tqdm(test_dataloader):
                 s_time = time.time()
                 examples, targets = data
 
-                # move data to device                
+                # move data to device
                 examples = examples.to(self.device)
                 targets = targets.to(self.device)
 

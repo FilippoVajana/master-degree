@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "C:\\Users\\filip\\Miniconda3\\envs\\pytorch\\python.exe",
+    "python.pythonPath": "C:\\Users\\fvajana\\Miniconda3\\python.exe",
     "python.testing.unittestArgs": [
         "-v",
         "-s",

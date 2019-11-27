@@ -1,16 +1,15 @@
+import itertools
 import torch
 from tqdm import tqdm
 from mlflow import log_metric
 import pandas as pd
-import itertools
-
 from engine.runconfig import RunConfig
 
 
 class GenericTrainer():
     # TODO: target device as constructor parameter
     def __init__(self, cfg: RunConfig):
-        self.device = None
+        self.device = cfg.device
         self.model = cfg.model
         self.optimizer = torch.optim.Adam(
             self.model.parameters(),
