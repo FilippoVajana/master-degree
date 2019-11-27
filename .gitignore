@@ -134,3 +134,4 @@ dmypy.json
 *.ini
 *.txt
 */mnist/*
+/mlruns

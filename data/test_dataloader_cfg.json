@@ -1,8 +1,0 @@
-{
-    "py/object": "data.dataloader.DataLoaderConfig",
-    "batch_size": 1,
-    "data_folder": "./data/mnist/",
-    "id": "",
-    "shuffle": true,
-    "train_data": true
-}

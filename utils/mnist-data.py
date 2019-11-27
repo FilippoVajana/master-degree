@@ -4,13 +4,12 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import imageio
 
 
-def get_cifar10():
+def get_mnist():
     transform = transforms.Compose([
         transforms.ToTensor()
         ])
@@ -18,10 +17,10 @@ def get_cifar10():
     trainset = torchvision.datasets.MNIST(root='./data/mnist/archive', train=True, download=True, transform=transform)
     testset = torchvision.datasets.MNIST(root='./data/mnist/archive', train=False, download=True, transform=transform)
 
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=0)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=0)   
+    trainld = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=0)
+    testld = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=0)   
 
-    return trainloader, testloader
+    return trainld, testld
 
 def saveimg(img_data, filename, images_dir, label):
     img_path = os.path.join(images_dir, f"{filename}.png")
@@ -29,27 +28,24 @@ def saveimg(img_data, filename, images_dir, label):
 
     npimg = img_data.numpy()
     npimg = np.transpose(npimg, (1, 2, 0))
-    
-    imageio.imwrite(img_path, npimg)
 
+    imageio.imwrite(img_path, npimg)
     with open(label_path, "w") as l_file:
         l_file.write(label)
-    
-    pass
 
 
 if __name__ == "__main__":
     classes = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
     # make dirs
-    cifar10_data_path = "./data/mnist"
-    train_dir = os.path.join(cifar10_data_path, "train")
-    test_dir = os.path.join(cifar10_data_path, "test")
-    if not os.path.exists(train_dir) : os.makedirs(train_dir)
-    if not os.path.exists(test_dir) : os.makedirs(test_dir)    
+    mnist_data_path= "./data/mnist"
+    train_dir = os.path.join(mnist_data_path, "train")
+    test_dir = os.path.join(mnist_data_path, "test")
+    if not os.path.exists(train_dir): os.makedirs(train_dir)
+    if not os.path.exists(test_dir): os.makedirs(test_dir)
 
     # build loaders
-    trainloader, testloader =  get_cifar10()
+    trainloader, testloader =  get_mnist()
 
     # iterate over train data
     i = 0
