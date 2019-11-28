@@ -48,7 +48,7 @@ if __name__ == "__main__":
     for data in tqdm(iter(train_dl)):
         image, label = data
         img_class = CLASSES[label.item()]
-        train_img_arr.append(image.numpy())
+        train_img_arr.append(image.squeeze(0).numpy())
         train_lab_arr.append(int(img_class))
     
     save_data(np.asarray(train_img_arr), "images", TRAIN_DIR)
