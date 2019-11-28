@@ -3,11 +3,8 @@ import os
 import torch
 import torchvision
 import torchvision.transforms as transforms
-
 import numpy as np
-
-import imageio
-
+from tqdm import tqdm
 
 def get_mnist():
     transform = transforms.Compose([
@@ -22,60 +19,51 @@ def get_mnist():
 
     return trainld, testld
 
-def saveimg(img_data, filename, images_dir, label):
-    img_path = os.path.join(images_dir, f"{filename}.png")
-    label_path = os.path.join(images_dir, "labels", f"{filename}.txt")
-
-    npimg = img_data.numpy()
-    npimg = np.transpose(npimg, (1, 2, 0))
-
-    imageio.imwrite(img_path, npimg)
-    with open(label_path, "w") as l_file:
-        l_file.write(label)
+def save_data(arr: np.ndarray, name: str, path: str):
+    size = arr.size * arr.itemsize / 1e6
+    tqdm.write(f"Saving {name} ndarray [{size} MB]")
+    np.save(os.path.join(path, name), arr)
 
 
 if __name__ == "__main__":
-    classes = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+    CLASSES = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
     # make dirs
-    mnist_data_path= "./data/mnist"
-    train_dir = os.path.join(mnist_data_path, "train")
-    test_dir = os.path.join(mnist_data_path, "test")
-    if not os.path.exists(train_dir): os.makedirs(train_dir)
-    if not os.path.exists(test_dir): os.makedirs(test_dir)
+    DATA_ROOT = "./data/mnist"
+    TRAIN_DIR = os.path.join(DATA_ROOT, "train")
+    TEST_DIR = os.path.join(DATA_ROOT, "test")
+    if not os.path.exists(TRAIN_DIR):
+        os.makedirs(TRAIN_DIR)
+    if not os.path.exists(TEST_DIR):
+        os.makedirs(TEST_DIR)
 
     # build loaders
-    trainloader, testloader =  get_mnist()
+    train_dl, test_dl =  get_mnist()
 
-    # iterate over train data
-    i = 0
-    labels_folder = os.path.join(train_dir, "labels")
-    os.mkdir(labels_folder)
+    # train data
+    train_img_arr = []
+    train_lab_arr = []
 
-    for data in iter(trainloader):
+    tqdm.write("Reading train data")
+    for data in tqdm(iter(train_dl)):
         image, label = data
-        i_class = classes[label.item()]
-
-        i = i + 1
-        # if i > 1 : break
-
-        saveimg(image.squeeze(dim=0), f"img_{i}", train_dir, i_class)
-
-    # iterate over test data
-    i = 0
-    labels_folder = os.path.join(test_dir, "labels")
-    os.mkdir(labels_folder)
+        img_class = CLASSES[label.item()]
+        train_img_arr.append(image.numpy())
+        train_lab_arr.append(int(img_class))
     
-    for data in iter(testloader):
+    save_data(np.asarray(train_img_arr), "images", TRAIN_DIR)
+    save_data(np.asarray(train_lab_arr), "labels", TRAIN_DIR)
+
+    # test data
+    test_img_arr = []
+    test_lab_arr = []
+
+    tqdm.write("Reading test data")
+    for data in tqdm(iter(test_dl)):
         image, label = data
-        i_class = classes[label.item()]
-
-        i = i + 1
-        # if i > 1 : break
-
-        saveimg(image.squeeze(dim=0), f"img_{i}", test_dir, i_class)
-
-
-
-
-
+        img_class = CLASSES[label.item()]
+        test_img_arr.append(image.numpy())
+        test_lab_arr.append(int(img_class))
+    
+    save_data(np.asarray(test_img_arr), "images", TEST_DIR)
+    save_data(np.asarray(test_lab_arr), "labels", TEST_DIR)

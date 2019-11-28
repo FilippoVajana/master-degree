@@ -37,6 +37,13 @@
                 "-n", "LeNet5", 
                 "-d", "./data/mnist"],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "DATA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/mnist-data.py",            
+            "console": "integratedTerminal"
         }
     ]
 }
