@@ -4,9 +4,9 @@ from engine.runconfig import RunConfig
 
 
 class Tester():
-    def __init__(self, cfg: RunConfig):
+    def __init__(self, model : torch.nn.Module):
         self.device = "cpu"
-        self.model = cfg.model.to(self.device)
+        self.model = model.to(self.device)
         self.log = {
             "nll_loss" : [],
             "accuracy" : 0.0,

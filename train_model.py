@@ -9,6 +9,8 @@ import engine
 MODELS = {
     'LeNet5': engine.LeNet5()
 }
+# getattr(engine, config['model'])()
+
 RUN_CFG_PATH = './runconfig.json'
 RUNS_DIR = './runs/'
 

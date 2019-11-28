@@ -1,5 +1,4 @@
 import os
-
 import torchvision
 from torch.utils.data import Dataset
 
@@ -8,19 +7,12 @@ import imageio
 
 
 class CustomDataset(Dataset):
-    def __init__(self, root, train_data=True):
+    def __init__(self, root, train_data):
         self.root = root
 
-        if train_data:
-            self.mode = "TRAIN"
-            self.ex_dir = os.path.join(self.root, "train")
-            self.l_dir = os.path.join(self.ex_dir, "labels")
-        else:
-            self.mode = "TEST"
-            self.ex_dir = os.path.join(self.root, "test")
-            self.l_dir = os.path.join(self.ex_dir, "labels")
-
         # init data
+        self.ex_dir = os.path.abspath(train_data)
+        self.l_dir = os.path.abspath(os.path.join(self.ex_dir, "labels"))
         self.data = self.join_data()
 
         # init cache system

@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
             "name": "Python: Current File",
             "type": "python",
@@ -25,6 +26,16 @@
             "request": "launch",
             "program": "${workspaceFolder}/train_model.py",
             "args": ["-cfg", "runconfig_cuda.json"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Testing",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_model.py",
+            "args": ["-m", "./runs/2711_1603/LeNet5/LeNet5.pt", 
+                "-n", "LeNet5", 
+                "-d", "./data/mnist"],
             "console": "integratedTerminal"
         }
     ]
