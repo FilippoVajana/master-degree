@@ -133,6 +133,6 @@ dmypy.json
 *.png
 *.ini
 *.txt
-*/mnist/*
+/data
 /mlruns
-runs
+/runs
