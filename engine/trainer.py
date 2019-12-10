@@ -91,8 +91,7 @@ class GenericTrainer():
         predictions = self.model(examples)
 
         # compute loss
-        loss = self.loss_fn(predictions, labels)
-        print(loss.item())
+        loss = self.loss_fn(predictions, labels)        
 
         # backpropagation and gradients computation
         loss.backward()
