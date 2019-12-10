@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import torch
 import torchvision
 from torch.utils.data import Dataset
 
@@ -26,12 +27,9 @@ class CustomDataset(Dataset):
 
 
     @cachetools.cachedmethod(lambda self: self.cache)
-    def __getitem__(self, index):
-        transform = torchvision.transforms.Compose([
-            torchvision.transforms.ToTensor()
-        ])
+    def __getitem__(self, index):        
 
-        image = self.data[0][index]
-        label = self.data[1][index]
+        image = torch.tensor(self.data[0][index])
+        label = int(self.data[1][index])
 
-        return (transform(image), int(label))
+        return (image, label)
