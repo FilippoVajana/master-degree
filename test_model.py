@@ -1,7 +1,6 @@
 import os
 import datetime as dt
 import argparse
-import mlflow
 import torch
 
 import engine
@@ -45,12 +44,7 @@ if __name__ == '__main__':
             max_items=10
         ).dataloader
 
-    # test model
-    mlflow.start_run(run_name=model.__class__.__name__)
-
+    # test model    
     t = tester.Tester(model)
     log = t.test(dataloader)
     print(log)
-
-    mlflow.end_run()
-    
