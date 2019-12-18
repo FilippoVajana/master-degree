@@ -1,10 +1,12 @@
 import torch
+import torch.nn.functional as F
 from tqdm import tqdm
+import numpy as np
 from engine.runconfig import RunConfig
 
 
 class Tester():
-    def __init__(self, model : torch.nn.Module):
+    def __init__(self, model: torch.nn.Module):
         self.device = "cpu"
         self.model = model.to(self.device)
         self.log = {
@@ -24,21 +26,39 @@ class Tester():
                 examples, targets = data
 
                 # move data to device
-                examples = examples.to(self.device)
+                examples = examples.to(self.device).squeeze(dim=0).float()
                 targets = targets.to(self.device)
 
                 # predict
                 predictions = self.model(examples)
 
                 # NLL loss
-                self.log["nll_loss"].append(torch.nn.NLLLoss()(predictions, targets))
+                nll = torch.nn.NLLLoss()(predictions, targets)
+                self.log["nll_loss"].append(nll)
 
                 # Accuracy
-                for idx, p in enumerate(predictions):
-                    if p == targets[idx]:
-                        accuracy_count += 1 / len(test_dataloader.dataset)
-                        self.log["accuracy_onehot"].append(1)
-                    else:
-                        self.log["accuracy_onehot"].append(0)
+                smax = torch.nn.Softmax()(predictions)
+                prediction_arr = smax.numpy()
+                predicted_class = np.argmax(prediction_arr)
+
+
+                ### DEBUG
+                # import matplotlib.pyplot as plt
+                # plt.imshow(examples.squeeze().numpy())
+                # plt.xlabel(f"Predicted: {predicted_class} " + f"Ground Truth: {targets.item()}")
+                # plt.show()
+
+                # plt.scatter(x=range(0,10), y=smax)
+                # plt.show()
+                ### DEBUG
+
+                
+                if predicted_class == targets.item():
+                    accuracy_count += 1
+                    self.log["accuracy_onehot"].append(1)
+                else:
+                    self.log["accuracy_onehot"].append(0)
+
+                self.log["accuracy"] = accuracy_count / len(test_dataloader.dataset)
                 
         return self.log

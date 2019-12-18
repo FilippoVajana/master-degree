@@ -1,6 +1,7 @@
 import os
 import tarfile
 import imageio
+from PIL import Image
 import tqdm
 import numpy as np
 
@@ -24,10 +25,12 @@ def get_nomnist():
                 os.mkdir(tmp_path)
 
             for f in files:
-                f_obj = tar.extractfile(f)
                 # read images
                 try:
-                    arr = np.asarray(imageio.imread(f_obj))
+                    f_obj = tar.extractfile(f)
+                    img = imageio.imread(f_obj)                    
+                    arr = np.asarray(img)
+                    arr = np.expand_dims(arr, axis=0)
                     img_arr.append(arr)
                     lab_arr.append(ord(c))
                 except Exception:
@@ -55,5 +58,7 @@ if __name__ == "__main__":
     img_list, lab_list = get_nomnist()
 
     # save data
-    save_data(np.asarray(img_list), "images", TEST_DIR)
-    save_data(np.asarray(lab_list), "labels", TEST_DIR)
+    img_arr = np.asarray(img_list)
+    save_data(img_arr, "images", TEST_DIR)
+    lab_arr = np.asarray(lab_list)
+    save_data(lab_arr, "labels", TEST_DIR)

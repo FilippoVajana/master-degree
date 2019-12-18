@@ -133,5 +133,7 @@ dmypy.json
 *.ini
 *.txt
 *.npy
+*.sh
+*.code-workspace
 /data
-rsyncto_invariant01.sh
+/runs
