@@ -11,9 +11,11 @@ from ..dataloader import ImageDataLoader
 class LeNet5(torch.nn.Module):
     def __init__(self):
         super(LeNet5, self).__init__()
-        self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
+        self.conv1 = torch.nn.Conv2d(
+            in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
         self.max_pool1 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.conv2 = torch.nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1, padding=0)
+        self.conv2 = torch.nn.Conv2d(
+            in_channels=6, out_channels=16, kernel_size=5, stride=1, padding=0)
         self.max_pool2 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.fc1 = torch.nn.Linear(in_features=16*5*5, out_features=120)
         self.fc2 = torch.nn.Linear(in_features=120, out_features=84)
@@ -29,9 +31,9 @@ class LeNet5(torch.nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
 
-        return x # softmax values must be evaluated during inference.
+        return x  # softmax values must be evaluated during inference.
 
-    def start_training(self, cfg: RunConfig):
+    def start_training(self, cfg: RunConfig, device):
         # init dataloader
         dataloader = ImageDataLoader(
             data_folder=cfg.data_folder,
@@ -42,16 +44,17 @@ class LeNet5(torch.nn.Module):
         )
 
         # init model trainer
-        trainer = LeNet5Trainer(cfg)
+        trainer = LeNet5Trainer(cfg, device)
 
         # run training
         model, data = trainer.train(
-                        epochs=cfg.epochs,
-                        train_dataloader=dataloader.dataloader,
-                        validation_dataloader=None
-                        )
-         
+            epochs=cfg.epochs,
+            train_dataloader=dataloader.dataloader,
+            validation_dataloader=None
+        )
+
         return model, data
+
 
 class LeNet5Trainer(GenericTrainer):
     """
@@ -64,10 +67,9 @@ class LeNet5Trainer(GenericTrainer):
     fully-connected layer. We employed hyperparameter tuning (See Section A.7) to select the training
     batch size, learning rate, and dropout rate.
     """
-    def __init__(self, cfg: RunConfig):
-        super().__init__(cfg)
-        self.device = cfg.device
-        self.model = cfg.model
+
+    def __init__(self, cfg: RunConfig, device):
+        super().__init__(cfg, device)
         self.optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=cfg.optimizer_args['lr'],
