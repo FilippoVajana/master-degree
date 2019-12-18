@@ -35,7 +35,7 @@
             "program": "${workspaceFolder}/test_model.py",
             "args": ["-m", "./runs/LeNet5/LeNet5.pt", 
                 "-n", "LeNet5", 
-                "-d", "mnist"],
+                "-d", "no-mnist"],
             "console": "integratedTerminal"
         },
         {
