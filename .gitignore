@@ -125,7 +125,6 @@ dmypy.json
 .pyre/
 
 .vscode/*
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -133,5 +132,8 @@ dmypy.json
 *.png
 *.ini
 *.txt
-*/mnist/*
-/mlruns
+*.npy
+*.sh
+*.code-workspace
+/data
+/runs

@@ -1,64 +1,33 @@
 import os
-
-import torchvision
+import numpy as np
+import torch
 from torch.utils.data import Dataset
 
 import cachetools
-import imageio
-
 
 class CustomDataset(Dataset):
-    def __init__(self, root, train_data=True):
-        self.root = root
-
-        if train_data:
-            self.mode = "TRAIN"
-            self.ex_dir = os.path.join(self.root, "train")
-            self.l_dir = os.path.join(self.ex_dir, "labels")
-        else:
-            self.mode = "TEST"
-            self.ex_dir = os.path.join(self.root, "test")
-            self.l_dir = os.path.join(self.ex_dir, "labels")
-
+    def __init__(self, data_path: str):
         # init data
-        self.data = self.join_data()
+        images, labels = self.load_data(data_path)
+        self.data = (images, labels)
 
         # init cache system
-        self.cache = cachetools.LRUCache(maxsize=len(self.data))
+        self.cache = cachetools.LRUCache(maxsize=len(images))
 
-    def get_images(self, directory):
-        items = list(map(lambda x: os.path.join(directory, x), os.listdir(directory)))
-        imgs = [os.path.normpath(i) for i in items if i.endswith(".png")]
-        imgs.sort()
-        return imgs
 
-    def get_labels(self, directory):
-        items = list(map(lambda x: os.path.join(directory, x), os.listdir(directory)))
-        labels = [os.path.normpath(i) for i in items if i.endswith(".txt")]
-        labels.sort()
-        return labels
+    def load_data(self, path: str):
+        images = np.load(os.path.join(path, "images.npy"))
+        labels = np.load(os.path.join(path, "labels.npy"))
+        return images, labels
 
-    def join_data(self):
-        ex = self.get_images(self.ex_dir)
-        l = self.get_labels(self.l_dir)
-        return tuple(zip(ex, l))
 
     def __len__(self):
-        return len(self.data)
+        return len(self.data[0])
+
 
     @cachetools.cachedmethod(lambda self: self.cache)
     def __getitem__(self, index):
-        transform = torchvision.transforms.Compose([
-            torchvision.transforms.ToTensor()
-        ])
+        image = torch.Tensor(self.data[0][index])
+        label = int(self.data[1][index])
 
-        # get image and label paths
-        d = self.data[index]
-
-        # load image
-        img = imageio.imread(d[0])
-
-        # load label value
-        lab = open(d[1], "r").read()
-
-        return (transform(img), int(lab))
+        return (image, label)

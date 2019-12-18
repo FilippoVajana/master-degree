@@ -21,19 +21,23 @@ class ImageDataLoader():
 
         if self.train_mode:
             data = os.path.join(self.data_folder, 'train')
-            self.dataset = self._build_dataset(self.data_folder, data)
         else:
             data = os.path.join(self.data_folder, 'test')
-            self.dataset = self._build_dataset(self.data_folder, data)
 
+        self.dataset = self._build_dataset(data)
         self.dataloader = self._build_dataloader(self.batch_size, self.shuffle)
 
-    def _build_dataset(self, data_folder, train_data):
-        dataset = CustomDataset(root=data_folder, train_data=train_data)
+
+    def _build_dataset(self, data_folder):
+        dataset = CustomDataset(data_folder)
+
         if (len(dataset) > self.max_items) and (self.max_items > 0):
             dataset.data = dataset.data[:self.max_items]
+
         return dataset
+
 
     def _build_dataloader(self, batch_size, shuffle):
         dataloader = TorchDataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle)
+
         return dataloader

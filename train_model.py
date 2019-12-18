@@ -1,14 +1,15 @@
 import os
+import shutil
 import datetime as dt
-import mlflow
 from torch import save
 import argparse
-
 import engine
 
 MODELS = {
     'LeNet5': engine.LeNet5()
 }
+# getattr(engine, config['model'])()
+
 RUN_CFG_PATH = './runconfig.json'
 RUNS_DIR = './runs/'
 
@@ -22,6 +23,9 @@ def create_run(root: str):
     os.mkdir(path)
     return path
 
+def save_empty_cfg(path: str):
+    engine.RunConfig().save(path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train DNN models.")
@@ -30,10 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     RUN_CFG_PATH = args.cfg
-    RUNS_DIR = args.out
-
-    # save reference RunConfig json
-    # engine.RunConfig().save(run_cfg_path)
+    RUNS_DIR = args.out    
 
     # load reference RunConfig json
     run_cfg = engine.RunConfig().load(RUN_CFG_PATH)
@@ -43,19 +44,19 @@ if __name__ == '__main__':
     run_cfg.model = model # swaps model classname with model instance
 
     # init run 
-    run_path = create_run(RUNS_DIR)
-    results_path = os.path.join(run_path, run_cfg.model.__class__.__name__)
-    os.mkdir(results_path)
+    # run_path = create_run(RUNS_DIR)
+    results_path = os.path.join(RUNS_DIR, run_cfg.model.__class__.__name__)
+    if os.path.exists(results_path):
+        shutil.rmtree(results_path)
+    os.makedirs(results_path)
 
-    # train model
-    mlflow.start_run(run_name=run_cfg.model.__class__.__name__)
+    # train model    
     trained_model, training_logs = model.start_training(run_cfg)
-    mlflow.end_run()
 
     # save model dict
     tm_path = os.path.join(results_path, f"{run_cfg.model.__class__.__name__}.pt")
     save(trained_model, tm_path)
 
     # save training logs
-    tl_path = os.path.join(results_path, 'training logs.xlsx')
+    tl_path = os.path.join(results_path, 'train_logs.xlsx')
     training_logs.to_excel(tl_path, engine='xlsxwriter')
