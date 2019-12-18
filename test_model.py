@@ -1,5 +1,6 @@
 import argparse
 import torch
+import pandas as pd
 import engine
 import engine.tester as tester
 
@@ -19,9 +20,12 @@ DATA_DICT = {
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Test DNN models.")
-    parser.add_argument('-m', type=str, action='store', help='Model file path.')
-    parser.add_argument('-n', type=str, action='store', help='Model class name')
-    parser.add_argument('-d', type=str, action='store', help='Test data directory.')
+    parser.add_argument('-m', type=str, action='store',
+                        help='Model file path.')
+    parser.add_argument('-n', type=str, action='store',
+                        help='Model class name')
+    parser.add_argument('-d', type=str, action='store',
+                        help='Test data directory.')
     args = parser.parse_args()
 
     # load model
@@ -30,14 +34,19 @@ if __name__ == '__main__':
 
     # init dataloader
     dataloader = engine.dataloader.ImageDataLoader(
-            data_folder=DATA_DICT[args.d],
-            batch_size=1,
-            shuffle=False,
-            train_mode=False,
-            max_items=10
-        ).dataloader
+        data_folder=DATA_DICT[args.d],
+        batch_size=1,
+        shuffle=False,
+        train_mode=False,
+        max_items=10
+    ).dataloader
 
-    # test model    
+    # test model
     t = tester.Tester(model)
     log = t.test(dataloader)
-    print(log)
+    df = pd.DataFrame(data=log)
+    # print(df.head(n=1))
+
+    # accuracy
+    right_preds = df[df.prediction_ok == True]
+    print("Tet accuracy: ", len(right_preds) / len(dataloader.dataset))
