@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # load model
     model = MODELS[args.n]
-    # model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
     # init dataloader
     dataloader = engine.dataloader.ImageDataLoader(
