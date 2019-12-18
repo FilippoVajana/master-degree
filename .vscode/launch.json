@@ -4,8 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-
         {
             "name": "Python: Current File",
             "type": "python",
@@ -21,28 +19,37 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Training GPU",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/train_model.py",
-            "args": ["-cfg", "runconfig_cuda.json"],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Testing",
+            "name": "Testing MNIST",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test_model.py",
-            "args": ["-m", "./runs/2711_1603/LeNet5/LeNet5.pt", 
+            "args": ["-m", "./runs/LeNet5/LeNet5.pt", 
                 "-n", "LeNet5", 
-                "-d", "./data/mnist"],
+                "-d", "mnist"],
             "console": "integratedTerminal"
         },
         {
-            "name": "DATA",
+            "name": "Testing NOT-MNIST",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/utils/mnist-data.py",            
+            "program": "${workspaceFolder}/test_model.py",
+            "args": ["-m", "./runs/LeNet5/LeNet5.pt", 
+                "-n", "LeNet5", 
+                "-d", "mnist"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Fetch MNIST Data",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/mnist-data.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Fetch NOT-MNIST Data",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/not-mnist-data.py",
             "console": "integratedTerminal"
         }
     ]

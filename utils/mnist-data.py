@@ -51,6 +51,7 @@ if __name__ == "__main__":
         train_img_arr.append(image.squeeze(0).numpy())
         train_lab_arr.append(int(img_class))
     
+    
     save_data(np.asarray(train_img_arr), "images", TRAIN_DIR)
     save_data(np.asarray(train_lab_arr), "labels", TRAIN_DIR)
 

@@ -1,5 +1,4 @@
 import os
-import datetime as dt
 import argparse
 import torch
 
@@ -9,35 +8,31 @@ import engine.tester as tester
 MODELS = {
     'LeNet5': engine.LeNet5()
 }
-RUN_CFG_PATH = './runconfig.json'
-RUNS_DIR = './runs/'
 
-def get_id():
-    # get run id as a time string        
-    time = dt.datetime.now()
-    return time.strftime("%d%m_%H%M") # Hour_Minute_Day_Month
+RUNS_DICT = {
+    'LeNet5': "./runs/LeNet5"
+}
 
-def create_run(root: str):
-    path = os.path.join(root, get_id())
-    os.mkdir(path)
-    return path
+DATA_DICT = {
+    'mnist': './data/mnist',
+    'no-mnist': './data/no-mnist'
+}
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Test DNN models.")
-    parser.add_argument('-m', type=str, action='store', help='Load model file.')
+    parser.add_argument('-m', type=str, action='store', help='Model file path.')
     parser.add_argument('-n', type=str, action='store', help='Model class name')
     parser.add_argument('-d', type=str, action='store', help='Test data directory.')
     args = parser.parse_args()
 
     # load model
     model = MODELS[args.n]
-    path = os.path.normpath(os.path.join(os.getcwd(), args.m))
-    model.load_state_dict(torch.load(path))
+    # model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
     # init dataloader
     dataloader = engine.dataloader.ImageDataLoader(
-            data_folder=args.d,
+            data_folder=DATA_DICT[args.d],
             batch_size=1,
             shuffle=False,
             train_mode=False,

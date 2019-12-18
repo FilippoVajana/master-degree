@@ -41,8 +41,7 @@ class GenericTrainer():
 
             # update train log
             t_loss = tmp_loss.mean().item()
-            tqdm.write("Train Loss: {}".format(t_loss))
-            # log_metric('train loss', t_loss, step=epoch)
+            tqdm.write("Train Loss: {}".format(t_loss))            
             train_loss.append(t_loss)
 
 
@@ -57,8 +56,7 @@ class GenericTrainer():
                 
                 # update validation log
                 v_loss = tmp_loss.mean().item()
-                tqdm.write("Validation Loss: {}".format(v_loss))
-                # log_metric('validation loss', v_loss, step=epoch)
+                tqdm.write("Validation Loss: {}".format(v_loss))                
                 validation_loss.append(v_loss)
 
             # save checkpoint
