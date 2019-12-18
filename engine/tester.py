@@ -43,13 +43,13 @@ class Tester():
 
 
                 ### DEBUG
-                import matplotlib.pyplot as plt
-                plt.imshow(examples.squeeze().numpy())
-                plt.xlabel(f"Predicted: {predicted_class} " + f"Ground Truth: {targets.item()}")
-                plt.show()
+                # import matplotlib.pyplot as plt
+                # plt.imshow(examples.squeeze().numpy())
+                # plt.xlabel(f"Predicted: {predicted_class} " + f"Ground Truth: {targets.item()}")
+                # plt.show()
 
-                plt.scatter(x=range(0,10), y=smax)
-                plt.show()
+                # plt.scatter(x=range(0,10), y=smax)
+                # plt.show()
                 ### DEBUG
 
                 
@@ -58,5 +58,7 @@ class Tester():
                     self.log["accuracy_onehot"].append(1)
                 else:
                     self.log["accuracy_onehot"].append(0)
+
+                self.log["accuracy"] = accuracy_count / len(test_dataloader.dataset)
                 
         return self.log

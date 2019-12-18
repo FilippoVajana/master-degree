@@ -1,7 +1,5 @@
-import os
 import argparse
 import torch
-
 import engine
 import engine.tester as tester
 
