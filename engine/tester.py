@@ -10,7 +10,7 @@ class Tester():
         self.device = "cpu"
         self.model = model.to(self.device)
         self.log = {
-            "nll_loss": [],
+            "nll": [],
             "softmax_dist": [],
             "prediction_ok": [],
             "input_tensor": []}
@@ -27,22 +27,22 @@ class Tester():
                 examples, targets = data
 
                 # move data to device
-                examples = examples.to(self.device).squeeze(dim=0).float()
+                examples = examples.to(self.device).float()
                 targets = targets.to(self.device)
 
                 # predict
                 predictions = self.model(examples)
 
-                # NLL loss
-                nll = torch.nn.NLLLoss()(predictions, targets)
-                self.log["nll_loss"].append(nll.item())
+                # softmax
+                softmax_pred = torch.nn.Softmax()(predictions).numpy()
+                self.log["softmax_dist"].append(softmax_pred)
 
-                # Accuracy
-                smax = torch.nn.Softmax()(predictions)
-                prediction_arr = smax.numpy()
-                self.log["softmax_dist"].append(prediction_arr)
+                # nll
+                nll = np.log(softmax_pred) * -1
+                self.log["nll"].append(nll)
 
-                predicted_class = np.argmax(prediction_arr)  # predicted class
+                # accuracy
+                predicted_class = np.argmax(softmax_pred)  # predicted class
                 if predicted_class == targets.item():
                     accuracy_count += 1
                     self.log["prediction_ok"].append(True)
