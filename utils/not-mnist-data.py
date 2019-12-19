@@ -16,13 +16,15 @@ def get_nomnist():
     lab_arr = []
 
     # retrieve and save .tar
-    tqdm.tqdm.write(f"GET from {tar_url}")
-    r = requests.get(tar_url)
-    os.makedirs("./data/no-mnist/archive/", exist_ok=True)
-    with open(tar_path, 'wb') as f:
-        tqdm.tqdm.write(f"Saving .tar file to {tar_path}")
-        f.write(r.content)
+    if not os.path.exists(tar_path):
+        tqdm.tqdm.write(f"GET from {tar_url}")
+        r = requests.get(tar_url)
+        os.makedirs("./data/no-mnist/archive/", exist_ok=True)
+        with open(tar_path, 'wb') as f:
+            tqdm.tqdm.write(f"Saving .tar file to {tar_path}")
+            f.write(r.content)
 
+    # extract images from .tar
     with tarfile.open(tar_path) as tar:
         tar_root = tar.next().name
         for c in tqdm.tqdm(classes):
@@ -67,10 +69,10 @@ if __name__ == "__main__":
     if not os.path.exists(TEST_DIR):
         os.makedirs(TEST_DIR)
 
-    # get data
+    # get test data
     img_list, lab_list = get_nomnist()
 
-    # save data
+    # save test data
     img_arr = np.asarray(img_list)
     save_data(img_arr, "images", TEST_DIR)
     lab_arr = np.asarray(lab_list)

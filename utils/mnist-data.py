@@ -6,18 +6,24 @@ import torchvision.transforms as transforms
 import numpy as np
 from tqdm import tqdm
 
+
 def get_mnist():
     transform = transforms.Compose([
         transforms.ToTensor()
-        ])
+    ])
 
-    trainset = torchvision.datasets.MNIST(root='./data/mnist/archive', train=True, download=True, transform=transform)
-    testset = torchvision.datasets.MNIST(root='./data/mnist/archive', train=False, download=True, transform=transform)
+    trainset = torchvision.datasets.MNIST(
+        root='./data/mnist/archive', train=True, download=True, transform=transform)
+    testset = torchvision.datasets.MNIST(
+        root='./data/mnist/archive', train=False, download=True, transform=transform)
 
-    trainld = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=0)
-    testld = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=0)   
+    trainld = torch.utils.data.DataLoader(
+        trainset, batch_size=1, shuffle=False, num_workers=0)
+    testld = torch.utils.data.DataLoader(
+        testset, batch_size=1, shuffle=False, num_workers=0)
 
     return trainld, testld
+
 
 def save_data(arr: np.ndarray, name: str, path: str):
     size = arr.size * arr.itemsize / 1e6
@@ -38,7 +44,7 @@ if __name__ == "__main__":
         os.makedirs(TEST_DIR)
 
     # build loaders
-    train_dl, test_dl =  get_mnist()
+    train_dl, test_dl = get_mnist()
 
     # train data
     train_img_arr = []
@@ -50,8 +56,7 @@ if __name__ == "__main__":
         img_class = CLASSES[label.item()]
         train_img_arr.append(image.squeeze(0).numpy())
         train_lab_arr.append(int(img_class))
-    
-    
+
     save_data(np.asarray(train_img_arr), "images", TRAIN_DIR)
     save_data(np.asarray(train_lab_arr), "labels", TRAIN_DIR)
 
@@ -63,8 +68,8 @@ if __name__ == "__main__":
     for data in tqdm(iter(test_dl)):
         image, label = data
         img_class = CLASSES[label.item()]
-        test_img_arr.append(image.numpy())
+        test_img_arr.append(image.squeeze(0).numpy())
         test_lab_arr.append(int(img_class))
-    
+
     save_data(np.asarray(test_img_arr), "images", TEST_DIR)
     save_data(np.asarray(test_lab_arr), "labels", TEST_DIR)

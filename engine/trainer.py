@@ -74,7 +74,7 @@ class GenericTrainer():
 
     def __train_batch(self, batch):
         """
-        Train a batch of data. 
+        Train a batch of data.
         """
 
         examples, labels = batch
