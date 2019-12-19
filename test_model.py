@@ -1,6 +1,8 @@
+import os
 import argparse
 import torch
 import pandas as pd
+import matplotlib.pyplot as plt
 import engine
 import engine.tester as tester
 
@@ -45,8 +47,8 @@ if __name__ == '__main__':
     t = tester.Tester(model)
     log = t.test(dataloader)
     df = pd.DataFrame(data=log)
-    # print(df.head(n=1))
+    print(df.head(n=5))
 
-    # accuracy
-    right_preds = df[df.prediction_ok == True]
-    print("Tet accuracy: ", len(right_preds) / len(dataloader.dataset))
+    # save test results
+    df_path = os.path.join(RUNS_DICT['LeNet5'], f'{args.d}_test.xlsx')
+    df.to_excel(df_path, engine='xlsxwriter')
