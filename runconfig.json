@@ -1,8 +1,7 @@
 {
-    "batch_size": 256,
+    "batch_size": 64,
     "data_folder": "./data/mnist/",
-    "device": "cuda",
-    "epochs": 20,
+    "epochs": 25,
     "max_items": -1,
     "model": "LeNet5",
     "optimizer_args": {

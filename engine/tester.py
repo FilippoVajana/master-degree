@@ -10,9 +10,10 @@ class Tester():
         self.device = "cpu"
         self.model = model.to(self.device)
         self.log = {
-            "nll_loss" : [],
-            "accuracy" : 0.0,
-            "accuracy_onehot" : []}
+            "nll_loss": [],
+            "softmax_dist": [],
+            "prediction_ok": [],
+            "input_tensor": []}
 
     def test(self, test_dataloader=None):
         """
@@ -34,31 +35,20 @@ class Tester():
 
                 # NLL loss
                 nll = torch.nn.NLLLoss()(predictions, targets)
-                self.log["nll_loss"].append(nll)
+                self.log["nll_loss"].append(nll.item())
 
                 # Accuracy
                 smax = torch.nn.Softmax()(predictions)
                 prediction_arr = smax.numpy()
-                predicted_class = np.argmax(prediction_arr)
+                self.log["softmax_dist"].append(prediction_arr)
 
-
-                ### DEBUG
-                # import matplotlib.pyplot as plt
-                # plt.imshow(examples.squeeze().numpy())
-                # plt.xlabel(f"Predicted: {predicted_class} " + f"Ground Truth: {targets.item()}")
-                # plt.show()
-
-                # plt.scatter(x=range(0,10), y=smax)
-                # plt.show()
-                ### DEBUG
-
-                
+                predicted_class = np.argmax(prediction_arr)  # predicted class
                 if predicted_class == targets.item():
                     accuracy_count += 1
-                    self.log["accuracy_onehot"].append(1)
+                    self.log["prediction_ok"].append(True)
                 else:
-                    self.log["accuracy_onehot"].append(0)
+                    self.log["prediction_ok"].append(False)
 
-                self.log["accuracy"] = accuracy_count / len(test_dataloader.dataset)
-                
+                self.log["input_tensor"].append(examples)
+
         return self.log

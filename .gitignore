@@ -137,3 +137,4 @@ dmypy.json
 *.code-workspace
 /data
 /runs
+sample.py
