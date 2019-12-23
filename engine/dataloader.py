@@ -12,6 +12,7 @@ class ImageDataLoader():
     cfg_file_path: string
         Path to the configuration file.
     """
+
     def __init__(self, data_folder: str, batch_size: int, shuffle: bool, train_mode: bool, max_items: int):
         self.data_folder = data_folder
         self.batch_size = batch_size
@@ -27,17 +28,17 @@ class ImageDataLoader():
         self.dataset = self._build_dataset(data)
         self.dataloader = self._build_dataloader(self.batch_size, self.shuffle)
 
-
     def _build_dataset(self, data_folder):
         dataset = CustomDataset(data_folder)
 
         if (len(dataset) > self.max_items) and (self.max_items > 0):
-            dataset.data = dataset.data[:self.max_items]
+            dataset.images = dataset.images[:self.max_items]
+            dataset.labels = dataset.labels[:self.max_items]
 
         return dataset
 
-
     def _build_dataloader(self, batch_size, shuffle):
-        dataloader = TorchDataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle)
+        dataloader = TorchDataLoader(
+            self.dataset, batch_size=batch_size, shuffle=shuffle)
 
         return dataloader
