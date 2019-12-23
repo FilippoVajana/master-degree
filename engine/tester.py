@@ -11,7 +11,8 @@ class Tester():
             "nll": [],
             "softmax_dist": [],
             "prediction_ok": [],
-            "input_tensor": []}
+            "input_tensor": [],
+            "brier_score": 0}
 
     def test(self, test_dataloader=None):
         """
@@ -20,6 +21,7 @@ class Tester():
         self.model.eval()
         with torch.no_grad():
             accuracy_count = 0
+            brier = []
 
             for data in tqdm(test_dataloader):
                 examples, targets = data
@@ -48,5 +50,15 @@ class Tester():
                     self.log["prediction_ok"].append(False)
 
                 self.log["input_tensor"].append(examples)
+
+                # multiclass brier score
+                onehot_true = np.zeros(softmax_pred.size)
+                try:
+                    onehot_true[int(targets)] = 1
+                    brier.append(np.sum((softmax_pred - onehot_true)**2))
+                except IndexError:
+                    brier.append(float('inf'))
+
+            self.log["brier_score"] = np.mean(brier)
 
         return self.log
