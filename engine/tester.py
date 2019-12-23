@@ -1,8 +1,6 @@
 import torch
-import torch.nn.functional as F
 from tqdm import tqdm
 import numpy as np
-from engine.runconfig import RunConfig
 
 
 class Tester():
