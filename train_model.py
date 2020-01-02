@@ -79,5 +79,5 @@ if __name__ == '__main__':
     save(trained_model, tm_path)
 
     # save training logs
-    tl_path = os.path.join(results_path, 'train_logs.xlsx')
-    training_logs.to_excel(tl_path, engine='xlsxwriter')
+    tl_path = os.path.join(results_path, 'train_logs.csv')
+    training_logs.to_csv(tl_path)
