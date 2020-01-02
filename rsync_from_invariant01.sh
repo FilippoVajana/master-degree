@@ -2,10 +2,6 @@
 clear
 echo "Downloading runs/ directory from invariant01"
 
-rsync -vaz --progress --delete --force --ignore-times \
---exclude '*.code-workspace' \
---exclude './utils' \
---exclude '*__pycache__' \
---exclude '.git'\
+rsync -chavzP --delete --stats \
 -e 'ssh -i ~/.ssh/FilippoVajanaOrobix_rsa' \
-orobix@192.168.3.77:/home/orobix/Documents/fvajana/thesis/code/runs/. './runs'
+orobix@192.168.3.77:/home/orobix/Documents/fvajana/thesis/code/runs/. ./runs/.
