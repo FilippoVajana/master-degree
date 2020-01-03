@@ -13,12 +13,13 @@ class ImageDataLoader():
         Path to the configuration file.
     """
 
-    def __init__(self, data_folder: str, batch_size: int, shuffle: bool, train_mode: bool, max_items: int):
+    def __init__(self, data_folder: str, batch_size: int, shuffle: bool, train_mode: bool, max_items: int, transformation: None):
         self.data_folder = data_folder
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.train_mode = train_mode
         self.max_items = max_items
+        self.transformation = transformation
 
         if self.train_mode:
             data = os.path.join(self.data_folder, 'train')
@@ -29,7 +30,7 @@ class ImageDataLoader():
         self.dataloader = self._build_dataloader(self.batch_size, self.shuffle)
 
     def _build_dataset(self, data_folder):
-        dataset = CustomDataset(data_folder)
+        dataset = CustomDataset(data_folder, self.transformation)
 
         if (len(dataset) > self.max_items) and (self.max_items > 0):
             dataset.images = dataset.images[:self.max_items]
