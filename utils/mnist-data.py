@@ -1,4 +1,5 @@
 import os
+import argparse
 
 import torch
 import torchvision
@@ -31,13 +32,21 @@ def save_data(arr: np.ndarray, name: str, path: str):
     np.save(os.path.join(path, name), arr)
 
 
+CLASSES = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+DATA_ROOT = "./data/mnist"
+TRAIN_DIR = os.path.join(DATA_ROOT, "train")
+TEST_DIR = os.path.join(DATA_ROOT, "test")
+
 if __name__ == "__main__":
-    CLASSES = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+    parser = argparse.ArgumentParser(description="Build MNIST dataset.")
+    parser.add_argument('-d', type=str, action='store',
+                        default='./data/mnist', help='Dataset root directory.')
+    args = parser.parse_args()
+
+    # read DATA_ROOT
+    DATA_ROOT = args.d
 
     # make dirs
-    DATA_ROOT = "./data/mnist"
-    TRAIN_DIR = os.path.join(DATA_ROOT, "train")
-    TEST_DIR = os.path.join(DATA_ROOT, "test")
     if not os.path.exists(TRAIN_DIR):
         os.makedirs(TRAIN_DIR)
     if not os.path.exists(TEST_DIR):
