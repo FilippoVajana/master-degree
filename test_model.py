@@ -1,11 +1,12 @@
 import os
 import argparse
 import torch
-import torchvision.transforms
+import torchvision.transforms as transforms
 import pandas as pd
 import numpy as np
 import engine
 import engine.tester as tester
+from skimage import transform
 
 MODELS = {
     'LeNet5': engine.LeNet5()
@@ -22,15 +23,6 @@ DATA_DICT = {
 
 
 def test_regular_data(model, dataset_name):
-    raise NotImplementedError()
-
-
-def test_shifted_data(model, dataset_name, shift_value=2):
-    IMG_SIZE = 32
-    SHIFT_FACTOR = shift_value / IMG_SIZE
-    transformation = torchvision.transforms.RandomAffine(
-        degrees=0, translate=SHIFT_FACTOR)
-
     # get dataloader
     dataloader = engine.dataloader.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
@@ -38,7 +30,7 @@ def test_shifted_data(model, dataset_name, shift_value=2):
         shuffle=False,
         train_mode=False,
         max_items=100,
-        transformation=transformation
+        transformation=None
     ).dataloader
 
     # test model
@@ -48,8 +40,8 @@ def test_shifted_data(model, dataset_name, shift_value=2):
 
 
 def test_rotated_data(model, dataset_name, rotation_value=45):
-    transformation = torchvision.transforms.RandomAffine(
-        degrees=rotation_value, translate=0)
+    transformation = transforms.RandomAffine(
+        degrees=rotation_value, translate=(0, 0))
 
     # get dataloader
     dataloader = engine.dataloader.ImageDataLoader(
@@ -82,22 +74,22 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
     # test In-Distribution
-    try:
-        log_regular = test_regular_data(model, args.d)
-    except Exception:
-        pass
-
-    # test In-Distribution Shifted
-    try:
-        log_shifted = test_shifted_data(model, args.d)
-    except Exception:
-        pass
+    if False:
+        try:
+            log_regular = test_regular_data(model, "mnist")
+            df = pd.DataFrame(log_regular)
+            print(df.head())
+        except Exception as exc:
+            print(exc)
 
     # test In-Distribution Rotated
-    try:
-        log_rotated = test_rotated_data(model, args.d)
-    except Exception:
-        pass
+    if True:
+        try:
+            log_rotated = test_rotated_data(model, "mnist")
+            df = pd.DataFrame(log_rotated)
+            print(df.head())
+        except Exception:
+            pass
 
     # # save test results
     # for m in log.keys():

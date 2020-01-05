@@ -2,7 +2,7 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-import torchvision.transforms
+from torchvision import transforms
 
 import cachetools
 
@@ -30,8 +30,7 @@ class CustomDataset(Dataset):
         if self.transformation is None:
             image = torch.Tensor(self.images[index])
         else:
-            tc = torchvision.transforms.Compose(self.transformation)
-            image = tc(torch.Tensor(self.images[index]))
+            image = self.transformation(self.images[index])
 
         label = int(self.labels[index])
         return (image, label)
