@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-import cachetools
+# import cachetools
 
 
 class CustomDataset(Dataset):
@@ -15,7 +15,7 @@ class CustomDataset(Dataset):
         self.images, self.labels = self.__load_data(data_path)
 
         # init cache system
-        self.cache = cachetools.LRUCache(maxsize=len(self))
+        # self.cache = cachetools.LRUCache(maxsize=len(self))
 
     def __load_data(self, path: str):
         images = np.load(os.path.join(path, "images.npy"))
@@ -25,7 +25,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.images)
 
-    @cachetools.cachedmethod(lambda self: self.cache)
+    # @cachetools.cachedmethod(lambda self: self.cache)
     def __getitem__(self, index):
         if self.transformation is None:
             image = torch.Tensor(self.images[index])
