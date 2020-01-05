@@ -9,13 +9,18 @@ class Tester():
         self.device = "cpu"
         self.model = model.to(self.device)
         self.log = {
-            "nll": [],
-            "softmax_dist": [],
-            "prediction_ok": [],
-            "input_tensor": [],
-            "brier_score": 0,
-            "confidence": [],
-            "entropy": []}
+            "predicted_class": [],
+            "true_class": [],
+            "prediction_arr": [],
+            "input_arr": []}
+
+    def get_predicted_class(self, prediction_tensor):
+        # softmax of prediction tensor
+        prediction_softmax = torch.nn.Softmax()(prediction_tensor).numpy()
+
+        # get index of max value
+        predicted_class = np.argmax(prediction_softmax)
+        return predicted_class
 
     def accuracy(self, pred_probs, targets):
         good_count = 0
@@ -40,17 +45,32 @@ class Tester():
 
         return np.vstack(preds_entropy)
 
+    def brier_score(self, prediction_tensor, true_class):
+        # ground truth one-hot encoding
+        onehot_true = np.zeros(prediction_tensor.size)
+        onehot_true[true_class] = 1
+
+        # softmax of prediction tensor
+        prediction_softmax = torch.nn.Softmax()(prediction_tensor).numpy()
+
+        # brier score
+        brier_score = np.sum((prediction_softmax - onehot_true)**2)
+        return brier_score
+
+    def nll(self, prediction_tensor):
+        # softmax of prediction tensor
+        prediction_softmax = torch.nn.Softmax()(prediction_tensor).numpy()
+
+        # negative log of softmax
+        nll = np.log(prediction_softmax) * -1
+        return nll
+
     def test(self, test_dataloader=None):
         """
         Tests the model.
         """
         self.model.eval()
         with torch.no_grad():
-            accuracy_count = 0
-            brier = []
-            pred_probs = []
-            ground_truth = []
-
             for data in tqdm(test_dataloader):
                 example, target = data
 
@@ -58,47 +78,20 @@ class Tester():
                 example = example.to(self.device).float()
                 target = target.to(self.device)
 
-                # predict
-                prediction = self.model(example)
+                # predict tensor
+                prediction_tensor = self.model(example)
 
-                # softmax
-                softmax_pred = torch.nn.Softmax()(prediction).numpy()
-                self.log["softmax_dist"].append(softmax_pred)
+                # log prediction tensor
+                self.log["prediction_arr"].append(prediction_tensor.numpy())
 
-                # nll
-                nll = np.log(softmax_pred) * -1
-                self.log["nll"].append(nll)
+                # log input tensor
+                self.log["input_arr"].append(example.numpy())
 
-                # accuracy
-                predicted_class = np.argmax(softmax_pred)  # predicted class
-                if predicted_class == target.item():
-                    accuracy_count += 1
-                    self.log["prediction_ok"].append(True)
-                else:
-                    self.log["prediction_ok"].append(False)
+                # log predicted class
+                self.log["predicted_class"].append(self.get_predicted_class(
+                    prediction_tensor))
 
-                self.log["input_tensor"].append(example)
-
-                # multiclass brier score
-                onehot_true = np.zeros(softmax_pred.size)
-                try:
-                    onehot_true[int(target)] = 1
-                    brier.append(np.sum((softmax_pred - onehot_true)**2))
-                except IndexError:
-                    brier.append(float('inf'))
-
-                # cache results
-                pred_probs.append(softmax_pred)
-                ground_truth.append(target.item())
-
-            # OOD metrics
-            confidence = self.ood_confidence(pred_probs)
-            self.log['confidence'] = confidence
-
-            entropy = self.entropy(pred_probs)
-            self.log['entropy'] = entropy
-
-            # Brier Score
-            self.log["brier_score"] = np.mean(brier)
+                # log true class
+                self.log["true_class"].append(int(target))
 
         return self.log

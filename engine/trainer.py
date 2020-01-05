@@ -4,9 +4,8 @@ from tqdm import tqdm
 import pandas as pd
 from engine.runconfig import RunConfig
 
-
-class GenericTrainer():
-    # TODO: target device as constructor parameter
+# TODO: add validation loop
+class GenericTrainer():    
     def __init__(self, cfg: RunConfig, device):
         self.device = device
         self.model = cfg.model
