@@ -82,16 +82,16 @@ class Tester():
                 prediction_tensor = self.model(example)
 
                 # log prediction tensor
-                self.log["prediction_arr"] = prediction_tensor.numpy()
+                self.log["prediction_arr"].append(prediction_tensor.numpy())
 
                 # log input tensor
-                self.log["input_arr"] = example.numpy()
+                self.log["input_arr"].append(example.numpy())
 
                 # log predicted class
-                self.log["predicted_class"] = self.get_predicted_class(
-                    prediction_tensor)
+                self.log["predicted_class"].append(self.get_predicted_class(
+                    prediction_tensor))
 
                 # log true class
-                self.log["true_class"] = int(target)
+                self.log["true_class"].append(int(target))
 
         return self.log
