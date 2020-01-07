@@ -37,7 +37,7 @@ def save_empty_cfg(path: str):
 def get_device():
     device = "cpu"  # default device
     # check cuda device availability
-    if is_available():  
+    if is_available():
         gpu = GPUtil.getFirstAvailable()  # get best GPU
         device = f"cuda:{gpu[0]}"
     print("Selected device: ", device)
@@ -63,22 +63,29 @@ if __name__ == '__main__':
     run_cfg.model = model  # swaps model classname with proper model instance
 
     # create train result folder
-    # results_path = create_run(os.path.join(
-    #     RUNS_DIR, run_cfg.model.__class__.__name__))
+    dirs_name = [int(d.name) for d in os.scandir(os.path.join(
+        RUNS_DIR, run_cfg.model.__class__.__name__)) if os.path.isdir(d.path)]
 
-    results_path = os.path.join(RUNS_DIR, run_cfg.model.__class__.__name__)
-    # if os.path.exists(results_path):
-    #     shutil.rmtree(results_path)
+    if len(dirs_name) == 0:
+        results_path = os.path.join(
+            RUNS_DIR, run_cfg.model.__class__.__name__, "0")
+    else:
+        dirs_name.sort()
+        last = dirs_name[-1]
+        results_path = os.path.join(
+            RUNS_DIR, run_cfg.model.__class__.__name__, f"{last + 1}")
+
     os.makedirs(results_path, exist_ok=True)
 
     # train model
-    trained_model, training_logs = model.start_training(run_cfg, get_device())
+    trained_model, train_dataframe = model.start_training(
+        run_cfg, get_device())
 
     # save model dict
-    tm_path = os.path.join(
+    state_dict_path = os.path.join(
         results_path, f"{run_cfg.model.__class__.__name__}.pt")
-    save(trained_model, tm_path)
+    save(trained_model, state_dict_path)
 
     # save training logs
-    tl_path = os.path.join(results_path, 'train_logs.csv')
-    training_logs.to_csv(tl_path)
+    train_logs_path = os.path.join(results_path, 'train_logs.csv')
+    train_dataframe.to_csv(train_logs_path)

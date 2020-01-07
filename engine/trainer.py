@@ -92,7 +92,6 @@ class GenericTrainer():
         data = {"epoch": range(epochs)}
         data.update(self.train_logs)
         data.update(self.validation_logs)
-        # self.train_logs.update(self.validation_logs)
 
         # build dataframe from logs
         df = pd.DataFrame(data=data)
