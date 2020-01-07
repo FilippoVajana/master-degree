@@ -22,16 +22,36 @@ DATA_DICT = {
 }
 
 
-def test_regular_data(model, dataset_name):
-    # get dataloader
-    dataloader = engine.dataloader.ImageDataLoader(
+def test_dataloader():
+    dataset_name = 'mnist'
+    dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
         batch_size=1,
         shuffle=False,
-        train_mode=False,
-        max_items=100,
         transformation=None
-    ).dataloader
+    ).build(train_mode=True, max_items=100, validation_ratio=.2)
+    print(
+        f"Main set: {len(dataloader[0])}\nValidation set: {len(dataloader[1])}")
+
+    dataset_name = 'no-mnist'
+    dataloader = engine.ImageDataLoader(
+        data_folder=DATA_DICT[dataset_name],
+        batch_size=1,
+        shuffle=True,
+        transformation=None
+    ).build(train_mode=False, max_items=100, validation_ratio=0)
+    print(
+        f"Main set: {len(dataloader[0])}\nValidation set: {len(dataloader[1])}")
+
+
+def test_regular_data(model, dataset_name):
+    # get dataloader
+    dataloader = engine.ImageDataLoader(
+        data_folder=DATA_DICT[dataset_name],
+        batch_size=1,
+        shuffle=False,
+        transformation=None
+    ).build(train_mode=False, max_items=100, validation_ratio=.2)
 
     # test model
     t = tester.Tester(model)
@@ -44,14 +64,12 @@ def test_rotated_data(model, dataset_name, rotation_value=45):
         degrees=rotation_value, translate=(0, 0))
 
     # get dataloader
-    dataloader = engine.dataloader.ImageDataLoader(
+    dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
         batch_size=1,
         shuffle=False,
-        train_mode=False,
-        max_items=100,
         transformation=transformation
-    ).dataloader
+    ).build(train_mode=False, max_items=100, validation_ratio=.2)
 
     # test model
     t = tester.Tester(model)
@@ -73,6 +91,13 @@ if __name__ == '__main__':
     model = MODELS[args.n]
     model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
+    # DEBUG
+    if True:
+        try:
+            test_dataloader()
+        except Exception as exc:
+            pass
+
     # test In-Distribution
     if False:
         try:
@@ -83,7 +108,7 @@ if __name__ == '__main__':
             print(exc)
 
     # test In-Distribution Rotated
-    if True:
+    if False:
         try:
             log_rotated = test_rotated_data(model, "mnist")
             df = pd.DataFrame(log_rotated)

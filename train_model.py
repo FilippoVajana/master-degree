@@ -36,7 +36,8 @@ def save_empty_cfg(path: str):
 
 def get_device():
     device = "cpu"  # default device
-    if is_available():  # check cuda device availability
+    # check cuda device availability
+    if is_available():  
         gpu = GPUtil.getFirstAvailable()  # get best GPU
         device = f"cuda:{gpu[0]}"
     print("Selected device: ", device)

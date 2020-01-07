@@ -14,7 +14,7 @@ class ImageDataLoader():
         Path to the configuration file.
     """
 
-    def __init__(self, data_folder: str, batch_size: int, shuffle: bool, transformation: None):
+    def __init__(self, data_folder: str, batch_size: int, shuffle: bool, transformation=None):
         self.data_folder = data_folder
         self.batch_size = batch_size
         self.shuffle = shuffle
