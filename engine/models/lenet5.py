@@ -38,7 +38,7 @@ class LeNet5(torch.nn.Module):
         dataloader = ImageDataLoader(
             data_folder=cfg.data_folder,
             batch_size=cfg.batch_size,
-            shuffle=cfg.shuffle,
+            shuffle=cfg.shuffle
         ).build(train_mode=True, max_items=cfg.max_items, validation_ratio=.2)
 
         # init model trainer
