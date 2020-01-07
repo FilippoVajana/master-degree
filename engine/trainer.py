@@ -1,7 +1,7 @@
 import itertools
 import torch
 import numpy as np
-from tqdm import tqdm
+from tqdm import tqdm, trange
 import pandas as pd
 from engine.runconfig import RunConfig
 from scipy.stats import entropy
@@ -28,6 +28,14 @@ class GenericTrainer():
             "t_mean_loss": []
         }
 
+        # validation metrics
+        self.validation_logs = {
+            "v_mean_accuracy": [],
+            "v_mean_brier": [],
+            "v_mean_entropy": [],
+            "v_mean_loss": []
+        }
+
     def train(self, epochs=0, train_dataloader=None, validation_dataloader=None):
         """
         Starts the train-validation loop.
@@ -36,15 +44,13 @@ class GenericTrainer():
         self.model = self.model.to(self.device)
         best_model = self.model.state_dict()
         best_loss = None
-        train_loss = list()
-        validation_loss = list()
 
-        for _ in tqdm(range(epochs)):
+        for _ in trange(epochs):
             # TRAIN LOOP
             self.model.train()
             t_tmp_metrics = []
 
-            for idx, batch in enumerate(train_dataloader):
+            for batch in train_dataloader:
                 # result = (accuracy, brier, entropy, loss)
                 result = self.__train_batch(batch)
                 t_tmp_metrics.append(result)
@@ -56,34 +62,40 @@ class GenericTrainer():
             t_metrics_dict = dict(zip(self.train_logs.keys(), t_metrics))
             for k in self.train_logs.keys():
                 self.train_logs[k].append(t_metrics_dict[k])
-                tqdm.write(f"{k}: {self.train_logs[k]}")
+                # tqdm.write(f"{k}: {t_metrics_dict[k]}")
 
-            # # validation loop
-            # if validation_dataloader is not None:
-            #     tmp_loss = torch.zeros(
-            #         len(validation_dataloader), device=self.device)
-            #     self.model.eval()
-            #     with torch.no_grad():
-            #         for idx, batch in enumerate(validation_dataloader):
-            #             b_loss = self.__validate_batch(batch)
-            #             tmp_loss[idx] = b_loss
+            # VALIDATION LOOP
+            self.model.eval()
+            v_tmp_metrics = []
 
-            #     # update validation log
-            #     v_loss = tmp_loss.mean().item()
-            #     tqdm.write("Validation Loss: {}".format(v_loss))
-            #     validation_loss.append(v_loss)
+            with torch.no_grad():
+                for batch in validation_dataloader:
+                    # result = (accuracy, brier, entropy, loss)
+                    result = self.__validate_batch(batch)
+                    v_tmp_metrics.append(result)
+
+            # update validation log
+            v_metrics = np.vstack(v_tmp_metrics)
+            v_metrics = np.round(v_metrics, 4)
+            v_metrics = np.mean(v_metrics, axis=0)  # epoch values
+            v_metrics_dict = dict(zip(self.validation_logs.keys(), v_metrics))
+            for k in self.validation_logs.keys():
+                self.validation_logs[k].append(v_metrics_dict[k])
+                # tqdm.write(f"{k}: {v_metrics_dict[k]}")
 
             # save checkpoint
-            if best_loss is None or t_loss < best_loss:
-                best_loss = t_loss
+            if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
+                best_loss = self.validation_logs["v_mean_loss"][-1]
                 best_model = self.model.state_dict()
 
-        # record train data
-        t_data = list(itertools.zip_longest(
-            train_loss, validation_loss, fillvalue=0))
-        df = pd.DataFrame(data=t_data, columns=[
-            'train loss', 'validation loss'
-        ])
+        # merge train and validation logs
+        data = {"epoch": range(epochs)}
+        data.update(self.train_logs)
+        data.update(self.validation_logs)
+        # self.train_logs.update(self.validation_logs)
+
+        # build dataframe from logs
+        df = pd.DataFrame(data=data)
 
         return best_model, df
 
@@ -126,22 +138,31 @@ class GenericTrainer():
 
     def __validate_batch(self, batch):
         """
-        Validate a batch of data. Usually for validation batch_size=1.
+        Validate over a batch of data.
         """
 
-        examples, targets = batch
+        examples, labels = batch
 
         # move data to device
         examples = examples.to(self.device)
-        targets = targets.to(self.device)
+        labels = labels.to(self.device)
 
         # forward
         predictions = self.model(examples)
 
         # compute loss
-        loss = self.loss_fn(predictions, targets)
+        loss = self.loss_fn(predictions, labels)
 
-        return loss.detach()
+        # compute accuracy
+        accuracy = self.get_accuracy(predictions, labels)
+
+        # compute entropy
+        entropy = self.get_entropy(predictions)
+
+        # compute brier
+        brier = self.get_brier_score(predictions, labels)
+
+        return (accuracy, brier, entropy, loss.item())
 
     def get_accuracy(self, predictions, labels):
         good_count = 0
