@@ -1,11 +1,13 @@
 import itertools
 import torch
+import numpy as np
 from tqdm import tqdm
 import pandas as pd
 from engine.runconfig import RunConfig
+from scipy.stats import entropy
 
-# TODO: add validation loop
-class GenericTrainer():    
+
+class GenericTrainer():
     def __init__(self, cfg: RunConfig, device):
         self.device = device
         self.model = cfg.model
@@ -17,6 +19,14 @@ class GenericTrainer():
             eps=cfg.optimizer_args['eps']
         )
         self.loss_fn = torch.nn.MSELoss()
+
+        # train metrics
+        self.train_logs = {
+            "t_mean_accuracy": [],
+            "t_mean_brier": [],
+            "t_mean_entropy": [],
+            "t_mean_loss": []
+        }
 
     def train(self, epochs=0, train_dataloader=None, validation_dataloader=None):
         """
@@ -71,9 +81,43 @@ class GenericTrainer():
 
         return best_model, df
 
+    def get_accuracy(self, predictions, labels):
+        good_count = 0
+        for p, t in zip(predictions, labels):
+            if np.argmax(p.detach()) == t:
+                good_count = good_count + 1
+        return good_count / len(predictions)
+
+    def get_entropy(self, predictions):
+        # predictions = np.vstack(predictions.detach())
+        entropy_arr = []
+
+        for pred in predictions:
+            pred_softmax = torch.nn.Softmax()(pred.detach())
+            pred_entropy = entropy(pred_softmax)
+            entropy_arr.append(pred_entropy)
+
+        return np.mean(entropy_arr)
+
+    def get_brier_score(self, predictions, labels):
+        score_arr = []
+        for pred, lab in zip(predictions, labels):
+            # ground truth one-hot encoding
+            onehot_true = np.zeros(pred.shape)
+            onehot_true[lab] = 1
+
+            # softmax of prediction tensor
+            pred_softmax = torch.nn.Softmax()(pred.detach()).numpy()
+
+            # brier score
+            brier_score = np.sum((pred_softmax - onehot_true)**2)
+            score_arr.append(brier_score)
+
+        return np.mean(score_arr)
+
     def __train_batch(self, batch):
         """
-        Train a batch of data.
+        Train over a batch of data.
         """
 
         examples, labels = batch
@@ -97,7 +141,16 @@ class GenericTrainer():
         # update weights
         self.optimizer.step()
 
-        return loss.detach()
+        # compute accuracy
+        accuracy = self.get_accuracy(predictions, labels)
+
+        # compute entropy
+        entropy = self.get_entropy(predictions)
+
+        # compute brier
+        brier = self.get_brier_score(predictions, labels)
+
+        return (accuracy, brier, entropy, loss.item())
 
     def __validate_batch(self, batch):
         """
