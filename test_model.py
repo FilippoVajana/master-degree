@@ -92,14 +92,14 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
     # DEBUG
-    if True:
+    if False:
         try:
             test_dataloader()
         except Exception as exc:
             pass
 
     # test In-Distribution
-    if False:
+    if True:
         try:
             log_regular = test_regular_data(model, "mnist")
             df = pd.DataFrame(log_regular)

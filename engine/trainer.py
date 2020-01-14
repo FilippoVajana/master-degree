@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm, trange
 import pandas as pd
 from engine.runconfig import RunConfig
+from engine.dataloader import ImageDataLoader
 from scipy.stats import entropy
 
 
@@ -35,6 +36,19 @@ class GenericTrainer():
             "v_mean_entropy": [],
             "v_mean_loss": []
         }
+
+        # out-of-distribution metrics and dataloader
+        self.ood_logs = {
+            "ov_mean_brier": [],
+            "ov_mean_entropy": []
+        }
+
+        self.ood_dataloader = ImageDataLoader(
+            data_folder='./data/no-mnist',
+            batch_size=1,
+            shuffle=False,
+            transformation=None
+        ).build(train_mode=False, max_items=-1, validation_ratio=0)
 
     def train(self, epochs=0, train_dataloader=None, validation_dataloader=None):
         """
@@ -75,13 +89,33 @@ class GenericTrainer():
                     v_tmp_metrics.append(result)
 
             # update validation log
-            v_metrics = np.vstack(v_tmp_metrics)
-            v_metrics = np.round(v_metrics, 4)
-            v_metrics = np.mean(v_metrics, axis=0)  # epoch values
-            v_metrics_dict = dict(zip(self.validation_logs.keys(), v_metrics))
-            for k in self.validation_logs.keys():
-                self.validation_logs[k].append(v_metrics_dict[k])
-                # tqdm.write(f"{k}: {v_metrics_dict[k]}")
+            if len(v_tmp_metrics) > 0:
+                v_metrics = np.vstack(v_tmp_metrics)
+                v_metrics = np.round(v_metrics, 4)
+                v_metrics = np.mean(v_metrics, axis=0)  # epoch values
+                v_metrics_dict = dict(zip(self.validation_logs.keys(), v_metrics))
+                for k in self.validation_logs.keys():
+                    self.validation_logs[k].append(v_metrics_dict[k])
+                    # tqdm.write(f"{k}: {v_metrics_dict[k]}")
+
+            # OOD LOOP
+            self.model.eval()
+            ov_tmp_metrics = []
+
+            with torch.no_grad():
+                for batch in self.ood_dataloader[0]:
+                    result = self.__validate_batch(batch)
+                    # result = (brier, entropy)
+                    result = (result[1], result[2])
+                    ov_tmp_metrics.append(result)
+
+            # update ood log
+            ov_metrics = np.vstack(ov_tmp_metrics)
+            ov_metrics = np.round(ov_metrics, 4)
+            ov_metrics = np.mean(ov_metrics, axis=0)  # epoch values            
+            self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
+            self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
+            # tqdm.write(f"{k}: {v_metrics_dict[k]}")
 
             # save checkpoint
             if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
@@ -150,7 +184,9 @@ class GenericTrainer():
         predictions = self.model(examples)
 
         # compute loss
-        loss = self.loss_fn(predictions, labels)
+        if labels.min() >= 65:
+            labels.add_(-65)
+        loss = self.loss_fn(predictions, labels)  
 
         # compute accuracy
         accuracy = self.get_accuracy(predictions, labels)
@@ -164,14 +200,16 @@ class GenericTrainer():
         return (accuracy, brier, entropy, loss.item())
 
     def get_accuracy(self, predictions, labels):
+        predictions = predictions.to("cpu")
+        labels = labels.to("cpu")
         good_count = 0
         for p, t in zip(predictions, labels):
-            if np.argmax(p.detach()) == t:
+            if np.argmax(p.detach().numpy()) == t:
                 good_count = good_count + 1
         return good_count / len(predictions)
 
     def get_entropy(self, predictions):
-        # predictions = np.vstack(predictions.detach())
+        predictions = predictions.to("cpu")
         entropy_arr = []
 
         for pred in predictions:
@@ -182,6 +220,8 @@ class GenericTrainer():
         return np.mean(entropy_arr)
 
     def get_brier_score(self, predictions, labels):
+        predictions = predictions.to("cpu")
+        labels = labels.to("cpu")
         score_arr = []
         for pred, lab in zip(predictions, labels):
             # ground truth one-hot encoding

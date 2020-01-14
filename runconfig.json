@@ -1,8 +1,8 @@
 {
     "batch_size": 64,
     "data_folder": "./data/mnist/",
-    "epochs": 25,
-    "max_items": -1,
+    "epochs": 20,
+    "max_items": 1500,
     "model": "LeNet5",
     "optimizer_args": {
         "betas": {

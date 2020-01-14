@@ -22,6 +22,11 @@ class ImageDataLoader():
         self.transformation = None
 
     def build(self, train_mode: bool, max_items: int, validation_ratio=0.0):
+        """
+        Builds the dataloader based on input params.
+        
+        Returns a tuple (train_dl, validation_dl).
+        """
         # check validation_ratio
         if validation_ratio < 0 or validation_ratio > 1:
             raise ValueError("validation_ratio must be in [0,1] interval")
