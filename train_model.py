@@ -78,8 +78,9 @@ if __name__ == '__main__':
     os.makedirs(results_path, exist_ok=True)
 
     # train model
+    device = get_device()
     trained_model, train_dataframe = model.start_training(
-        run_cfg, get_device())
+        run_cfg, device)
 
     # save model dict
     state_dict_path = os.path.join(

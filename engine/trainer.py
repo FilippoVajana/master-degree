@@ -65,7 +65,7 @@ class GenericTrainer():
             t_tmp_metrics = []
 
             for batch in train_dataloader:
-                # result = (accuracy, brier, entropy, loss)
+                # result === (accuracy, brier, entropy, loss)
                 result = self.__train_batch(batch)
                 t_tmp_metrics.append(result)
 
@@ -84,7 +84,7 @@ class GenericTrainer():
 
             with torch.no_grad():
                 for batch in validation_dataloader:
-                    # result = (accuracy, brier, entropy, loss)
+                    # result === (accuracy, brier, entropy, loss)
                     result = self.__validate_batch(batch)
                     v_tmp_metrics.append(result)
 
@@ -93,34 +93,34 @@ class GenericTrainer():
                 v_metrics = np.vstack(v_tmp_metrics)
                 v_metrics = np.round(v_metrics, 4)
                 v_metrics = np.mean(v_metrics, axis=0)  # epoch values
-                v_metrics_dict = dict(zip(self.validation_logs.keys(), v_metrics))
+                v_metrics_dict = dict(
+                    zip(self.validation_logs.keys(), v_metrics))
                 for k in self.validation_logs.keys():
                     self.validation_logs[k].append(v_metrics_dict[k])
                     # tqdm.write(f"{k}: {v_metrics_dict[k]}")
 
             # OOD LOOP
-            self.model.eval()
             ov_tmp_metrics = []
 
             with torch.no_grad():
                 for batch in self.ood_dataloader[0]:
                     result = self.__validate_batch(batch)
-                    # result = (brier, entropy)
+                    # result === (brier, entropy)
                     result = (result[1], result[2])
-                    ov_tmp_metrics.append(result)
+                    # ov_tmp_metrics.append(result)
 
-            # update ood log
-            ov_metrics = np.vstack(ov_tmp_metrics)
-            ov_metrics = np.round(ov_metrics, 4)
-            ov_metrics = np.mean(ov_metrics, axis=0)  # epoch values            
-            self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
-            self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
-            # tqdm.write(f"{k}: {v_metrics_dict[k]}")
+            # # update ood log
+            # ov_metrics = np.vstack(ov_tmp_metrics)
+            # ov_metrics = np.round(ov_metrics, 4)
+            # ov_metrics = np.mean(ov_metrics, axis=0)  # epoch values
+            # self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
+            # self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
+            # # tqdm.write(f"{k}: {v_metrics_dict[k]}")
 
-            # save checkpoint
-            if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
-                best_loss = self.validation_logs["v_mean_loss"][-1]
-                best_model = self.model.state_dict()
+            # # save checkpoint
+            # if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
+            #     best_loss = self.validation_logs["v_mean_loss"][-1]
+            #     best_model = self.model.state_dict()
 
         # merge train and validation logs
         data = {"epoch": range(epochs)}
@@ -158,16 +158,17 @@ class GenericTrainer():
         # update weights
         self.optimizer.step()
 
-        # compute accuracy
-        accuracy = self.get_accuracy(predictions, labels)
+        # # compute accuracy
+        # accuracy = self.get_accuracy(predictions, labels)
 
-        # compute entropy
-        entropy = self.get_entropy(predictions)
+        # # compute entropy
+        # entropy = self.get_entropy(predictions)
 
-        # compute brier
-        brier = self.get_brier_score(predictions, labels)
+        # # compute brier
+        # brier = self.get_brier_score(predictions, labels)
 
-        return (accuracy, brier, entropy, loss.item())
+        # return (accuracy, brier, entropy, loss.item())
+        return (0, 0, 0, loss.item())
 
     def __validate_batch(self, batch):
         """
@@ -186,18 +187,19 @@ class GenericTrainer():
         # compute loss
         if labels.min() >= 65:
             labels.add_(-65)
-        loss = self.loss_fn(predictions, labels)  
+        loss = self.loss_fn(predictions, labels)
 
-        # compute accuracy
-        accuracy = self.get_accuracy(predictions, labels)
+        # # compute accuracy
+        # accuracy = self.get_accuracy(predictions, labels)
 
-        # compute entropy
-        entropy = self.get_entropy(predictions)
+        # # compute entropy
+        # entropy = self.get_entropy(predictions)
 
-        # compute brier
-        brier = self.get_brier_score(predictions, labels)
+        # # compute brier
+        # brier = self.get_brier_score(predictions, labels)
 
-        return (accuracy, brier, entropy, loss.item())
+        # return (accuracy, brier, entropy, loss.item())
+        return (0, 0, 0, loss.item())
 
     def get_accuracy(self, predictions, labels):
         predictions = predictions.to("cpu")

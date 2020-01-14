@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-# import cachetools
+import cachetools
 
 
 class CustomDataset(Dataset):
@@ -15,7 +15,7 @@ class CustomDataset(Dataset):
         self.images, self.labels = self.__load_data(data_path)
 
         # init cache system
-        # self.cache = cachetools.LRUCache(maxsize=len(self))
+        self.cache = cachetools.LRUCache(maxsize=len(self))
 
     def __load_data(self, path: str):
         images = np.load(os.path.join(path, "images.npy"))
