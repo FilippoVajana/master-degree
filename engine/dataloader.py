@@ -24,7 +24,7 @@ class ImageDataLoader():
     def build(self, train_mode: bool, max_items: int, validation_ratio=0.0):
         """
         Builds the dataloader based on input params.
-        
+
         Returns a tuple (train_dl, validation_dl).
         """
         # check validation_ratio
@@ -55,6 +55,7 @@ class ImageDataLoader():
         # build dataloaders
         self.main_dl = TorchDataLoader(
             main_set, batch_size=self.batch_size, shuffle=self.shuffle)
-        self.val_dl = TorchDataLoader(val_set, batch_size=1, shuffle=False)
+        self.val_dl = TorchDataLoader(
+            val_set, batch_size=self.batch_size, shuffle=False)
 
         return (self.main_dl, self.val_dl)
