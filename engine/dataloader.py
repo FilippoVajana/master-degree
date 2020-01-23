@@ -54,8 +54,8 @@ class ImageDataLoader():
 
         # build dataloaders
         self.main_dl = TorchDataLoader(
-            main_set, batch_size=self.batch_size, shuffle=self.shuffle)
+            main_set, batch_size=self.batch_size, shuffle=self.shuffle, drop_last=True)
         self.val_dl = TorchDataLoader(
-            val_set, batch_size=self.batch_size, shuffle=False)
+            val_set, batch_size=self.batch_size, shuffle=False, drop_last=True)
 
         return (self.main_dl, self.val_dl)

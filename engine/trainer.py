@@ -7,6 +7,21 @@ from engine.runconfig import RunConfig
 from engine.dataloader import ImageDataLoader
 from scipy.stats import entropy
 
+import time
+
+# TODO: print as logging
+
+
+def timer(func):
+    def wrapper(*args):
+        start_time = time.perf_counter()
+        value = func(*args)
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
+        # print(f"[{func.__name__!r}] Execution time: {elapsed_time*1000:.4f} ms")
+        return value
+    return wrapper
+
 
 class GenericTrainer():
     def __init__(self, cfg: RunConfig, device):
@@ -45,7 +60,7 @@ class GenericTrainer():
 
         self.ood_dataloader = ImageDataLoader(
             data_folder='./data/no-mnist',
-            batch_size=1,
+            batch_size=cfg.batch_size,
             shuffle=False,
             transformation=None
         ).build(train_mode=False, max_items=-1, validation_ratio=0)
@@ -107,15 +122,15 @@ class GenericTrainer():
                     result = self.__validate_batch(batch)
                     # result === (brier, entropy)
                     result = (result[1], result[2])
-                    # ov_tmp_metrics.append(result)
+                    ov_tmp_metrics.append(result)
 
-            # # update ood log
-            # ov_metrics = np.vstack(ov_tmp_metrics)
-            # ov_metrics = np.round(ov_metrics, 4)
-            # ov_metrics = np.mean(ov_metrics, axis=0)  # epoch values
-            # self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
-            # self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
-            # # tqdm.write(f"{k}: {v_metrics_dict[k]}")
+            # update ood log
+            ov_metrics = np.vstack(ov_tmp_metrics)
+            ov_metrics = np.round(ov_metrics, 4)
+            ov_metrics = np.mean(ov_metrics, axis=0)  # epoch values
+            self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
+            self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
+            # tqdm.write(f"{k}: {v_metrics_dict[k]}")
 
             # # save checkpoint
             # if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
@@ -126,6 +141,7 @@ class GenericTrainer():
         data = {"epoch": range(epochs)}
         data.update(self.train_logs)
         data.update(self.validation_logs)
+        data.update(self.ood_logs)
 
         # build dataframe from logs
         df = pd.DataFrame(data=data)
@@ -158,17 +174,17 @@ class GenericTrainer():
         # update weights
         self.optimizer.step()
 
-        # # compute accuracy
-        # accuracy = self.get_accuracy(predictions, labels)
+        # compute accuracy
+        accuracy = self.get_accuracy(predictions, labels)
 
-        # # compute entropy
-        # entropy = self.get_entropy(predictions)
+        # compute entropy
+        entropy = self.get_entropy(predictions)
 
-        # # compute brier
-        # brier = self.get_brier_score(predictions, labels)
+        # compute brier
+        brier = self.get_brier_score(predictions, labels)
 
         # return (accuracy, brier, entropy, loss.item())
-        return (0, 0, 0, loss.item())
+        return (accuracy, brier, entropy, loss.item())
 
     def __validate_batch(self, batch):
         """
@@ -189,52 +205,39 @@ class GenericTrainer():
             labels.add_(-65)
         loss = self.loss_fn(predictions, labels)
 
-        # # compute accuracy
-        # accuracy = self.get_accuracy(predictions, labels)
+        # compute accuracy
+        accuracy = self.get_accuracy(predictions, labels)
 
-        # # compute entropy
-        # entropy = self.get_entropy(predictions)
+        # compute entropy
+        entropy = self.get_entropy(predictions)
 
-        # # compute brier
-        # brier = self.get_brier_score(predictions, labels)
+        # compute brier
+        brier = self.get_brier_score(predictions, labels)
 
         # return (accuracy, brier, entropy, loss.item())
-        return (0, 0, 0, loss.item())
+        return (accuracy, brier, entropy, loss.item())
 
+    @timer
     def get_accuracy(self, predictions, labels):
-        predictions = predictions.to("cpu")
-        labels = labels.to("cpu")
-        good_count = 0
-        for p, t in zip(predictions, labels):
-            if np.argmax(p.detach().numpy()) == t:
-                good_count = good_count + 1
-        return good_count / len(predictions)
+        t_predicted_class = predictions.argmax(dim=1)
+        res = (t_predicted_class == labels).sum().float() / \
+            len(t_predicted_class)
+        return res.to("cpu")
 
+    @timer
     def get_entropy(self, predictions):
-        predictions = predictions.to("cpu")
-        entropy_arr = []
+        t_entropy = torch.distributions.Categorical(
+            torch.nn.Softmax(dim=1)(predictions.detach())).entropy()
+        return t_entropy.to("cpu").mean()
 
-        for pred in predictions:
-            pred_softmax = torch.nn.Softmax()(pred.detach())
-            pred_entropy = entropy(pred_softmax)
-            entropy_arr.append(pred_entropy)
-
-        return np.mean(entropy_arr)
-
+    @timer
     def get_brier_score(self, predictions, labels):
-        predictions = predictions.to("cpu")
-        labels = labels.to("cpu")
-        score_arr = []
-        for pred, lab in zip(predictions, labels):
-            # ground truth one-hot encoding
-            onehot_true = np.zeros(pred.shape)
-            onehot_true[lab] = 1
+        onehot_true = torch.zeros(predictions.size())
+        onehot_true[:, list(labels.to("cpu").numpy())] = 1
+        # softmax of prediction tensor
+        prediction_softmax = torch.nn.functional.softmax(
+            predictions.detach().cpu(), 1)
+        # brier score
+        brier_score = torch.sum((prediction_softmax - onehot_true)**2, axis=1)
 
-            # softmax of prediction tensor
-            pred_softmax = torch.nn.Softmax()(pred.detach()).numpy()
-
-            # brier score
-            brier_score = np.sum((pred_softmax - onehot_true)**2)
-            score_arr.append(brier_score)
-
-        return np.mean(score_arr)
+        return brier_score.to("cpu").mean()
