@@ -58,6 +58,9 @@ if __name__ == '__main__':
     # load reference RunConfig json
     run_cfg = engine.RunConfig().load(RUN_CFG_PATH)
 
+    # create folders
+    os.makedirs(os.path.join(RUNS_DIR, run_cfg.model))
+
     # get model
     model = MODELS[run_cfg.model]
     run_cfg.model = model  # swaps model classname with proper model instance

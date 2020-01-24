@@ -132,10 +132,10 @@ class GenericTrainer():
             self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
             # tqdm.write(f"{k}: {v_metrics_dict[k]}")
 
-            # # save checkpoint
-            # if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
-            #     best_loss = self.validation_logs["v_mean_loss"][-1]
-            #     best_model = self.model.state_dict()
+            # save checkpoint
+            if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
+                best_loss = self.validation_logs["v_mean_loss"][-1]
+                best_model = self.model.state_dict()
 
         # merge train and validation logs
         data = {"epoch": range(epochs)}
