@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 import pandas as pd
 import numpy as np
 import engine
-import engine.tester as tester
+from engine.tester import Tester
 from skimage import transform
 
 MODELS = {
@@ -22,59 +22,37 @@ DATA_DICT = {
 }
 
 
-def test_dataloader():
-    dataset_name = 'mnist'
-    dataloader = engine.ImageDataLoader(
-        data_folder=DATA_DICT[dataset_name],
-        batch_size=1,
-        shuffle=False,
-        transformation=None
-    ).build(train_mode=True, max_items=100, validation_ratio=.2)
-    print(
-        f"Main set: {len(dataloader[0])}\nValidation set: {len(dataloader[1])}")
-
-    dataset_name = 'no-mnist'
-    dataloader = engine.ImageDataLoader(
-        data_folder=DATA_DICT[dataset_name],
-        batch_size=1,
-        shuffle=True,
-        transformation=None
-    ).build(train_mode=False, max_items=100, validation_ratio=0)
-    print(
-        f"Main set: {len(dataloader[0])}\nValidation set: {len(dataloader[1])}")
-
-
 def test_regular_data(model, dataset_name):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
-        batch_size=1,
+        batch_size=32,
         shuffle=False,
         transformation=None
-    ).build(train_mode=False, max_items=100, validation_ratio=.2)
+    ).build(train_mode=False, max_items=100, validation_ratio=0)
 
     # test model
-    t = tester.Tester(model)
-    log = t.test(dataloader)
-    return log
+    tester = Tester(model, device="cuda", is_ood=False)
+    df = tester.test(dataloader[0])
+    return df
 
 
-def test_rotated_data(model, dataset_name, rotation_value=45):
-    transformation = transforms.RandomAffine(
-        degrees=rotation_value, translate=(0, 0))
+# def test_rotated_data(model, dataset_name, rotation_value=45):
+#     transformation = transforms.RandomAffine(
+#         degrees=rotation_value, translate=(0, 0))
 
-    # get dataloader
-    dataloader = engine.ImageDataLoader(
-        data_folder=DATA_DICT[dataset_name],
-        batch_size=1,
-        shuffle=False,
-        transformation=transformation
-    ).build(train_mode=False, max_items=100, validation_ratio=.2)
+#     # get dataloader
+#     dataloader = engine.ImageDataLoader(
+#         data_folder=DATA_DICT[dataset_name],
+#         batch_size=1,
+#         shuffle=False,
+#         transformation=transformation
+#     ).build(train_mode=False, max_items=100, validation_ratio=.2)
 
-    # test model
-    t = tester.Tester(model)
-    log = t.test(dataloader)
-    return log
+#     # test model
+#     t = tester.Tester(model)
+#     log = t.test(dataloader)
+#     return log
 
 
 if __name__ == '__main__':
@@ -91,30 +69,24 @@ if __name__ == '__main__':
     model = MODELS[args.n]
     model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
-    # DEBUG
-    if False:
-        try:
-            test_dataloader()
-        except Exception as exc:
-            pass
-
     # test In-Distribution
     if True:
         try:
-            log_regular = test_regular_data(model, "mnist")
-            df = pd.DataFrame(log_regular)
-            print(df.head())
+            mnist_df = test_regular_data(model, "mnist")
+            df_path = os.path.join(RUNS_DICT['LeNet5'], "test")
+            os.makedirs(df_path, exist_ok=True)
+            mnist_df.to_csv(df_path + os.sep + "mnist.csv", index=True)
         except Exception as exc:
             print(exc)
 
     # test In-Distribution Rotated
-    if False:
-        try:
-            log_rotated = test_rotated_data(model, "mnist")
-            df = pd.DataFrame(log_rotated)
-            print(df.head())
-        except Exception:
-            pass
+    # if False:
+    #     try:
+    #         log_rotated = test_rotated_data(model, "mnist")
+    #         df = pd.DataFrame(log_rotated)
+    #         print(df.head())
+    #     except Exception:
+    #         pass
 
     # # save test results
     # for m in log.keys():
