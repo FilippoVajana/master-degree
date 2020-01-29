@@ -27,10 +27,10 @@ class CustomDataset(Dataset):
 
     # @cachetools.cachedmethod(lambda self: self.cache)
     def __getitem__(self, index):
-        if self.transformation is None:
-            image = torch.Tensor(self.images[index])
-        else:
-            image = self.transformation(self.images[index])
+        image = torch.Tensor(self.images[index])
+
+        if self.transformation:
+            image = self.transformation(image)
 
         label = int(self.labels[index])
         return (image, label)

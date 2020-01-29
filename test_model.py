@@ -29,7 +29,7 @@ def test_regular_data(model, dataset_name):
         batch_size=32,
         shuffle=False,
         transformation=None
-    ).build(train_mode=False, max_items=100, validation_ratio=0)
+    ).build(train_mode=False, max_items=-1, validation_ratio=0)
 
     # test model
     tester = Tester(model, device="cuda", is_ood=False)
@@ -37,22 +37,46 @@ def test_regular_data(model, dataset_name):
     return df
 
 
-# def test_rotated_data(model, dataset_name, rotation_value=45):
-#     transformation = transforms.RandomAffine(
-#         degrees=rotation_value, translate=(0, 0))
+def test_rotated_data(model, dataset_name, rotation_value=45):
+    transformation = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.RandomRotation((rotation_value, rotation_value)),
+        transforms.ToTensor()
+    ])
 
-#     # get dataloader
-#     dataloader = engine.ImageDataLoader(
-#         data_folder=DATA_DICT[dataset_name],
-#         batch_size=1,
-#         shuffle=False,
-#         transformation=transformation
-#     ).build(train_mode=False, max_items=100, validation_ratio=.2)
+    # get dataloader
+    dataloader = engine.ImageDataLoader(
+        data_folder=DATA_DICT[dataset_name],
+        batch_size=32,
+        shuffle=False,
+        transformation=transformation
+    ).build(train_mode=False, max_items=-1, validation_ratio=.0)
 
-#     # test model
-#     t = tester.Tester(model)
-#     log = t.test(dataloader)
-#     return log
+    # test model
+    tester = Tester(model, device="cuda", is_ood=False)
+    df = tester.test(dataloader[0])
+    return df
+
+
+def test_shifted_data(model, dataset_name, shift_value=45):
+    transformation = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.RandomAffine(0, translate=(shift_value, shift_value)),
+        transforms.ToTensor()
+    ])
+
+    # get dataloader
+    dataloader = engine.ImageDataLoader(
+        data_folder=DATA_DICT[dataset_name],
+        batch_size=32,
+        shuffle=False,
+        transformation=transformation
+    ).build(train_mode=False, max_items=-1, validation_ratio=.0)
+
+    # test model
+    tester = Tester(model, device="cuda", is_ood=False)
+    df = tester.test(dataloader[0])
+    return df
 
 
 if __name__ == '__main__':
@@ -69,24 +93,30 @@ if __name__ == '__main__':
     model = MODELS[args.n]
     model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
 
+    # prepare test folder
+    df_path = os.path.join(RUNS_DICT['LeNet5'], "test")
+    os.makedirs(df_path, exist_ok=True)
+
     # test In-Distribution
-    if True:
+    if False:
         try:
+            print("Testing MNIST")
             mnist_df = test_regular_data(model, "mnist")
-            df_path = os.path.join(RUNS_DICT['LeNet5'], "test")
-            os.makedirs(df_path, exist_ok=True)
             mnist_df.to_csv(df_path + os.sep + "mnist.csv", index=True)
         except Exception as exc:
             print(exc)
 
     # test In-Distribution Rotated
-    # if False:
-    #     try:
-    #         log_rotated = test_rotated_data(model, "mnist")
-    #         df = pd.DataFrame(log_rotated)
-    #         print(df.head())
-    #     except Exception:
-    #         pass
+    rotation_range = range(15, 180 + 15, 15)
+    if True:
+        for rotation_value in rotation_range:
+            try:
+                print(f"Testing Rotated {rotation_value} MNIST")
+                rotated_df = test_rotated_data(model, "mnist", rotation_value)
+                rotated_df.to_csv(df_path + os.sep +
+                                  f"mnist_rotate{rotation_value}.csv", index=True)
+            except Exception:
+                print(exc)
 
     # # save test results
     # for m in log.keys():

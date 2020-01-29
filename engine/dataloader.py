@@ -19,7 +19,7 @@ class ImageDataLoader():
         self.batch_size = batch_size
         self.shuffle = shuffle
         # TODO: add images transformation option
-        self.transformation = None
+        self.transformation = transformation
 
     def build(self, train_mode: bool, max_items: int, validation_ratio=0.0):
         """
