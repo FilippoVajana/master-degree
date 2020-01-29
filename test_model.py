@@ -37,6 +37,21 @@ def test_regular_data(model, dataset_name):
     return df
 
 
+def test_ood_data(model, dataset_name):
+    # get dataloader
+    dataloader = engine.ImageDataLoader(
+        data_folder=DATA_DICT[dataset_name],
+        batch_size=32,
+        shuffle=False,
+        transformation=None
+    ).build(train_mode=False, max_items=-1, validation_ratio=0)
+
+    # test model
+    tester = Tester(model, device="cuda", is_ood=True)
+    df = tester.test(dataloader[0])
+    return df
+
+
 def test_rotated_data(model, dataset_name, rotation_value=45):
     transformation = transforms.Compose([
         transforms.ToPILImage(),
@@ -98,7 +113,7 @@ if __name__ == '__main__':
     os.makedirs(df_path, exist_ok=True)
 
     # test In-Distribution
-    if False:
+    if True:
         try:
             print("Testing MNIST")
             mnist_df = test_regular_data(model, "mnist")
@@ -108,37 +123,35 @@ if __name__ == '__main__':
 
     # test In-Distribution Rotated
     rotation_range = range(15, 180 + 15, 15)
-    if False:
+    if True:
         for rotation_value in rotation_range:
             try:
                 print(f"Testing Rotated {rotation_value} MNIST")
                 rotated_df = test_rotated_data(model, "mnist", rotation_value)
                 rotated_df.to_csv(df_path + os.sep +
                                   f"mnist_rotate{rotation_value}.csv", index=True)
-            except Exception:
+            except Exception as exc:
                 print(exc)
 
     # test In-Distribution shifted
-    shift_range = range(2, 14 + 2, 2)
-    img_size = 28
     if True:
+        shift_range = range(2, 14 + 2, 2)
+        img_size = 28
         for shift_value in shift_range:
             shift_value /= img_size
             try:
                 print(f"Testing Shifted {int(shift_value * img_size)}px MNIST")
                 rotated_df = test_shifted_data(model, "mnist", shift_value)
                 rotated_df.to_csv(df_path + os.sep +
-                                  f"mnist_shift{shift_value}.csv", index=True)
-            except Exception:
+                                  f"mnist_shift{int(shift_value * img_size)}.csv", index=True)
+            except Exception as exc:
                 print(exc)
 
-    # # save test results
-    # for m in log.keys():
-    #     if m == "input_tensor":
-    #         continue
-    #     try:
-    #         df = pd.DataFrame(np.vstack(log[m]))
-    #         path = os.path.join(RUNS_DICT['LeNet5'], f'{args.d}_test_{m}.csv')
-    #         df.to_csv(path)
-    #     except Exception:
-    #         continue
+    # test Out-of-Distribution
+    if True:
+        try:
+            print("Testing OOD")
+            ood_df = test_ood_data(model, "no-mnist")
+            ood_df.to_csv(df_path + os.sep + f"nomnist.csv", index=True)
+        except Exception as exc:
+            print(exc)

@@ -25,13 +25,6 @@ class Tester():
         t_predicted_cls = t_predictions.argmax(dim=1)
         return t_predicted_cls.to("cpu")
 
-    # def accuracy(self, pred_probs, targets):
-    #     good_count = 0
-    #     for p, t in (pred_probs, targets):
-    #         if np.argmax(p) == t:
-    #             good_count = good_count + 1
-    #     return good_count / len(pred_probs)
-
     def check_prediction(self, t_predictions, t_labels):
         t_predicted_cls = t_predictions.argmax(dim=1)
         res = (t_predicted_cls == t_labels)
@@ -52,35 +45,13 @@ class Tester():
         t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
 
         # prediction confidence as max prob after softmax
-        t_confidence = t_softmax.max(dim=1)
-        return t_confidence.to("cpu")
-
-    # def entropy(self, pred_probs):
-    #     pred_probs = np.vstack(pred_probs)
-    #     pred_probs = np.around(pred_probs, decimals=3)
-
-    #     preds_entropy = []
-    #     for pred in pred_probs:
-    #         preds_entropy.append(entropy(pred))
-
-    #     return np.vstack(preds_entropy)
+        t_confidence = t_softmax.max(dim=1)[0]
+        return t_confidence.to("cpu").numpy()
 
     def get_entropy(self, predictions):
         t_entropy = torch.distributions.Categorical(
             torch.nn.Softmax(dim=1)(predictions.detach())).entropy()
         return t_entropy.to("cpu")
-
-    # def brier_score(self, prediction_tensor, true_class):
-    #     # ground truth one-hot encoding
-    #     onehot_true = np.zeros(prediction_tensor.size)
-    #     onehot_true[true_class] = 1
-
-    #     # softmax of prediction tensor
-    #     prediction_softmax = torch.nn.Softmax()(prediction_tensor).numpy()
-
-    #     # brier score
-    #     brier_score = np.sum((prediction_softmax - onehot_true)**2)
-    #     return brier_score
 
     def get_brier_score(self, predictions, labels):
         onehot_true = torch.zeros(predictions.size())
@@ -110,6 +81,10 @@ class Tester():
         with torch.no_grad():
             for batch in tqdm(test_dataloader):
                 t_examples, t_labels = batch
+
+                # shift labels values for OOD data
+                if self.is_ood:
+                    t_labels = t_labels - 65
 
                 # move data to device
                 t_examples = t_examples.to(self.device).float()
