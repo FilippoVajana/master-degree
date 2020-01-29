@@ -9,10 +9,9 @@ from scipy.stats import entropy
 
 import time
 
-# TODO: print as logging
-
 
 def timer(func):
+    # TODO: print as logging
     def wrapper(*args):
         start_time = time.perf_counter()
         value = func(*args)
