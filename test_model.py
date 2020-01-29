@@ -108,13 +108,27 @@ if __name__ == '__main__':
 
     # test In-Distribution Rotated
     rotation_range = range(15, 180 + 15, 15)
-    if True:
+    if False:
         for rotation_value in rotation_range:
             try:
                 print(f"Testing Rotated {rotation_value} MNIST")
                 rotated_df = test_rotated_data(model, "mnist", rotation_value)
                 rotated_df.to_csv(df_path + os.sep +
                                   f"mnist_rotate{rotation_value}.csv", index=True)
+            except Exception:
+                print(exc)
+
+    # test In-Distribution shifted
+    shift_range = range(2, 14 + 2, 2)
+    img_size = 28
+    if True:
+        for shift_value in shift_range:
+            shift_value /= img_size
+            try:
+                print(f"Testing Shifted {int(shift_value * img_size)}px MNIST")
+                rotated_df = test_shifted_data(model, "mnist", shift_value)
+                rotated_df.to_csv(df_path + os.sep +
+                                  f"mnist_shift{shift_value}.csv", index=True)
             except Exception:
                 print(exc)
 
