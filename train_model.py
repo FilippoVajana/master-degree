@@ -92,4 +92,4 @@ if __name__ == '__main__':
 
     # save training logs
     train_logs_path = os.path.join(results_path, 'train_logs.csv')
-    train_dataframe.to_csv(train_logs_path)
+    train_dataframe.to_csv(train_logs_path, index=True)
