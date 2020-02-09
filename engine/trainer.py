@@ -232,11 +232,12 @@ class GenericTrainer():
     @timer
     def get_brier_score(self, predictions, labels):
         onehot_true = torch.zeros(predictions.size())
-        onehot_true[:, list(labels.to("cpu").numpy())] = 1
+        onehot_true[torch.arange(len(predictions)), labels] = 1
         # softmax of prediction tensor
         prediction_softmax = torch.nn.functional.softmax(
             predictions.detach().cpu(), 1)
         # brier score
-        brier_score = torch.sum((prediction_softmax - onehot_true)**2, axis=1)
-
+        diff = prediction_softmax - onehot_true
+        square_diff = torch.pow(diff, 2)
+        brier_score = torch.sum(square_diff, dim=1)
         return brier_score.to("cpu").mean()
