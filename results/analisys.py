@@ -1,6 +1,7 @@
 import pandas as pd
 import natsort
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import matplotlib
 import os
 import fnmatch
@@ -21,21 +22,14 @@ def load_csv(filename: str):
     data = pd.read_csv(filename, index_col=[0])
     return data
 
+
 # LENET5_VANILLA
+
 # TRAINING
 
 
-# load train logs dataframe
-lenet5V_train_df = load_csv(os.path.join(
-    LENET5_VANILLA_PATH, "train_logs.csv"))
-lenet5V_train_df.head()
-
-# LENET5_VANILLA
 # TESTING
-
 # dataframe helpers
-
-
 def load_rotated():
     '''Returns a dictionary of pandas datasets for tests with rotated data.
     '''
@@ -77,7 +71,6 @@ def load_shifted():
 
 
 # metrics helpers
-
 def get_accuracy(df: pd.DataFrame):
     accuracy_row = df['t_good_pred']
     accuracy = accuracy_row.sum() / accuracy_row.count()
@@ -90,7 +83,6 @@ def get_brier(df: pd.DataFrame):
 
 
 # plotting
-
 def plot_rotated(dataset_name: str):
     accuracy_dict = {}
     brier_dict = {}
@@ -100,34 +92,44 @@ def plot_rotated(dataset_name: str):
     rotated_dict = load_rotated()
 
     # get accuracy
-    accuracy_dict["R0"] = get_accuracy(original_df)
+    accuracy_dict["0"] = get_accuracy(original_df)
     for key in rotated_dict.keys():
-        accuracy_dict[f"R{key}"] = get_accuracy(rotated_dict[key])
+        accuracy_dict[str(key)] = get_accuracy(rotated_dict[key])
 
     # get brier
-    brier_dict["R0"] = get_brier(original_df)
+    brier_dict["0"] = get_brier(original_df)
     for key in rotated_dict.keys():
-        brier_dict[f"R{key}"] = get_brier(rotated_dict[key])
+        brier_dict[str(key)] = get_brier(rotated_dict[key])
 
     # plot
-    xlabels = [f"{v}°" for v in range(0, 195, 15)]
+    fig = plt.figure()
+    (ax1, ax2) = fig.subplots(nrows=2, sharex=True)
+    fig.suptitle("Rotated MNIST")
+    formatter = ticker.FormatStrFormatter("%d°")
 
-    plt.subplot(211)
-    plt.scatter(x=xlabels, y=accuracy_dict.values())
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Intensity of Skew")
-    plt.xticks(rotation=45)
-    plt.ylabel("Accuracy")
+    ax1.xaxis.set_major_formatter(formatter)
+    ax2.xaxis.set_major_formatter(formatter)
 
-    plt.subplot(212)
-    plt.scatter(x=xlabels, y=brier_dict.values())
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Intensity of Skew")
-    plt.xticks(rotation=45)
-    plt.ylabel("Brier")
+    ax1.grid(True)
+    ax2.grid(True)
 
-    plt.subplots_adjust(hspace=1.5)
-    plt.show()
+    ax1.tick_params(grid_linestyle='dotted')
+    ax2.tick_params(grid_linestyle='dotted')
+
+    ax1.set_xlim(0, 180)
+    ax2.set_xlim(0, 180)
+    ax1.set_ylim(0, 1)
+
+    xticks = range(0, 195, 15)
+
+    ax1.plot(xticks, list(accuracy_dict.values()))
+    ax2.plot(xticks, list(brier_dict.values()))
+
+    ax1.set_ylabel("Accuracy")
+    ax2.set_ylabel("Brier score")
+    ax2.set_xlabel("Intensity of Skew")
+
+    return ax1, ax2
 
 
 def plot_shifted(dataset_name: str):
@@ -139,43 +141,52 @@ def plot_shifted(dataset_name: str):
     shifted_dict = load_shifted()
 
     # get accuracy
-    accuracy_dict["R0"] = get_accuracy(original_df)
+    accuracy_dict["0"] = get_accuracy(original_df)
     for key in shifted_dict.keys():
-        accuracy_dict[f"R{key}"] = get_accuracy(shifted_dict[key])
+        accuracy_dict[str(key)] = get_accuracy(shifted_dict[key])
 
     # get brier
-    brier_dict["R0"] = get_brier(original_df)
+    brier_dict["0"] = get_brier(original_df)
     for key in shifted_dict.keys():
-        brier_dict[f"P{key}"] = get_brier(shifted_dict[key])
+        brier_dict[str(key)] = get_brier(shifted_dict[key])
 
     # plot
-    xlabels = [f"{v}px" for v in range(0, 16, 2)]
+    fig = plt.figure()
+    (ax1, ax2) = fig.subplots(nrows=2, sharex=True)
+    fig.suptitle("Translated MNIST")
+    formatter = ticker.FormatStrFormatter("%dpx")
 
-    plt.subplot(211)
-    plt.scatter(x=xlabels, y=accuracy_dict.values())
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Intensity of Skew")
-    plt.xticks(rotation=45)
-    plt.ylabel("Accuracy")
+    ax1.xaxis.set_major_formatter(formatter)
+    ax2.xaxis.set_major_formatter(formatter)
 
-    plt.subplot(212)
-    plt.scatter(x=xlabels, y=brier_dict.values())
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Intensity of Skew")
-    plt.xticks(rotation=45)
-    plt.ylabel("Brier")
+    ax1.grid(True)
+    ax2.grid(True)
 
-    plt.subplots_adjust(hspace=1.5)
-    plt.show()
+    ax1.tick_params(grid_linestyle='dotted')
+    ax2.tick_params(grid_linestyle='dotted')
+
+    ax1.set_xlim(0, 14)
+    ax2.set_xlim(0, 14)
+    ax1.set_ylim(0, 1)
+
+    xticks = range(0, 16, 2)
+
+    ax1.plot(xticks, list(accuracy_dict.values()))
+    ax2.plot(xticks, list(brier_dict.values()))
+
+    ax1.set_ylabel("Accuracy")
+    ax2.set_ylabel("Brier score")
+    ax2.set_xlabel("Intensity of Skew")
+
+    return ax1, ax2
 
 
 def plot_confidence_vs_accuracy_60(dataset_name: str):
     # load rotated 60° dataframe
     df = load_csv(os.path.join(LENET5_VANILLA_PATH, "mnist_rotate60.csv"))
 
-    confidence_range = np.arange(0, 1, 0.1)
+    confidence_range = np.arange(0, 1, .01)
     acc_conf_df = df[['t_good_pred', 't_confidence']]
-    # print(acc_conf_df.head())
 
     # select data based on confidence value
     acc_conf_dict = {}
@@ -185,22 +196,34 @@ def plot_confidence_vs_accuracy_60(dataset_name: str):
         acc_conf_dict[cv] = accuracy
 
     # plot
-    xlabels = [f"{v/10}" for v in range(0, 10, 1)]
+    fig = plt.figure()
+    ax1 = fig.subplots(nrows=1)
+    fig.suptitle("Confidence vs Acc Rotated 60°")
+    formatter = ticker.FormatStrFormatter("%.1f")
 
-    plt.subplot(211)
-    plt.scatter(x=xlabels, y=acc_conf_dict.values())
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Confidence")
-    plt.xticks(rotation=45)
-    plt.ylabel("Accuracy")
-    plt.show()
+    ax1.xaxis.set_major_formatter(formatter)
+
+    ax1.grid(True)
+
+    ax1.tick_params(grid_linestyle='dotted')
+
+    ax1.set_xlim(0, 1)
+
+    xticks = confidence_range
+
+    ax1.plot(xticks, list(acc_conf_dict.values()))
+
+    ax1.set_ylabel(r"Accuracy on examples $p(y|x) \geq \tau$")
+    ax1.set_xlabel(r"$\tau$")
+
+    return ax1
 
 
 def plot_count_vs_confidence_60(dataset_name: str):
     # load rotated 60° dataframe
     df = load_csv(os.path.join(LENET5_VANILLA_PATH, "mnist_rotate60.csv"))
 
-    confidence_range = np.arange(0, 1, 0.1)
+    confidence_range = np.arange(0, 1, 0.01)
     count_df = df['t_confidence']
 
     # select data based on confidence value
@@ -211,45 +234,108 @@ def plot_count_vs_confidence_60(dataset_name: str):
         conf_count_dict[cv] = count
 
     # plot
-    xlabels = [f"{v/10}" for v in range(0, 10, 1)]
+    fig = plt.figure()
+    ax1 = fig.subplots(nrows=1)
+    fig.suptitle("Count vs Acc Rotated 60°")
+    formatter = ticker.FormatStrFormatter("%.1f")
 
-    plt.subplot(211)
-    plt.scatter(x=xlabels, y=conf_count_dict.values())
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Confidence")
-    plt.xticks(rotation=45)
-    plt.ylabel("Number of examples")
+    ax1.xaxis.set_major_formatter(formatter)
 
-    plt.show()
+    ax1.grid(True)
+
+    ax1.tick_params(grid_linestyle='dotted')
+
+    ax1.set_xlim(0, 1)
+
+    xticks = confidence_range
+
+    ax1.plot(xticks, list(conf_count_dict.values()))
+
+    ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
+    ax1.set_xlabel(r"$\tau$")
+
+    return ax1
 
 
 def plot_entropy_ood(dataset_name: str):
     # load nomnist dataframe
     df = load_csv(os.path.join(LENET5_VANILLA_PATH, "nomnist.csv"))
-    print(df.head())
-
     ent_df = df['t_entropy']
-    print(ent_df.describe())
 
     # count examples based on entropy value
-    ent_range = np.arange(ent_df.min(), ent_df.max()*1.1, 1)
+    ent_range = np.arange(ent_df.min(), ent_df.max()*1,
+                          (ent_df.max() - ent_df.min())/25)
+
     ent_count_dict = {}
     for ev in ent_range:
         count_df = ent_df.loc[df['t_entropy'] >= ev]
         count = count_df.count()
         ent_count_dict[ev] = count
 
+    # ent_df.hist()
+    # print(ent_df.describe())
+
     # plot
-    xlabels = [f"{v}" for v in ent_range]
+    fig = plt.figure()
+    ax1 = fig.subplots(nrows=1)
+    fig.suptitle("Entropy on OOD")
+    formatter = ticker.FormatStrFormatter("%.1f")
 
-    plt.subplot(211)
-    plt.hist(ent_df)
-    plt.title(str.upper(dataset_name))
-    plt.xlabel("Entropy (Nats)")
-    plt.xticks(rotation=45)
-    plt.ylabel("Number of examples")
+    ax1.xaxis.set_major_formatter(formatter)
 
-    plt.show()
+    ax1.grid(True)
+
+    ax1.tick_params(grid_linestyle='dotted')
+
+    #ax1.set_xlim(0, .9)
+    #ax1.set_ylim(0, ent_df.count())
+
+    xticks = ent_range
+
+    ax1.plot(xticks, list(ent_count_dict.values()))
+
+    ax1.set_ylabel("Number of examples")
+    ax1.set_xlabel("Entropy (Nats)")
+
+    return ax1
+
+
+def plot_confidence_ood(dataset_name: str):
+    # load rotated 60° dataframe
+    df = load_csv(os.path.join(LENET5_VANILLA_PATH, "nomnist.csv"))
+
+    confidence_range = np.arange(0, 1, 0.01)
+    count_df = df['t_confidence']
+
+    # select data based on confidence value
+    conf_count_dict = {}
+    for cv in confidence_range:
+        count_df = count_df.loc[df['t_confidence'] >= cv]
+        count = count_df.count()
+        conf_count_dict[cv] = count
+
+    # plot
+    fig = plt.figure()
+    ax1 = fig.subplots(nrows=1)
+    fig.suptitle("Confidence on OOD")
+    formatter = ticker.FormatStrFormatter("%.1f")
+
+    ax1.xaxis.set_major_formatter(formatter)
+
+    ax1.grid(True)
+
+    ax1.tick_params(grid_linestyle='dotted')
+
+    ax1.set_xlim(0, 1)
+
+    xticks = confidence_range
+
+    ax1.plot(xticks, list(conf_count_dict.values()))
+
+    ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
+    ax1.set_xlabel(r"$\tau$")
+
+    return ax1
 
 
 if __name__ == "__main__":
@@ -258,3 +344,6 @@ if __name__ == "__main__":
     plot_confidence_vs_accuracy_60("mnist")
     plot_count_vs_confidence_60("mnist")
     plot_entropy_ood("not-mnist")
+    plot_confidence_ood("not-mnist")
+
+    plt.show()
