@@ -36,7 +36,7 @@
             "name": "Analize LENET5_Vanilla",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/results/analisys.py",
+            "program": "${workspaceFolder}/data-results/analisys.py",
             "console": "integratedTerminal"
         }
     ]
