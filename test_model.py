@@ -112,9 +112,9 @@ def test_shifted_data(model, dataset_name, shift_value=45):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Test DNN models.")
-    parser.add_argument('-m', type=str, action='store',
+    parser.add_argument('-m', type=str, action='store', default='./runs/LeNet5/LeNet5.pt',
                         help='Model file path.')
-    parser.add_argument('-n', type=str, action='store',
+    parser.add_argument('-n', type=str, action='store', default='LeNet5',
                         help='Model class name')
     parser.add_argument('-d', type=str, action='store',
                         help='Test data directory.')
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     TEST_RUN_ID = now.strftime("%j_%H%M%S")
 
     # prepare test folder
-    TEST_DIRECTORY = os.path.join(RUN_DIRECTORY_DICT['LeNet5'], "test", TEST_RUN_ID)
+    TEST_DIRECTORY = os.path.join(RUN_DIRECTORY_DICT['LeNet5'], "test")
     os.makedirs(TEST_DIRECTORY, exist_ok=True)
 
     # TEST LOOP
@@ -191,7 +191,10 @@ if __name__ == '__main__':
 
     # save results    
     if args.save:
+        # create run folder
+        r_path = os.path.join(TEST_DIRECTORY, TEST_RUN_ID)
+        os.makedirs(r_path)
         for key in results_df_dict.keys():
-            path = os.path.join(TEST_DIRECTORY, key)
+            path = os.path.join(r_path, key)
             print("Saving to ", path)
             results_df_dict[key].to_csv(path, index=True)
