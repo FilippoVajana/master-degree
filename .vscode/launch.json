@@ -27,7 +27,8 @@
                 "-m",
                 "./runs/LeNet5/LeNet5.pt",
                 "-n",
-                "LeNet5"
+                "LeNet5",
+                "-save"
             ],
             "console": "integratedTerminal"
         },
