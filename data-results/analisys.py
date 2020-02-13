@@ -40,7 +40,7 @@ def load_rotated():
     paths = natsort.natsorted(paths)
 
     # load as pandas
-    degree_regex = re.compile('\d+')
+    degree_regex = re.compile(r'\d+')
     dataframes = {}
     for filename in paths:
         df = load_csv(os.path.join(LENET5_VANILLA_PATH, filename))
@@ -60,7 +60,7 @@ def load_shifted():
     paths = natsort.natsorted(paths)
 
     # load as pandas
-    pixel_regex = re.compile('\d+')
+    pixel_regex = re.compile(r'\d+')
     dataframes = {}
     for filename in paths:
         df = load_csv(os.path.join(LENET5_VANILLA_PATH, filename))
