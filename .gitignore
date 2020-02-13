@@ -136,6 +136,5 @@ dmypy.json
 *.sh
 *.code-workspace
 /data
+/data-results/*/
 /runs
-sample.py
-.vscode/settings.json
