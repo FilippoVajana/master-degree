@@ -13,7 +13,7 @@ print("natsort:", natsort.__version__)
 print("pandas:", pd.__version__)
 
 
-LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "results", "lenet5")
+LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "data-results", "lenet5")
 
 
 def load_csv(filename: str):

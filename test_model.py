@@ -185,7 +185,7 @@ if __name__ == '__main__':
             print("Testing OOD")
             df = test_ood_data(model, "no-mnist")            
             # results_df_dict.append((df, os.path.join(TEST_DIRECTORY, "nomnist.csv")))
-            results_df_dict["no-mnist.csv"] = df
+            results_df_dict["nomnist.csv"] = df
         except Exception as exc:
             print(exc)
 
