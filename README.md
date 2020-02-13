@@ -1,6 +1,6 @@
 # Metrics for uncertainty evaluation in deep learning models blah blah
 
-# TODOs:
+# TODO:
 instructions for gewtting data
 
 # Basic usage:

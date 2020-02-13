@@ -1,5 +1,8 @@
 {
     "python.pythonPath": "C:\\Users\\filip\\Miniconda3\\envs\\pytorch\\python.exe",
     "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "python.linting.pylintArgs": [
+        "--generated-members=numpy.*,torch.*,Variable"
+    ]
 }
