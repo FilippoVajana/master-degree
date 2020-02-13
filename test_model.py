@@ -1,18 +1,22 @@
-import os
 import argparse
+import os
+import datetime
+import GPUtil
+import numpy as np
+import pandas as pd
 import torch
 import torchvision.transforms as transforms
-import pandas as pd
-import numpy as np
+from skimage import transform
+from torch.cuda import is_available
+
 import engine
 from engine.tester import Tester
-from skimage import transform
 
 MODELS = {
     'LeNet5': engine.LeNet5()
 }
 
-RUNS_DICT = {
+RUN_DIRECTORY_DICT = {
     'LeNet5': "./runs/LeNet5"
 }
 
@@ -20,6 +24,18 @@ DATA_DICT = {
     'mnist': './data/mnist',
     'no-mnist': './data/no-mnist'
 }
+
+DEVICE = "cpu"
+
+
+def get_device():
+    device = "cpu"  # default device
+    # check cuda device availability
+    if is_available():
+        gpu = GPUtil.getFirstAvailable()  # get best GPU
+        device = f"cuda:{gpu[0]}"
+    print("Selected device: ", device)
+    return device
 
 
 def test_regular_data(model, dataset_name):
@@ -32,7 +48,7 @@ def test_regular_data(model, dataset_name):
     ).build(train_mode=False, max_items=-1, validation_ratio=0)
 
     # test model
-    tester = Tester(model, device="cuda", is_ood=False)
+    tester = Tester(model, device=DEVICE, is_ood=False)
     df = tester.test(dataloader[0])
     return df
 
@@ -47,7 +63,7 @@ def test_ood_data(model, dataset_name):
     ).build(train_mode=False, max_items=-1, validation_ratio=0)
 
     # test model
-    tester = Tester(model, device="cuda", is_ood=True)
+    tester = Tester(model, device=DEVICE, is_ood=True)
     df = tester.test(dataloader[0])
     return df
 
@@ -68,7 +84,7 @@ def test_rotated_data(model, dataset_name, rotation_value=45):
     ).build(train_mode=False, max_items=-1, validation_ratio=.0)
 
     # test model
-    tester = Tester(model, device="cuda", is_ood=False)
+    tester = Tester(model, device=DEVICE, is_ood=False)
     df = tester.test(dataloader[0])
     return df
 
@@ -89,35 +105,51 @@ def test_shifted_data(model, dataset_name, shift_value=45):
     ).build(train_mode=False, max_items=-1, validation_ratio=.0)
 
     # test model
-    tester = Tester(model, device="cuda", is_ood=False)
+    tester = Tester(model, device=DEVICE, is_ood=False)
     df = tester.test(dataloader[0])
     return df
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Test DNN models.")
-    parser.add_argument('-m', type=str, action='store',
+    parser.add_argument('-m', type=str, action='store', default='./runs/LeNet5/LeNet5.pt',
                         help='Model file path.')
-    parser.add_argument('-n', type=str, action='store',
+    parser.add_argument('-n', type=str, action='store', default='LeNet5',
                         help='Model class name')
     parser.add_argument('-d', type=str, action='store',
                         help='Test data directory.')
+    parser.add_argument('-save', action='store_true')
     args = parser.parse_args()
+
+    # get compute device
+    DEVICE = get_device()
 
     # load model
     model = MODELS[args.n]
-    model.load_state_dict(torch.load(args.m, map_location=torch.device('cpu')))
+    if DEVICE is "cpu":
+        model.load_state_dict(torch.load(
+            args.m, map_location=torch.device('cpu')))
+    else:
+        model.load_state_dict(torch.load(args.m))
+
+    # compute test run id    
+    now = datetime.datetime.now()
+    TEST_RUN_ID = now.strftime("%j_%H%M%S")
 
     # prepare test folder
-    df_path = os.path.join(RUNS_DICT['LeNet5'], "test")
-    os.makedirs(df_path, exist_ok=True)
+    TEST_DIRECTORY = os.path.join(RUN_DIRECTORY_DICT['LeNet5'], "test")
+    os.makedirs(TEST_DIRECTORY, exist_ok=True)
+
+    # TEST LOOP
+    results_df_dict = dict()  # {filename.csv, pd.DataFrame}
 
     # test In-Distribution
     if True:
         try:
             print("Testing MNIST")
-            mnist_df = test_regular_data(model, "mnist")
-            mnist_df.to_csv(df_path + os.sep + "mnist.csv", index=True)
+            # results_df_dict.append((df, os.path.join(TEST_DIRECTORY, "mnist.csv")))
+            df = test_regular_data(model, "mnist")            
+            results_df_dict["mnist.csv"] = df
         except Exception as exc:
             print(exc)
 
@@ -127,9 +159,9 @@ if __name__ == '__main__':
         for rotation_value in rotation_range:
             try:
                 print(f"Testing Rotated {rotation_value} MNIST")
-                rotated_df = test_rotated_data(model, "mnist", rotation_value)
-                rotated_df.to_csv(df_path + os.sep +
-                                  f"mnist_rotate{rotation_value}.csv", index=True)
+                df = test_rotated_data(model, "mnist", rotation_value)
+                # results_df_dict.append((rotated_df, os.path.join(TEST_DIRECTORY, f"mnist_rotate{rotation_value}.csv")))
+                results_df_dict[f"mnist_rotate{rotation_value}.csv"] = df
             except Exception as exc:
                 print(exc)
 
@@ -141,9 +173,9 @@ if __name__ == '__main__':
             shift_value /= img_size
             try:
                 print(f"Testing Shifted {int(shift_value * img_size)}px MNIST")
-                rotated_df = test_shifted_data(model, "mnist", shift_value)
-                rotated_df.to_csv(df_path + os.sep +
-                                  f"mnist_shift{int(shift_value * img_size)}.csv", index=True)
+                df = test_shifted_data(model, "mnist", shift_value)                
+                # results_df_dict.append((df, os.path.join(TEST_DIRECTORY, f"mnist_shift{int(shift_value * img_size)}.csv")))
+                results_df_dict[f"mnist_shift{int(shift_value * img_size)}.csv"] = df
             except Exception as exc:
                 print(exc)
 
@@ -151,7 +183,18 @@ if __name__ == '__main__':
     if True:
         try:
             print("Testing OOD")
-            ood_df = test_ood_data(model, "no-mnist")
-            ood_df.to_csv(df_path + os.sep + f"nomnist.csv", index=True)
+            df = test_ood_data(model, "no-mnist")            
+            # results_df_dict.append((df, os.path.join(TEST_DIRECTORY, "nomnist.csv")))
+            results_df_dict["nomnist.csv"] = df
         except Exception as exc:
             print(exc)
+
+    # save results    
+    if args.save:
+        # create run folder
+        r_path = os.path.join(TEST_DIRECTORY, TEST_RUN_ID)
+        os.makedirs(r_path)
+        for key in results_df_dict.keys():
+            path = os.path.join(r_path, key)
+            print("Saving to ", path)
+            results_df_dict[key].to_csv(path, index=True)

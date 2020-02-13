@@ -2,6 +2,8 @@ import argparse
 import datetime as dt
 import os
 import shutil
+import logging as log
+log.basicConfig(level=log.DEBUG, format='[%(asctime)s] %(message)s.', datefmt='%H:%M:%S')
 
 import GPUtil
 from torch import save
@@ -16,22 +18,50 @@ MODELS = {
 
 RUN_CFG_PATH = './runconfig.json'
 RUNS_DIR = './runs/'
-
+TRAINS_DIR = './runs/train'
+TESTS_DIR = './runs/test'
 
 def get_id():
     # get run id as a time string
     time = dt.datetime.now()
-    return time.strftime("%d%m_%H%M")  # Hour_Minute_Day_Month
+    t_id = time.strftime("%d%m_%H%M") 
+    log.debug(f"Created ID: {t_id}")
 
-
-def create_run(root: str):
-    path = os.path.join(root, get_id())
-    os.makedirs(path, exist_ok=True)
-    return path
-
+    return t_id
 
 def save_empty_cfg(path: str):
     engine.RunConfig().save(path)
+
+
+def create_run_folders():
+    '''Creates "runs/" root directory plus "train/" and "test/" subdirectories.
+    Sets the "TRAINS_DIR" and "TESTS_DIR" global variables.
+    '''    
+    # create train root folder
+    tr_path = os.path.join(RUNS_DIR, 'train')
+    log.info(f"Creating train root: {tr_path}")
+    os.makedirs(tr_path, exist_ok=True)
+    TRAINS_DIR = tr_path
+
+    # create test root folder
+    te_path = os.path.join(RUNS_DIR, 'test')
+    log.info(f"Creating test root: {te_path}")
+    os.makedirs(te_path, exist_ok=True)
+    TESTS_DIR = te_path
+
+
+def create_train_run_folder(model_name: str, run_id=None):
+    '''Creates a dedicated folder for the train run.
+    Returns the folder's path.
+    '''
+    if run_id is None:
+        run_id = get_id()
+
+    # create train run folder
+    r_path = os.path.join(TRAINS_DIR, model_name, run_id)
+    log.info(f"Creating train run folder: {r_path}")
+    os.makedirs(r_path)
+    return r_path
 
 
 def get_device():
@@ -55,41 +85,34 @@ if __name__ == '__main__':
     RUN_CFG_PATH = args.cfg
     RUNS_DIR = args.out
 
-    # load reference RunConfig json
-    run_cfg = engine.RunConfig().load(RUN_CFG_PATH)
-
     # create folders
-    os.makedirs(os.path.join(RUNS_DIR, run_cfg.model))
+    create_run_folders() # train/ and test/ folders  
 
     # get model
+    run_cfg = engine.RunConfig().load(RUN_CFG_PATH)
     model = MODELS[run_cfg.model]
     run_cfg.model = model  # swaps model classname with proper model instance
+    log.info(f"Loaded model {run_cfg.model.__class__.__name__}")
 
-    # create train result folder
-    dirs_name = [int(d.name) for d in os.scandir(os.path.join(
-        RUNS_DIR, run_cfg.model.__class__.__name__)) if os.path.isdir(d.path)]
+    # create folder for train run
+    tr_run_folder = create_train_run_folder(run_cfg.model.__class__.__name__)
 
-    if len(dirs_name) == 0:
-        results_path = os.path.join(
-            RUNS_DIR, run_cfg.model.__class__.__name__, "0")
-    else:
-        dirs_name.sort()
-        last = dirs_name[-1]
-        results_path = os.path.join(
-            RUNS_DIR, run_cfg.model.__class__.__name__, f"{last + 1}")
-
-    os.makedirs(results_path, exist_ok=True)
-
-    # train model
+    #TRAIN MODEL
+    ############
     device = get_device()
-    trained_model, train_dataframe = model.start_training(
+    tr_model, tr_df = model.start_training(
         run_cfg, device)
 
     # save model dict
     state_dict_path = os.path.join(
-        results_path, f"{run_cfg.model.__class__.__name__}.pt")
-    save(trained_model, state_dict_path)
+        tr_run_folder, f"{run_cfg.model.__class__.__name__}.pt")
+    save(tr_model, state_dict_path)
 
     # save training logs
-    train_logs_path = os.path.join(results_path, 'train_logs.csv')
-    train_dataframe.to_csv(train_logs_path)
+    train_logs_path = os.path.join(tr_run_folder, 'train_logs.csv')
+    tr_df.to_csv(train_logs_path, index=True)
+
+    
+    #TEST MODEL
+    ############
+    # TODO
