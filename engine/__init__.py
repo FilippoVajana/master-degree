@@ -13,6 +13,7 @@ logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 # create formatter
-formatter = logging.Formatter('[%(asctime)s]  %(levelname)s: %(message)s', datefmt='%I:%M:%S')
+formatter = logging.Formatter(
+    '[%(asctime)s]  %(levelname)s: %(message)s', datefmt='%I:%M:%S')
 ch.setFormatter(formatter)
 logger.addHandler(ch)

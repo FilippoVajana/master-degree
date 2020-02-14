@@ -16,26 +16,27 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/train_model.py",
+            "args": [
+                "-cfg",
+                "./runconfig.json",
+                "--outdir",
+                "./runs/TEST"
+            ],
             "console": "integratedTerminal"
         },
         {
-            "name": "Testing MNIST",
+            "name": "Testing",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test_model.py",
-            "args": ["-m", "./runs/LeNet5/LeNet5.pt", 
-                "-n", "LeNet5", 
-                "-d", "mnist"],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Testing NOT-MNIST",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/test_model.py",
-            "args": ["-m", "./runs/LeNet5/LeNet5.pt", 
-                "-n", "LeNet5", 
-                "-d", "no-mnist"],
+            "args": [
+                "--mstate",
+                "./runs/TEST/LeNet5/LeNet5.pt",
+                "--mname",
+                "LeNet5",
+                "--outdir",
+                "./runs/TEST/LeNet5"
+            ],
             "console": "integratedTerminal"
         },
         {
