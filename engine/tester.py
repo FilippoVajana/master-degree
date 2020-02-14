@@ -80,7 +80,6 @@ class Tester():
         """
         Tests the model.
         """
-        # TODO: fix for batch
         self.model.eval()
         with torch.no_grad():
             for batch in tqdm(test_dataloader):

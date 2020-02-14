@@ -1,22 +1,24 @@
-import itertools
-import torch
-import numpy as np
-from tqdm import tqdm, trange
-import pandas as pd
-from engine.runconfig import RunConfig
-from engine.dataloader import ImageDataLoader
-from scipy.stats import entropy
-
+import logging as log
 import time
+from engine.dataloader import ImageDataLoader
+from engine.runconfig import RunConfig
+import pandas as pd
+from tqdm import trange
+import numpy as np
+import torch
+
+
+log.basicConfig(level=log.DEBUG,
+                format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 
 def timer(func):
     # TODO: print as logging
     def wrapper(*args):
-        start_time = time.perf_counter()
+        # start_time = time.perf_counter()
         value = func(*args)
-        end_time = time.perf_counter()
-        elapsed_time = end_time - start_time
+        # end_time = time.perf_counter()
+        # elapsed_time = end_time - start_time
         # print(f"[{func.__name__!r}] Execution time: {elapsed_time*1000:.4f} ms")
         return value
     return wrapper
@@ -68,6 +70,12 @@ class GenericTrainer():
         """
         Starts the train-validation loop.
         """
+
+        # sanity check
+        if len(validation_dataloader) <= 0:
+            log.error(
+                f"Validation set smaller than batch size: {len(validation_dataloader.dataset.indices)} < {validation_dataloader.batch_size}")
+            raise Exception("Validation set too small")
 
         self.model = self.model.to(self.device)
         best_model = self.model.state_dict()
@@ -216,20 +224,20 @@ class GenericTrainer():
         # return (accuracy, brier, entropy, loss.item())
         return (accuracy, brier, entropy, loss.item())
 
-    @timer
+    # @timer
     def get_accuracy(self, predictions, labels):
         t_predicted_class = predictions.argmax(dim=1)
         res = (t_predicted_class == labels).sum().float() / \
             len(t_predicted_class)
         return res.to("cpu")
 
-    @timer
+    # @timer
     def get_entropy(self, predictions):
         t_entropy = torch.distributions.Categorical(
             torch.nn.Softmax(dim=1)(predictions.detach())).entropy()
         return t_entropy.to("cpu").mean()
 
-    @timer
+    # @timer
     def get_brier_score(self, predictions, labels):
         onehot_true = torch.zeros(predictions.size())
         onehot_true[torch.arange(len(predictions)), labels] = 1
