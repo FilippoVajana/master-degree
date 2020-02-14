@@ -6,7 +6,7 @@ import os
 import GPUtil
 from torch import save
 from torch.cuda import is_available
-
+from torch.nn import Module
 import engine
 
 log.basicConfig(level=log.DEBUG,
@@ -64,7 +64,7 @@ def get_device():
     return device
 
 
-def do_train(model, device, config, directory):
+def do_train(model: Module, device: str, config: engine.RunConfig, directory: str):
     '''Trains the input model.
     The methods saves train logs as .csv and the final model state dict.     
     '''
