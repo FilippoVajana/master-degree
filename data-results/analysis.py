@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import natsort
 import matplotlib.pyplot as plt
@@ -6,12 +7,15 @@ import matplotlib
 import os
 import fnmatch
 import re
+import logging as log
 import numpy as np
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
 print("natsort:", natsort.__version__)
 print("pandas:", pd.__version__)
 
+log.basicConfig(level=log.DEBUG,
+                format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "data-results", "lenet5")
 # LENET5_VANILLA_PATH = os.path.join(
@@ -22,6 +26,7 @@ def load_csv(filename: str):
     '''Loads data from csv file and return as DataFrame.
     '''
     data = pd.read_csv(filename, index_col=[0])
+    log.info(f"Loaded csv file: {filename}")
     return data
 
 
@@ -341,6 +346,16 @@ def plot_confidence_ood(dataset_name: str):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Analyze data.")
+    parser.add_argument('-data', type=str, default='lenet5',
+                        action='store', help='Data folder name.')
+
+    args = parser.parse_args()
+
+    # set data folder
+    LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "data-results", args.data)
+
+    # draw plots
     plot_rotated("mnist")
     plot_shifted("mnist")
     plot_confidence_vs_accuracy_60("mnist")

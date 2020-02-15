@@ -12,7 +12,11 @@ log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 RUN_ROOT = './runs'
-RUN_CONFIGS = ['LeNet5_runcfg.json']
+RUN_CONFIGS = [
+    'LeNet5_runcfg.json',
+    'LeNet5SimpleLLDropout_runcfg.json',
+    'LeNet5SimpleDropout_runcfg.json'
+]
 
 
 def get_id():
@@ -59,6 +63,18 @@ def create_run_folders(model_name: str, train=True, test=True, run_id=None):
     return tr_path, te_path
 
 
+def create_run_folder(model_name: str, run_id=None):
+    '''Creates "runs/run_id/model_name" folder.
+    '''
+    # get run id
+    r_id = get_id() if run_id is None else run_id
+
+    # create run folder
+    path = os.path.join(RUN_ROOT, r_id, model_name.lower())
+    os.makedirs(path)
+    return path
+
+
 if __name__ == '__main__':
     # get cfg paths
     cfg_regex = f"{RUN_ROOT}/*_runcfg.json"
@@ -82,15 +98,17 @@ if __name__ == '__main__':
 
     # create run folders
     for cfg in cfg_list:
-        train_dir, test_dir = create_run_folders(
+        # train_dir, test_dir = create_run_folders(
+        #     model_name=cfg.model.__class__.__name__, run_id=r_id)
+        run_dir = create_run_folder(
             model_name=cfg.model.__class__.__name__, run_id=r_id)
 
         # performs training
         trm.do_train(model=cfg.model, device=r_device,
-                     config=cfg, directory=train_dir)
+                     config=cfg, directory=run_dir)
 
         # performs testing
         pt_path = glob.glob(
-            f"{train_dir}/{cfg.model.__class__.__name__}.pt")[0]
+            f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=cfg.model.__class__.__name__,
-                    state_dict_path=pt_path, device=r_device, directory=test_dir)
+                    state_dict_path=pt_path, device=r_device, directory=run_dir)
