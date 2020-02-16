@@ -1,14 +1,16 @@
 import argparse
-import pandas as pd
-import natsort
+import fnmatch
+import logging as log
+import os
+import re
+
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import matplotlib
-import os
-import fnmatch
-import re
-import logging as log
+import natsort
 import numpy as np
+import pandas as pd
+
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
 print("natsort:", natsort.__version__)
@@ -18,8 +20,6 @@ log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "data-results", "lenet5")
-# LENET5_VANILLA_PATH = os.path.join(
-#     os.getcwd(), "data-results", "lenet5", "TEST")
 
 
 def load_csv(filename: str):
@@ -344,23 +344,56 @@ def plot_confidence_ood(dataset_name: str):
 
     return ax1
 
+def get_union_df(results: list, df_name: str):
+    '''Loads and concats dataframes filtered by name from result folders.
+    '''
+    # load dataframes
+    df_list = list()
+    for model_name in results:
+        df_path = os.path.join(os.path.relpath(model_name), df_name)
+        df = load_csv(df_path)
+
+        # rename columns
+        df = df.rename(lambda cn: f"{model_name}_{cn}", axis='columns')
+        df_list.append(df)
+
+    res_df = pd.concat(df_list, axis=1)
+    log.debug(res_df.columns)
+    return res_df
+
+    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze data.")
-    parser.add_argument('-data', type=str, default='lenet5',
+    parser.add_argument('-data', type=str, default=None,
                         action='store', help='Data folder name.')
 
     args = parser.parse_args()
 
-    # set data folder
-    LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "data-results", args.data)
+    # set data folders
+    res_dir_list = list()
+    if args.data is not None:
+        res_dir_list.append(os.path.relpath(args.data))
+        log.debug(f"Result directory: {os.path.relpath(args.data)}")
+    else:
+        res_dir_list = [path for path in os.listdir() if os.path.isdir(path)]
+        log.debug(f"Result directories: {res_dir_list}")
 
-    # draw plots
-    plot_rotated("mnist")
-    plot_shifted("mnist")
-    plot_confidence_vs_accuracy_60("mnist")
-    plot_count_vs_confidence_60("mnist")
-    plot_entropy_ood("not-mnist")
-    plot_confidence_ood("not-mnist")
+    # get mnist results
+    mnist_df = get_union_df(res_dir_list, "mnist.csv")
 
-    plt.show()
+
+
+
+
+    # if False:
+    #     # draw plots
+    #     plot_rotated("mnist")
+    #     plot_shifted("mnist")
+    #     plot_confidence_vs_accuracy_60("mnist")
+    #     plot_count_vs_confidence_60("mnist")
+    #     plot_entropy_ood("not-mnist")
+    #     plot_confidence_ood("not-mnist")
+
+    #     plt.show()
