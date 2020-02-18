@@ -3,13 +3,15 @@ import fnmatch
 import logging as log
 import os
 import re
-
+import glob
+import itertools
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import natsort
 import numpy as np
 import pandas as pd
+import re
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
@@ -37,25 +39,41 @@ def load_csv(filename: str):
 
 # TESTING
 # dataframe helpers
-def load_rotated():
-    '''Returns a dictionary of pandas datasets for tests with rotated data.
+def get_union_df(results: list, df_name: str):
+    '''Loads and concats dataframes filtered by name from result folders.
     '''
-    # get filenames
-    files = [fn for fn in os.listdir(LENET5_VANILLA_PATH) if os.path.isfile(
-        os.path.join(LENET5_VANILLA_PATH, fn))]
-    paths = fnmatch.filter(files, '*rotate*')
+    # load dataframes
+    df_list = list()
+    for model_name in results:
+        df_path = os.path.join(os.path.relpath(model_name), df_name)
+        df = load_csv(df_path)
+
+        # rename columns
+        df = df.rename(lambda cn: f"{model_name}_{cn}", axis='columns')
+        df_list.append(df)
+
+    res_df = pd.concat(df_list, axis=1)
+    log.debug(res_df.columns)
+    return res_df
+
+def load_rotated(directory: str):
+    '''Returns a dictionary of dataframes with keys equals to rotation degrees range.
+    '''
+    # get rotated filenames
+    paths = glob.glob(f'{directory}/*rotate*.csv')
     paths = natsort.natsorted(paths)
 
     # load as pandas
-    degree_regex = re.compile(r'\d+')
-    dataframes = {}
-    for filename in paths:
-        df = load_csv(os.path.join(LENET5_VANILLA_PATH, filename))
-        name = degree_regex.findall(filename)[0]
-        dataframes[name] = df
+    df_dict = dict()
+    rot_value_regex = re.compile(r'[a-z]*_rotate(\d+).csv')
+    for df_p in paths:
+        # get rotation value
+        m = rot_value_regex.search(df_p)
+        rot_val = m.groups()[0]        
+        df_dict[rot_val] = load_csv(df_p)
 
-    return dataframes
-
+    #log.debug(f"Rotated df dict: {df_dict}")
+    return df_dict
 
 def load_shifted():
     '''Returns a dictionary of pandas datasets for tests with shifted data. tests with shifted data.
@@ -82,7 +100,6 @@ def get_accuracy(df: pd.DataFrame):
     accuracy_row = df['t_good_pred']
     accuracy = accuracy_row.sum() / accuracy_row.count()
     return accuracy
-
 
 def get_brier(df: pd.DataFrame):
     brier_row = df['t_brier']
@@ -344,24 +361,38 @@ def plot_confidence_ood(dataset_name: str):
 
     return ax1
 
-def get_union_df(results: list, df_name: str):
-    '''Loads and concats dataframes filtered by name from result folders.
+
+def get_rotated_df(results: list):
+    '''Returns an union of dataframes for Accuracy and Brier Score with rotated data.
     '''
-    # load dataframes
-    df_list = list()
-    for model_name in results:
-        df_path = os.path.join(os.path.relpath(model_name), df_name)
-        df = load_csv(df_path)
+    sr_list = list()
 
-        # rename columns
-        df = df.rename(lambda cn: f"{model_name}_{cn}", axis='columns')
-        df_list.append(df)
+    for res_dir in results:             
+        # get base data
+        df_base = load_csv(os.path.join(res_dir, 'mnist.csv'))
+        (base_acc, base_brier) = (get_accuracy(df_base), get_brier(df_base))
+        sr = pd.Series(data={'accuracy': get_accuracy(df_base), 'brier_score': get_brier(df_base)}, name='train')
+        sr_list.append(sr)
+        log.debug(f"Rot base acc: {base_acc}, brier: {base_brier}")
+                
+        # get rotated
+        df_rot = load_rotated(res_dir)
+        for df_k in df_rot:
+            data_dict = {
+                'accuracy': get_accuracy(df_rot[df_k]),
+                'brier_score': get_brier(df_rot[df_k])
+            }
+            sr_list.append(pd.Series(data=data_dict, name=df_k))
 
-    res_df = pd.concat(df_list, axis=1)
-    log.debug(res_df.columns)
-    return res_df
+        log.debug(f"sr_list: {sr_list}")
 
-    
+        # merge series
+        df = pd.DataFrame(columns=['accuracy', 'brier_score'])
+        for sr in sr_list:
+            df = df.append(sr, ignore_index=False)
+        log.debug(f"Rotated df: {df}")    
+
+        return df
 
 
 if __name__ == "__main__":
@@ -370,6 +401,10 @@ if __name__ == "__main__":
                         action='store', help='Data folder name.')
 
     args = parser.parse_args()
+    
+    # results data
+    RESULTS_DIRECTORY = os.path.relpath('data-results')
+    log.debug(f"Results directory: {RESULTS_DIRECTORY}")
 
     # set data folders
     res_dir_list = list()
@@ -377,23 +412,13 @@ if __name__ == "__main__":
         res_dir_list.append(os.path.relpath(args.data))
         log.debug(f"Result directory: {os.path.relpath(args.data)}")
     else:
-        res_dir_list = [path for path in os.listdir() if os.path.isdir(path)]
+        res_dir_list = [os.path.join(RESULTS_DIRECTORY, path) for path in os.listdir(RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
         log.debug(f"Result directories: {res_dir_list}")
 
     # get mnist results
     mnist_df = get_union_df(res_dir_list, "mnist.csv")
 
-
-
-
-
-    # if False:
-    #     # draw plots
-    #     plot_rotated("mnist")
-    #     plot_shifted("mnist")
-    #     plot_confidence_vs_accuracy_60("mnist")
-    #     plot_count_vs_confidence_60("mnist")
-    #     plot_entropy_ood("not-mnist")
-    #     plot_confidence_ood("not-mnist")
-
-    #     plt.show()
+    # get rotated results
+    rotated_df = get_rotated_df(res_dir_list)
+    plt.plot(rotated_df)
+    plt.show()
