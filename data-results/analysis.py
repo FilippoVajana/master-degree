@@ -65,34 +65,32 @@ def load_rotated(directory: str):
 
     # load as pandas
     df_dict = dict()
-    rot_value_regex = re.compile(r'[a-z]*_rotate(\d+).csv')
+    rotation_regex = re.compile(r'[a-z]*_rotate(\d+).csv')
     for df_p in paths:
         # get rotation value
-        m = rot_value_regex.search(df_p)
-        rot_val = m.groups()[0]        
-        df_dict[rot_val] = load_csv(df_p)
-
-    #log.debug(f"Rotated df dict: {df_dict}")
+        m = rotation_regex.search(df_p)
+        rotation = m.groups()[0]        
+        df_dict[rotation] = load_csv(df_p)
+    
     return df_dict
 
-def load_shifted():
-    '''Returns a dictionary of pandas datasets for tests with shifted data. tests with shifted data.
+def load_shifted(directory: str):
+    '''Returns a dictionary of dataframes with keys equals to shifted pixels range.
     '''
-    # get filenames
-    files = [fn for fn in os.listdir(LENET5_VANILLA_PATH) if os.path.isfile(
-        os.path.join(LENET5_VANILLA_PATH, fn))]
-    paths = fnmatch.filter(files, '*shift*')
+    # get shifted filenames
+    paths = glob.glob(f'{directory}/*shift*.csv')
     paths = natsort.natsorted(paths)
 
     # load as pandas
-    pixel_regex = re.compile(r'\d+')
-    dataframes = {}
-    for filename in paths:
-        df = load_csv(os.path.join(LENET5_VANILLA_PATH, filename))
-        name = pixel_regex.findall(filename)[0]
-        dataframes[name] = df
+    df_dict = dict()
+    shift_regex = re.compile(r'[a-z]*_shift(\d+).csv')
+    for df_p in paths:
+        # get shift value
+        m = shift_regex.search(df_p)
+        shift = m.groups()[0]        
+        df_dict[shift] = load_csv(df_p)
 
-    return dataframes
+    return df_dict
 
 
 # metrics helpers
@@ -373,7 +371,6 @@ def get_rotated_df(results: list):
         (base_acc, base_brier) = (get_accuracy(df_base), get_brier(df_base))
         sr = pd.Series(data={'accuracy': get_accuracy(df_base), 'brier_score': get_brier(df_base)}, name='train')
         sr_list.append(sr)
-        log.debug(f"Rot base acc: {base_acc}, brier: {base_brier}")
                 
         # get rotated
         df_rot = load_rotated(res_dir)
@@ -384,15 +381,44 @@ def get_rotated_df(results: list):
             }
             sr_list.append(pd.Series(data=data_dict, name=df_k))
 
-        log.debug(f"sr_list: {sr_list}")
+        # merge series
+        df = pd.DataFrame(columns=['accuracy', 'brier_score'])
+        for sr in sr_list:
+            df = df.append(sr, ignore_index=False)
+
+        log.debug(f"Rotated df: {df}")
+        return df
+
+
+def get_shifted_df(results: list):
+    '''Returns an union of dataframes for Accuracy and Brier Score with shifted data.
+    '''
+    sr_list = list()
+
+    for res_dir in results:             
+        # get base data
+        df_base = load_csv(os.path.join(res_dir, 'mnist.csv'))
+        (base_acc, base_brier) = (get_accuracy(df_base), get_brier(df_base))
+        sr = pd.Series(data={'accuracy': get_accuracy(df_base), 'brier_score': get_brier(df_base)}, name='train')
+        sr_list.append(sr)
+                
+        # get rotated
+        df_sh = load_shifted(res_dir)
+        for df_k in df_sh:
+            data_dict = {
+                'accuracy': get_accuracy(df_sh[df_k]),
+                'brier_score': get_brier(df_sh[df_k])
+            }
+            sr_list.append(pd.Series(data=data_dict, name=df_k))
 
         # merge series
         df = pd.DataFrame(columns=['accuracy', 'brier_score'])
         for sr in sr_list:
             df = df.append(sr, ignore_index=False)
-        log.debug(f"Rotated df: {df}")    
 
+        log.debug(f"Shifted df: {df}") 
         return df
+
 
 
 if __name__ == "__main__":
@@ -420,5 +446,16 @@ if __name__ == "__main__":
 
     # get rotated results
     rotated_df = get_rotated_df(res_dir_list)
+
+    # get shifted results
+    shifted_df = get_shifted_df(res_dir_list)
+
+
+    # plot
+    plt.figure(1)
     plt.plot(rotated_df)
-    plt.show()
+
+    plt.figure(2)
+    plt.plot(shifted_df)
+
+    # plt.show()
