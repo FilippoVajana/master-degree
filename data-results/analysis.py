@@ -1,17 +1,15 @@
 import argparse
-import fnmatch
+import glob
 import logging as log
 import os
 import re
-import glob
-import itertools
+
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import natsort
 import numpy as np
 import pandas as pd
-import re
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
@@ -105,23 +103,9 @@ def get_brier(df: pd.DataFrame):
 
 
 # plotting
-def plot_rotated(dataset_name: str):
-    accuracy_dict = {}
-    brier_dict = {}
-
-    # load dataframes
-    original_df = load_csv(os.path.join(LENET5_VANILLA_PATH, "mnist.csv"))
-    rotated_dict = load_rotated()
-
-    # get accuracy
-    accuracy_dict["0"] = get_accuracy(original_df)
-    for key in rotated_dict.keys():
-        accuracy_dict[str(key)] = get_accuracy(rotated_dict[key])
-
-    # get brier
-    brier_dict["0"] = get_brier(original_df)
-    for key in rotated_dict.keys():
-        brier_dict[str(key)] = get_brier(rotated_dict[key])
+def plot_rotated(res_dir_list: list):
+    # get rotated results
+    rotated_df = get_rotated_df(res_dir_list)
 
     # plot
     fig = plt.figure()
@@ -144,8 +128,8 @@ def plot_rotated(dataset_name: str):
 
     xticks = range(0, 195, 15)
 
-    ax1.plot(xticks, list(accuracy_dict.values()))
-    ax2.plot(xticks, list(brier_dict.values()))
+    ax1.plot(xticks, rotated_df['accuracy'])
+    ax2.plot(xticks, rotated_df['brier_score'])
 
     ax1.set_ylabel("Accuracy")
     ax2.set_ylabel("Brier score")
@@ -153,24 +137,9 @@ def plot_rotated(dataset_name: str):
 
     return ax1, ax2
 
-
-def plot_shifted(dataset_name: str):
-    accuracy_dict = {}
-    brier_dict = {}
-
-    # load dataframes
-    original_df = load_csv(os.path.join(LENET5_VANILLA_PATH, "mnist.csv"))
-    shifted_dict = load_shifted()
-
-    # get accuracy
-    accuracy_dict["0"] = get_accuracy(original_df)
-    for key in shifted_dict.keys():
-        accuracy_dict[str(key)] = get_accuracy(shifted_dict[key])
-
-    # get brier
-    brier_dict["0"] = get_brier(original_df)
-    for key in shifted_dict.keys():
-        brier_dict[str(key)] = get_brier(shifted_dict[key])
+def plot_shifted(res_dir_list: list):
+    # get shifted results
+    shifted_df = get_shifted_df(res_dir_list)
 
     # plot
     fig = plt.figure()
@@ -193,8 +162,8 @@ def plot_shifted(dataset_name: str):
 
     xticks = range(0, 16, 2)
 
-    ax1.plot(xticks, list(accuracy_dict.values()))
-    ax2.plot(xticks, list(brier_dict.values()))
+    ax1.plot(xticks, shifted_df['accuracy'])
+    ax2.plot(xticks, shifted_df['brier_score'])
 
     ax1.set_ylabel("Accuracy")
     ax2.set_ylabel("Brier score")
@@ -368,7 +337,6 @@ def get_rotated_df(results: list):
     for res_dir in results:             
         # get base data
         df_base = load_csv(os.path.join(res_dir, 'mnist.csv'))
-        (base_acc, base_brier) = (get_accuracy(df_base), get_brier(df_base))
         sr = pd.Series(data={'accuracy': get_accuracy(df_base), 'brier_score': get_brier(df_base)}, name='train')
         sr_list.append(sr)
                 
@@ -398,7 +366,6 @@ def get_shifted_df(results: list):
     for res_dir in results:             
         # get base data
         df_base = load_csv(os.path.join(res_dir, 'mnist.csv'))
-        (base_acc, base_brier) = (get_accuracy(df_base), get_brier(df_base))
         sr = pd.Series(data={'accuracy': get_accuracy(df_base), 'brier_score': get_brier(df_base)}, name='train')
         sr_list.append(sr)
                 
@@ -425,7 +392,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze data.")
     parser.add_argument('-data', type=str, default=None,
                         action='store', help='Data folder name.')
-
     args = parser.parse_args()
     
     # results data
@@ -452,10 +418,7 @@ if __name__ == "__main__":
 
 
     # plot
-    plt.figure(1)
-    plt.plot(rotated_df)
+    plot_rotated(res_dir_list)
+    plot_shifted(res_dir_list)
 
-    plt.figure(2)
-    plt.plot(shifted_df)
-
-    # plt.show()
+    plt.show()
