@@ -279,20 +279,22 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]):
     #return ax1
 
 
+def plot_count_vs_confidence_60(res_dir_list: List[str]):
+    # load rotated 60° dataframes
+    df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'mnist_rotate60.csv')) for path in res_dir_list}
+    res_df = pd.DataFrame()
 
-def plot_count_vs_confidence_60(dataset_name: str):
-    # load rotated 60° dataframe
-    df = load_csv(os.path.join(LENET5_VANILLA_PATH, "mnist_rotate60.csv"))
-
-    confidence_range = np.arange(0, 1, 0.01)
-    count_df = df['t_confidence']
-
-    # select data based on confidence value
-    conf_count_dict = {}
-    for cv in confidence_range:
-        count_df = count_df.loc[df['t_confidence'] >= cv]
-        count = count_df.count()
-        conf_count_dict[cv] = count
+    confidence_range = np.arange(0, 1, .01)
+    for k in df_dict:
+        # select data based on confidence value
+        count_list = list()        
+        for cv in confidence_range:
+            count_df = df_dict[k].loc[df_dict[k]['t_confidence'] >= cv]
+            count = count_df.iloc[:,0].count()
+            count_list.append(count)
+        
+        # save grouped data
+        res_df[k] = pd.Series(count_list, index=list(confidence_range))
 
     # plot
     fig = plt.figure()
@@ -301,21 +303,19 @@ def plot_count_vs_confidence_60(dataset_name: str):
     formatter = ticker.FormatStrFormatter("%.1f")
 
     ax1.xaxis.set_major_formatter(formatter)
-
     ax1.grid(True)
-
     ax1.tick_params(grid_linestyle='dotted')
-
     ax1.set_xlim(0, 1)
-
     xticks = confidence_range
 
-    ax1.plot(xticks, list(conf_count_dict.values()))
+    for k in res_df:
+        ax1.plot(xticks, list(res_df[k]), label=k)
 
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
+    ax1.legend()
+    #return ax1
 
-    return ax1
 
 
 def plot_entropy_ood(dataset_name: str):
@@ -431,5 +431,6 @@ if __name__ == "__main__":
     # plot
     # plot_shifted(res_dir_list)
     plot_confidence_vs_accuracy_60(res_dir_list)
+    plot_count_vs_confidence_60(res_dir_list)
 
     plt.show()
