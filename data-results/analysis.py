@@ -205,8 +205,8 @@ def plot_rotated(res_dir_list: List[str]):
     ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
+    #return ax1, ax2
 
-    return ax1, ax2
 
 
 def plot_shifted(res_dir_list: List[str]):
@@ -238,11 +238,10 @@ def plot_shifted(res_dir_list: List[str]):
     ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
+    #return ax1, ax2
 
-    return ax1, ax2
 
-
-def plot_confidence_vs_accuracy_60(res_dir_list: list):
+def plot_confidence_vs_accuracy_60(res_dir_list: List[str]):
     # load rotated 60° dataframes
     df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'mnist_rotate60.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
@@ -277,8 +276,8 @@ def plot_confidence_vs_accuracy_60(res_dir_list: list):
     ax1.set_ylabel(r"Accuracy on examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend()
+    #return ax1
 
-    return ax1
 
 
 def plot_count_vs_confidence_60(dataset_name: str):
