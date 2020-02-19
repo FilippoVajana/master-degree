@@ -317,24 +317,27 @@ def plot_count_vs_confidence_60(res_dir_list: List[str]):
     #return ax1
 
 
-
-def plot_entropy_ood(dataset_name: str):
+def plot_entropy_ood(res_dir_list: List[str]):
     # load nomnist dataframe
-    df = load_csv(os.path.join(LENET5_VANILLA_PATH, "nomnist.csv"))
-    ent_df = df['t_entropy']
+    df_dict = {
+        os.path.basename(path):load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy'] 
+        for path in res_dir_list
+        }
+    res_df = pd.DataFrame()
 
     # count examples based on entropy value
-    ent_range = np.arange(ent_df.min(), ent_df.max()*1,
-                          (ent_df.max() - ent_df.min())/25)
+    for k in df_dict:
+        # compute df entropy range
+        ent_range = np.arange(df_dict[k].min(), df_dict[k].max()*1,
+                            (df_dict[k].max() - df_dict[k].min())/25)
 
-    ent_count_dict = {}
-    for ev in ent_range:
-        count_df = ent_df.loc[df['t_entropy'] >= ev]
-        count = count_df.count()
-        ent_count_dict[ev] = count
+        count_list = list()
+        for ev in ent_range:
+            count_df = df_dict[k].loc[df_dict[k] >= ev]
+            count_list.append(count_df.count())
 
-    # ent_df.hist()
-    # print(ent_df.describe())
+        # save grouped data
+        res_df[k] = pd.Series(count_list, index=list(ent_range))
 
     # plot
     fig = plt.figure()
@@ -343,37 +346,34 @@ def plot_entropy_ood(dataset_name: str):
     formatter = ticker.FormatStrFormatter("%.1f")
 
     ax1.xaxis.set_major_formatter(formatter)
-
     ax1.grid(True)
-
     ax1.tick_params(grid_linestyle='dotted')
 
-    #ax1.set_xlim(0, .9)
-    #ax1.set_ylim(0, ent_df.count())
-
-    xticks = ent_range
-
-    ax1.plot(xticks, list(ent_count_dict.values()))
+    for k in res_df:
+        ax1.plot(res_df[k], label=k)
 
     ax1.set_ylabel("Number of examples")
     ax1.set_xlabel("Entropy (Nats)")
+    ax1.legend()
+    #return ax1
 
-    return ax1
 
+def plot_confidence_ood(res_dir_list: List[str]):
+    # load nomnist dataframe
+    df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
+    res_df = pd.DataFrame()
 
-def plot_confidence_ood(dataset_name: str):
-    # load rotated 60° dataframe
-    df = load_csv(os.path.join(LENET5_VANILLA_PATH, "nomnist.csv"))
-
-    confidence_range = np.arange(0, 1, 0.01)
-    count_df = df['t_confidence']
-
-    # select data based on confidence value
-    conf_count_dict = {}
-    for cv in confidence_range:
-        count_df = count_df.loc[df['t_confidence'] >= cv]
-        count = count_df.count()
-        conf_count_dict[cv] = count
+    confidence_range = np.arange(0, 1, .01)
+    for k in df_dict:
+        # select data based on confidence value
+        count_list = list()        
+        for cv in confidence_range:
+            count_df = df_dict[k].loc[df_dict[k]['t_confidence'] >= cv]
+            count = count_df.iloc[:,0].count()
+            count_list.append(count)
+        
+        # save grouped data
+        res_df[k] = pd.Series(count_list, index=list(confidence_range))
 
     # plot
     fig = plt.figure()
@@ -382,21 +382,18 @@ def plot_confidence_ood(dataset_name: str):
     formatter = ticker.FormatStrFormatter("%.1f")
 
     ax1.xaxis.set_major_formatter(formatter)
-
     ax1.grid(True)
-
     ax1.tick_params(grid_linestyle='dotted')
-
     ax1.set_xlim(0, 1)
-
     xticks = confidence_range
 
-    ax1.plot(xticks, list(conf_count_dict.values()))
+    for k in res_df:
+        ax1.plot(xticks, list(res_df[k]), label=k)
 
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
-
-    return ax1
+    ax1.legend
+    #return ax1
 
 
 if __name__ == "__main__":
@@ -419,18 +416,13 @@ if __name__ == "__main__":
             RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
         log.debug(f"Result directories: {res_dir_list}")
 
-    # get mnist results
-    # mnist_df = get_union_df(res_dir_list, "mnist.csv")
 
-    # get rotated results
-    # rotated_df = get_rotated_df(res_dir_list)
-
-    # get shifted results
-    # shifted_df = get_shifted_df(res_dir_list)
-
-    # plot
+    # PLOT    
+    # plot_rotated(res_dir_list)
     # plot_shifted(res_dir_list)
-    plot_confidence_vs_accuracy_60(res_dir_list)
-    plot_count_vs_confidence_60(res_dir_list)
+    # plot_confidence_vs_accuracy_60(res_dir_list)
+    # plot_count_vs_confidence_60(res_dir_list)
+    plot_entropy_ood(res_dir_list)
+    plot_confidence_ood(res_dir_list)
 
     plt.show()
