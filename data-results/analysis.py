@@ -43,12 +43,12 @@ def get_union_df(results: list, df_name: str) -> pd.DataFrame:
     '''
     # load dataframes
     df_list = list()
-    for model_name in results:
-        df_path = os.path.join(os.path.relpath(model_name), df_name)
+    for path in results:
+        df_path = os.path.join(str(os.path.relpath(path)), df_name)
         df = load_csv(df_path)
 
         # rename columns
-        df = df.rename(lambda cn: f"{model_name}_{cn}", axis='columns')
+        df = df.rename(lambda cn: f"{os.path.basename(path)}_{cn}", axis='columns')
         df_list.append(df)
 
     res_df = pd.concat(df_list, axis=1)
@@ -65,7 +65,8 @@ def load_rotated(directory: str) -> Dict[str, pd.DataFrame]:
 
     # load as pandas
     df_dict = dict()
-    rotation_regex = re.compile(r'[a-z]*_rotate(\d+).csv')
+    re_exp = r'[a-z]*_rotate(\d+).csv'
+    rotation_regex = re.compile(re_exp)
     for df_p in paths:
         # get rotation value
         m = rotation_regex.search(df_p)
@@ -95,7 +96,7 @@ def load_shifted(directory: str) -> Dict[str, pd.DataFrame]:
 
 
 def get_rotated_df(results: List[str]) -> Dict[str, pd.DataFrame]:
-    '''Returns an dictionary of dataframes for Accuracy and Brier Score with rotated data.
+    '''Returns a dictionary of dataframes for Accuracy and Brier Score with rotated data.
     '''
     df_dict = dict()
 
@@ -128,6 +129,40 @@ def get_rotated_df(results: List[str]) -> Dict[str, pd.DataFrame]:
     return df_dict
 
 
+def get_shifted_df(results: List[str]) -> Dict[str, pd.DataFrame]:
+    '''Returns a dictionary of dataframes for Accuracy and Brier Score with shifted data.
+    '''
+    df_dict = dict()
+
+    for res_dir in results:
+        sr_list = list()
+        # get base data
+        df_base = load_csv(os.path.join(res_dir, 'mnist.csv'))
+        sr = pd.Series(data={'accuracy': get_accuracy(
+            df_base), 'brier_score': get_brier(df_base)}, name='train')
+        sr_list.append(sr)
+
+        # get rotated
+        df_sh = load_shifted(res_dir)
+        for df_k in df_sh:
+            data_dict = {
+                'accuracy': get_accuracy(df_sh[df_k]),
+                'brier_score': get_brier(df_sh[df_k])
+            }
+            sr_list.append(pd.Series(data=data_dict, name=df_k))
+
+        # merge series
+        df = pd.DataFrame(columns=['accuracy', 'brier_score'])
+        for sr in sr_list:
+            df = df.append(sr, ignore_index=False)
+
+        # add to df dictionary
+        df_dict[os.path.basename(res_dir)] = df
+
+    log.debug(f"Shifted df:\n {df_dict}")
+    return df_dict
+
+
 # METRICS HELPERS
 def get_accuracy(df: pd.DataFrame):
     accuracy_row = df['t_good_pred']
@@ -141,7 +176,7 @@ def get_brier(df: pd.DataFrame):
 
 
 # PLOTTING
-def plot_rotated(res_dir_list: list):
+def plot_rotated(res_dir_list: List[str]):
     # get rotated results
     rotated_df_dict = get_rotated_df(res_dir_list)
 
@@ -153,25 +188,18 @@ def plot_rotated(res_dir_list: list):
 
     ax1.xaxis.set_major_formatter(formatter)
     ax2.xaxis.set_major_formatter(formatter)
-
     ax1.grid(True)
     ax2.grid(True)
-
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
-
     ax1.set_xlim(0, 180)
     ax2.set_xlim(0, 180)
     ax1.set_ylim(0, 1)
-
     xticks = range(0, 195, 15)
 
     for k in rotated_df_dict:
         ax1.plot(xticks, rotated_df_dict[k]['accuracy'], label=k)
         ax2.plot(xticks, rotated_df_dict[k]['brier_score'], label=k)
-
-    # ax1.plot(xticks, rotated_df_dict['accuracy'])
-    # ax2.plot(xticks, rotated_df_dict['brier_score'])
 
     ax1.set_ylabel("Accuracy")
     ax1.legend()
@@ -181,9 +209,9 @@ def plot_rotated(res_dir_list: list):
     return ax1, ax2
 
 
-def plot_shifted(res_dir_list: list):
+def plot_shifted(res_dir_list: List[str]):
     # get shifted results
-    shifted_df = get_shifted_df(res_dir_list)
+    shifted_df_dict = get_shifted_df(res_dir_list)
 
     # plot
     fig = plt.figure()
@@ -193,23 +221,21 @@ def plot_shifted(res_dir_list: list):
 
     ax1.xaxis.set_major_formatter(formatter)
     ax2.xaxis.set_major_formatter(formatter)
-
     ax1.grid(True)
     ax2.grid(True)
-
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
-
     ax1.set_xlim(0, 14)
     ax2.set_xlim(0, 14)
     ax1.set_ylim(0, 1)
-
     xticks = range(0, 16, 2)
 
-    ax1.plot(xticks, shifted_df['accuracy'])
-    ax2.plot(xticks, shifted_df['brier_score'])
+    for k in shifted_df_dict:
+        ax1.plot(xticks, shifted_df_dict[k]['accuracy'], label=k)
+        ax2.plot(xticks, shifted_df_dict[k]['brier_score'], label=k)
 
     ax1.set_ylabel("Accuracy")
+    ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
 
@@ -218,18 +244,20 @@ def plot_shifted(res_dir_list: list):
 
 def plot_confidence_vs_accuracy_60(res_dir_list: list):
     # load rotated 60° dataframes
-    df = get_union_df(res_dir_list, "mnist_rotate60.csv")
-    # df = load_csv(os.path.join(LENET5_VANILLA_PATH, "mnist_rotate60.csv"))
+    df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'mnist_rotate60.csv')) for path in res_dir_list}
+    res_df = pd.DataFrame()
 
     confidence_range = np.arange(0, 1, .01)
-    acc_conf_df = df[['t_good_pred', 't_confidence']]
+    for k in df_dict:
+        # select data based on confidence value
+        acc_list = list()
+        for cv in confidence_range:
+            acc_df = df_dict[k].loc[df_dict[k]['t_confidence'] >= cv]
+            accuracy = get_accuracy(acc_df)
+            acc_list.append(accuracy)
 
-    # select data based on confidence value
-    acc_conf_dict = {}
-    for cv in confidence_range:
-        acc_df = acc_conf_df.loc[df['t_confidence'] >= cv]
-        accuracy = get_accuracy(acc_df)
-        acc_conf_dict[cv] = accuracy
+        # save grouped data
+        res_df[k] = pd.Series(acc_list, index=list(confidence_range))
 
     # plot
     fig = plt.figure()
@@ -238,19 +266,17 @@ def plot_confidence_vs_accuracy_60(res_dir_list: list):
     formatter = ticker.FormatStrFormatter("%.1f")
 
     ax1.xaxis.set_major_formatter(formatter)
-
     ax1.grid(True)
-
     ax1.tick_params(grid_linestyle='dotted')
-
     ax1.set_xlim(0, 1)
-
     xticks = confidence_range
 
-    ax1.plot(xticks, list(acc_conf_dict.values()))
+    for k in res_df:
+        ax1.plot(xticks, res_df[k], label=k)
 
     ax1.set_ylabel(r"Accuracy on examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
+    ax1.legend()
 
     return ax1
 
@@ -374,36 +400,6 @@ def plot_confidence_ood(dataset_name: str):
     return ax1
 
 
-def get_shifted_df(results: list):
-    '''Returns an union of dataframes for Accuracy and Brier Score with shifted data.
-    '''
-    sr_list = list()
-
-    for res_dir in results:
-        # get base data
-        df_base = load_csv(os.path.join(res_dir, 'mnist.csv'))
-        sr = pd.Series(data={'accuracy': get_accuracy(
-            df_base), 'brier_score': get_brier(df_base)}, name='train')
-        sr_list.append(sr)
-
-        # get rotated
-        df_sh = load_shifted(res_dir)
-        for df_k in df_sh:
-            data_dict = {
-                'accuracy': get_accuracy(df_sh[df_k]),
-                'brier_score': get_brier(df_sh[df_k])
-            }
-            sr_list.append(pd.Series(data=data_dict, name=df_k))
-
-    # merge series
-    df = pd.DataFrame(columns=['accuracy', 'brier_score'])
-    for sr in sr_list:
-        df = df.append(sr, ignore_index=False)
-
-    log.debug(f"Shifted df: {df}")
-    return df
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze data.")
     parser.add_argument('-data', type=str, default=None,
@@ -425,22 +421,16 @@ if __name__ == "__main__":
         log.debug(f"Result directories: {res_dir_list}")
 
     # get mnist results
-    mnist_df = get_union_df(res_dir_list, "mnist.csv")
+    # mnist_df = get_union_df(res_dir_list, "mnist.csv")
 
     # get rotated results
-    rotated_df = get_rotated_df(res_dir_list)
+    # rotated_df = get_rotated_df(res_dir_list)
 
     # get shifted results
-    shifted_df = get_shifted_df(res_dir_list)
+    # shifted_df = get_shifted_df(res_dir_list)
 
     # plot
-    # rot_dict = get_rotated_df(res_dir_list)
-    # rot = [df for df in rot_dict.values()]
-    # for df in rot:
-    #     df.plot()
-    plot_rotated(res_dir_list)
-
     # plot_shifted(res_dir_list)
-    # plot_confidence_vs_accuracy_60(res_dir_list)
+    plot_confidence_vs_accuracy_60(res_dir_list)
 
     plt.show()
