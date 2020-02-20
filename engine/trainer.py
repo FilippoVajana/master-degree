@@ -13,13 +13,13 @@ log.basicConfig(level=log.DEBUG,
 
 
 def timer(func):
-    # TODO: print as logging
     def wrapper(*args):
-        # start_time = time.perf_counter()
+        start_time = time.perf_counter()
         value = func(*args)
-        # end_time = time.perf_counter()
-        # elapsed_time = end_time - start_time
-        # print(f"[{func.__name__!r}] Execution time: {elapsed_time*1000:.4f} ms")
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
+        log.debug(
+            f"[{func.__name__!r}] Execution time: {elapsed_time*1000:.4f} ms")
         return value
     return wrapper
 
