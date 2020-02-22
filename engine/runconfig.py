@@ -59,7 +59,3 @@ class RunConfig():
             json_obj = jsonpickle.encode(self)
             f.write(json_obj)
         return save_path
-
-
-if __name__ == "__main__":
-    RunConfig().save("./runconfig.json")
