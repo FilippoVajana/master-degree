@@ -19,7 +19,7 @@ RUN_CONFIGS = [
 ]
 
 
-def get_id():
+def get_id() -> str:
     '''Returns run id as a time string.
     '''
     time = dt.datetime.now()
@@ -28,7 +28,7 @@ def get_id():
     return t_id
 
 
-def get_device():
+def get_device() -> str:
     '''Returns the best available compute device.
     '''
     device = "cpu"  # default device
@@ -38,29 +38,6 @@ def get_device():
         device = f"cuda:{gpu[0]}"
     log.info(f"Set compute device: {device}")
     return device
-
-
-def create_run_folders(model_name: str, train=True, test=True, run_id=None):
-    '''Creates "runs/" root directory, "run_id/" folder and 
-    "train/" and "test/" run subdirectories.
-    '''
-    tr_path, te_path = str(), str()
-    # get run id
-    r_id = get_id() if run_id is None else run_id
-
-    if train == True:
-        # create train root folder
-        tr_path = os.path.join(RUN_ROOT, r_id, model_name, 'train')
-        os.makedirs(tr_path, exist_ok=True)
-        log.info(f"Created train root: {tr_path}")
-
-    if test == True:
-        # create test root folder
-        te_path = os.path.join(RUN_ROOT, r_id, model_name, 'test')
-        os.makedirs(te_path, exist_ok=True)
-        log.info(f"Created test root: {te_path}")
-
-    return tr_path, te_path
 
 
 def create_run_folder(model_name: str, run_id=None):
@@ -76,7 +53,7 @@ def create_run_folder(model_name: str, run_id=None):
 
 
 if __name__ == '__main__':
-    # get cfg paths
+    # detect models config json
     cfg_regex = f"{RUN_ROOT}/*_runcfg.json"
     cfg_paths = glob.glob(cfg_regex)
     log.debug(f"glob result: {cfg_paths}")
@@ -98,8 +75,6 @@ if __name__ == '__main__':
 
     # create run folders
     for cfg in cfg_list:
-        # train_dir, test_dir = create_run_folders(
-        #     model_name=cfg.model.__class__.__name__, run_id=r_id)
         run_dir = create_run_folder(
             model_name=cfg.model.__class__.__name__, run_id=r_id)
 

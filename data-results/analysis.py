@@ -48,7 +48,8 @@ def get_union_df(results: list, df_name: str) -> pd.DataFrame:
         df = load_csv(df_path)
 
         # rename columns
-        df = df.rename(lambda cn: f"{os.path.basename(path)}_{cn}", axis='columns')
+        df = df.rename(
+            lambda cn: f"{os.path.basename(path)}_{cn}", axis='columns')
         df_list.append(df)
 
     res_df = pd.concat(df_list, axis=1)
@@ -205,8 +206,7 @@ def plot_rotated(res_dir_list: List[str]):
     ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
-    #return ax1, ax2
-
+    # return ax1, ax2
 
 
 def plot_shifted(res_dir_list: List[str]):
@@ -238,12 +238,13 @@ def plot_shifted(res_dir_list: List[str]):
     ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
-    #return ax1, ax2
+    # return ax1, ax2
 
 
 def plot_confidence_vs_accuracy_60(res_dir_list: List[str]):
     # load rotated 60° dataframes
-    df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'mnist_rotate60.csv')) for path in res_dir_list}
+    df_dict = {os.path.basename(path): load_csv(os.path.join(
+        path, 'mnist_rotate60.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
     confidence_range = np.arange(0, 1, .01)
@@ -276,23 +277,24 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]):
     ax1.set_ylabel(r"Accuracy on examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend()
-    #return ax1
+    # return ax1
 
 
 def plot_count_vs_confidence_60(res_dir_list: List[str]):
     # load rotated 60° dataframes
-    df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'mnist_rotate60.csv')) for path in res_dir_list}
+    df_dict = {os.path.basename(path): load_csv(os.path.join(
+        path, 'mnist_rotate60.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
     confidence_range = np.arange(0, 1, .01)
     for k in df_dict:
         # select data based on confidence value
-        count_list = list()        
+        count_list = list()
         for cv in confidence_range:
             count_df = df_dict[k].loc[df_dict[k]['t_confidence'] >= cv]
-            count = count_df.iloc[:,0].count()
+            count = count_df.iloc[:, 0].count()
             count_list.append(count)
-        
+
         # save grouped data
         res_df[k] = pd.Series(count_list, index=list(confidence_range))
 
@@ -314,22 +316,22 @@ def plot_count_vs_confidence_60(res_dir_list: List[str]):
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend()
-    #return ax1
+    # return ax1
 
 
 def plot_entropy_ood(res_dir_list: List[str]):
     # load nomnist dataframe
     df_dict = {
-        os.path.basename(path):load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy'] 
+        os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
         for path in res_dir_list
-        }
+    }
     res_df = pd.DataFrame()
 
     # count examples based on entropy value
     for k in df_dict:
         # compute df entropy range
         ent_range = np.arange(df_dict[k].min(), df_dict[k].max()*1,
-                            (df_dict[k].max() - df_dict[k].min())/25)
+                              (df_dict[k].max() - df_dict[k].min())/25)
 
         count_list = list()
         for ev in ent_range:
@@ -355,23 +357,24 @@ def plot_entropy_ood(res_dir_list: List[str]):
     ax1.set_ylabel("Number of examples")
     ax1.set_xlabel("Entropy (Nats)")
     ax1.legend()
-    #return ax1
+    # return ax1
 
 
 def plot_confidence_ood(res_dir_list: List[str]):
     # load nomnist dataframe
-    df_dict = {os.path.basename(path):load_csv(os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
+    df_dict = {os.path.basename(path): load_csv(
+        os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
     confidence_range = np.arange(0, 1, .01)
     for k in df_dict:
         # select data based on confidence value
-        count_list = list()        
+        count_list = list()
         for cv in confidence_range:
             count_df = df_dict[k].loc[df_dict[k]['t_confidence'] >= cv]
-            count = count_df.iloc[:,0].count()
+            count = count_df.iloc[:, 0].count()
             count_list.append(count)
-        
+
         # save grouped data
         res_df[k] = pd.Series(count_list, index=list(confidence_range))
 
@@ -393,7 +396,7 @@ def plot_confidence_ood(res_dir_list: List[str]):
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend
-    #return ax1
+    # return ax1
 
 
 if __name__ == "__main__":
@@ -416,13 +419,12 @@ if __name__ == "__main__":
             RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
         log.debug(f"Result directories: {res_dir_list}")
 
-
-    # PLOT    
+    # PLOT
     # plot_rotated(res_dir_list)
     # plot_shifted(res_dir_list)
     # plot_confidence_vs_accuracy_60(res_dir_list)
     # plot_count_vs_confidence_60(res_dir_list)
-    plot_entropy_ood(res_dir_list)
-    plot_confidence_ood(res_dir_list)
+    # plot_entropy_ood(res_dir_list)
+    # plot_confidence_ood(res_dir_list)
 
     plt.show()
