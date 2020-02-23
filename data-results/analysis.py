@@ -11,16 +11,24 @@ import natsort
 import numpy as np
 import pandas as pd
 from typing import *
+import datetime as dt
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
 print("natsort:", natsort.__version__)
 print("pandas:", pd.__version__)
 
-log.basicConfig(level=log.DEBUG,
+log.basicConfig(level=log.INFO,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
-LENET5_VANILLA_PATH = os.path.join(os.getcwd(), "data-results", "lenet5")
+
+def get_id() -> str:
+    '''Returns run id as a time string.
+    '''
+    time = dt.datetime.now()
+    t_id = time.strftime("%d%m_%H%M")
+    log.debug(f"Created ID: {t_id}")
+    return t_id
 
 
 def load_csv(filename: str):
@@ -53,7 +61,7 @@ def get_union_df(results: list, df_name: str) -> pd.DataFrame:
         df_list.append(df)
 
     res_df = pd.concat(df_list, axis=1)
-    log.debug(res_df.columns)
+    # log.debug(res_df.columns)
     return res_df
 
 
@@ -126,7 +134,7 @@ def get_rotated_df(results: List[str]) -> Dict[str, pd.DataFrame]:
         # add to df dictionary
         df_dict[os.path.basename(res_dir)] = df
 
-    log.debug(f"Rotated df:\n {df_dict}")
+    # log.debug(f"Rotated df:\n {df_dict}")
     return df_dict
 
 
@@ -160,7 +168,7 @@ def get_shifted_df(results: List[str]) -> Dict[str, pd.DataFrame]:
         # add to df dictionary
         df_dict[os.path.basename(res_dir)] = df
 
-    log.debug(f"Shifted df:\n {df_dict}")
+    # log.debug(f"Shifted df:\n {df_dict}")
     return df_dict
 
 
@@ -177,7 +185,7 @@ def get_brier(df: pd.DataFrame):
 
 
 # PLOTTING
-def plot_rotated(res_dir_list: List[str]):
+def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     # get rotated results
     rotated_df_dict = get_rotated_df(res_dir_list)
 
@@ -206,10 +214,10 @@ def plot_rotated(res_dir_list: List[str]):
     ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
-    # return ax1, ax2
+    return fig
 
 
-def plot_shifted(res_dir_list: List[str]):
+def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     # get shifted results
     shifted_df_dict = get_shifted_df(res_dir_list)
 
@@ -238,10 +246,10 @@ def plot_shifted(res_dir_list: List[str]):
     ax1.legend()
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Intensity of Skew")
-    # return ax1, ax2
+    return fig
 
 
-def plot_confidence_vs_accuracy_60(res_dir_list: List[str]):
+def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     # load rotated 60° dataframes
     df_dict = {os.path.basename(path): load_csv(os.path.join(
         path, 'mnist_rotate60.csv')) for path in res_dir_list}
@@ -277,10 +285,10 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]):
     ax1.set_ylabel(r"Accuracy on examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend()
-    # return ax1
+    return fig
 
 
-def plot_count_vs_confidence_60(res_dir_list: List[str]):
+def plot_count_vs_confidence_60(res_dir_list: List[str]) -> plt.Figure:
     # load rotated 60° dataframes
     df_dict = {os.path.basename(path): load_csv(os.path.join(
         path, 'mnist_rotate60.csv')) for path in res_dir_list}
@@ -316,10 +324,10 @@ def plot_count_vs_confidence_60(res_dir_list: List[str]):
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend()
-    # return ax1
+    return fig
 
 
-def plot_entropy_ood(res_dir_list: List[str]):
+def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     # load nomnist dataframe
     df_dict = {
         os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
@@ -357,10 +365,10 @@ def plot_entropy_ood(res_dir_list: List[str]):
     ax1.set_ylabel("Number of examples")
     ax1.set_xlabel("Entropy (Nats)")
     ax1.legend()
-    # return ax1
+    return fig
 
 
-def plot_confidence_ood(res_dir_list: List[str]):
+def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
     # load nomnist dataframe
     df_dict = {os.path.basename(path): load_csv(
         os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
@@ -396,7 +404,7 @@ def plot_confidence_ood(res_dir_list: List[str]):
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
     ax1.legend
-    # return ax1
+    return fig
 
 
 if __name__ == "__main__":
@@ -404,6 +412,8 @@ if __name__ == "__main__":
     parser.add_argument('-data', type=str, default=None,
                         action='store', help='Data folder name.')
     args = parser.parse_args()
+
+    ENABLE_SAVE_FIGURES = True
 
     # results data
     RESULTS_DIRECTORY = os.path.relpath('data-results')
@@ -420,11 +430,22 @@ if __name__ == "__main__":
         log.debug(f"Result directories: {res_dir_list}")
 
     # PLOT
-    # plot_rotated(res_dir_list)
-    # plot_shifted(res_dir_list)
-    # plot_confidence_vs_accuracy_60(res_dir_list)
-    # plot_count_vs_confidence_60(res_dir_list)
-    # plot_entropy_ood(res_dir_list)
-    # plot_confidence_ood(res_dir_list)
+    figures = dict()
+    figures["rotated.png"] = plot_rotated(res_dir_list)
+    figures["shifted.png"] = plot_shifted(res_dir_list)
+    figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
+    figures["count_acc60.png"] = plot_count_vs_confidence_60(res_dir_list)
+    figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
+    figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
 
     plt.show()
+
+    if ENABLE_SAVE_FIGURES:
+        log.info("Saving plots")
+        # create save folder
+        a_id = get_id()
+        a_path = os.path.join("./", "data-results", a_id)
+        os.makedirs(a_path, exist_ok=True)
+        # save loop
+        for fn in figures:
+            figures[fn].savefig(os.path.join(a_path, fn))
