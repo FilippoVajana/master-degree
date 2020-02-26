@@ -558,8 +558,12 @@ def plot_train_entropy(res_dir_list: List[str]) -> plt.Figure:
 
 
 if __name__ == "__main__":
-    ENABLE_SAVE_FIGURES = False
+    ENABLE_SAVE_FIGURES = True
     RESULTS_DIRECTORY = os.path.relpath('data-results')
+    run_dirs = [path for path in os.listdir(
+        RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
+    RUN_ID = sorted(run_dirs, reverse=True)[0]
+    IMGS_PATH = None
 
     parser = argparse.ArgumentParser(description="Analyze data.")
     parser.add_argument('-data', type=str, default=None,
@@ -569,35 +573,37 @@ if __name__ == "__main__":
     # set data folders
     res_dir_list = list()
     if args.data is not None:
+        IMGS_PATH = os.path.relpath(args.data)
         res_dir_list.append(os.path.relpath(args.data))
-        log.debug(f"Result directory: {os.path.relpath(args.data)}")
+        log.info(f"Result directory: {os.path.relpath(args.data)}")
     else:
-        res_dir_list = glob.glob(f"{RESULTS_DIRECTORY}/lenet5*")
-        log.debug(f"Result directories: {res_dir_list}")
+        IMGS_PATH = os.path.join(RESULTS_DIRECTORY, RUN_ID)
+        res_dir_list = glob.glob(f"{IMGS_PATH}/lenet5*")
+        log.info(f"Result directories: {res_dir_list}")
 
     # PLOT
     figures = dict()
+
     # train data
-    plot_train_accuracy(res_dir_list)
-    plot_train_loss(res_dir_list)
-    plot_train_brier(res_dir_list)
-    plot_train_entropy(res_dir_list)
+    figures["train_accuracy"] = plot_train_accuracy(res_dir_list)
+    figures["train_loss"] = plot_train_loss(res_dir_list)
+    figures["train_brier"] = plot_train_brier(res_dir_list)
+    figures["train_entropy"] = plot_train_entropy(res_dir_list)
+    # plt.show()
 
     # test data
-    # figures["rotated.png"] = plot_rotated(res_dir_list)
-    # figures["shifted.png"] = plot_shifted(res_dir_list)
-    # figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
-    # figures["count_acc60.png"] = plot_confidence_vs_count_60(res_dir_list)
-    # figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
-    # figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
-    plt.show()
+    figures["rotated.png"] = plot_rotated(res_dir_list)
+    figures["shifted.png"] = plot_shifted(res_dir_list)
+    figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
+    figures["count_acc60.png"] = plot_confidence_vs_count_60(res_dir_list)
+    figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
+    figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
+    # plt.show()
 
     if ENABLE_SAVE_FIGURES:
         log.info("Saving plots")
         # create save folder
-        a_id = get_id()
-        a_path = os.path.join("./", "data-results", a_id)
-        os.makedirs(a_path, exist_ok=True)
+        os.makedirs(IMGS_PATH, exist_ok=True)
         # save loop
         for fn in figures:
-            figures[fn].savefig(os.path.join(a_path, fn))
+            figures[fn].savefig(os.path.join(IMGS_PATH, fn))
