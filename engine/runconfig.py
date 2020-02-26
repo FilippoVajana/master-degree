@@ -1,5 +1,6 @@
 import jsonpickle
 
+
 class RunConfig():
     def __init__(self):
         # dataloaders params
@@ -10,25 +11,25 @@ class RunConfig():
 
         # trainer params
         self.model = 'LeNet5'
-        self.device = "cpu"
-        self.epochs = 10
+        self.epochs = 20
         self.optimizer_args = {
-            'lr': 0.1,
-            'weight_decay':1e-4,
-            'betas':(0.9, 0.999),
-            'eps':1e-08
-            }
+            'lr': 0.01,
+            'weight_decay': 1e-4,
+            'betas': (0.9, 0.999),
+            'eps': 1e-08
+        }
+        self.dirty_labels = 0.0
 
     @staticmethod
     def load(cfg_path):
         """
         Loads a configuration from file.
-        
+
         Parameters
         ----------
         cfg_path : string
             Path to the configuration file.
-        
+
         Returns
         -------
         DataLoaderConfiguration
@@ -43,12 +44,12 @@ class RunConfig():
     def save(self, save_path):
         """
         Saves the current configuration instance.
-        
+
         Parameters
         ----------
         save_path : string
             Destination path.
-        
+
         Returns
         -------
         string

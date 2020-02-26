@@ -67,19 +67,23 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str):
     # load model
     model_obj = load_model_state(model_name, state_dict_path, device)
 
-    # run tests
+    # in distribution mnist
     t_res_dict = dict()
     log.info("Testing MNIST")
     t_res_dict["mnist.csv"] = test_regular_data(model_obj)
+
+    # out-of-distribution notmnist
     log.info("Testing Out-Of-Distribution")
     t_res_dict["nomnist.csv"] = test_ood_data(model_obj)
 
+    # rotation skew
     rotation_range = range(15, 180 + 15, 15)
     for rotation_value in rotation_range:
         log.info(f"Testing Rotated {rotation_value} MNIST")
         df = test_rotated_data(model_obj, "mnist", rotation_value)
         t_res_dict[f"mnist_rotate{rotation_value}.csv"] = df
 
+    # pixel shift skew
     shift_range = range(2, 14 + 2, 2)
     img_size = 28
     for shift_value in shift_range:
@@ -95,7 +99,6 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str):
 
 
 def test_regular_data(model, dataset_name="mnist"):
-    # TODO: add device arg
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
