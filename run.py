@@ -18,7 +18,8 @@ RUN_ROOT = './runs'
 RUN_CONFIGS = [
     'LeNet5_runcfg.json',
     'LeNet5SimpleLLDropout_runcfg.json',
-    'LeNet5SimpleDropout_runcfg.json'
+    'LeNet5SimpleDropout_runcfg.json',
+    'LeNet5ConcreteDropout_runcfg.json'
 ]
 
 # RUN_CONFIGS = ['LeNet5_runcfg.json']
@@ -83,7 +84,7 @@ if __name__ == '__main__':
 
     if ENABLE_DIRTY_LABELS:
         lenet5_cfg = run_configurations["LeNet5"]
-        dl_values = np.arange(.02, .10, .02)
+        dl_values = [0.10, 0.20]
         run_configurations.update(
             create_labeldropout_configs(lenet5_cfg, dl_values))
 
