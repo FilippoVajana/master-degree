@@ -1,3 +1,8 @@
+import datetime as dt
+from typing import Dict, List
+import pandas as pd
+import numpy as np
+import natsort
 import argparse
 import glob
 import logging as log
@@ -7,11 +12,9 @@ import re
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import natsort
-import numpy as np
-import pandas as pd
-from typing import *
-import datetime as dt
+plt.rcParams["figure.figsize"] = [10, 8]
+prop_cycle = plt.rcParams['axes.prop_cycle']
+mycolors = prop_cycle.by_key()['color']
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
@@ -40,6 +43,7 @@ def load_csv(filename: str):
 
 ###########
 # TRAINING #
+
 
 ###########
 # TESTING #
@@ -288,7 +292,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     return fig
 
 
-def plot_count_vs_confidence_60(res_dir_list: List[str]) -> plt.Figure:
+def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     # load rotated 60° dataframes
     df_dict = {os.path.basename(path): load_csv(os.path.join(
         path, 'mnist_rotate60.csv')) for path in res_dir_list}
@@ -309,7 +313,7 @@ def plot_count_vs_confidence_60(res_dir_list: List[str]) -> plt.Figure:
     # plot
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Count vs Acc Rotated 60°")
+    fig.suptitle("Confidence vs Count Rotated 60°")
     formatter = ticker.FormatStrFormatter("%.1f")
 
     ax1.xaxis.set_major_formatter(formatter)
@@ -403,21 +407,164 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
     ax1.set_xlabel(r"$\tau$")
-    ax1.legend
+    ax1.legend()
+    return fig
+
+
+# TODO: move up
+def plot_train_accuracy(res_dir_list: List[str]) -> plt.Figure:
+    # load dataframes
+    df_union = get_union_df(res_dir_list, "train_logs.csv")
+    df_union.drop(list(df_union.filter(regex='epoch')), axis=1, inplace=True)
+
+    # select accuracy columns
+    tr_acc_df = pd.DataFrame(df_union.filter(regex=r"t_mean_accuracy$"))
+    tr_acc_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+    va_acc_df = pd.DataFrame(df_union.filter(regex=r"v_mean_accuracy$"))
+    va_acc_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+
+    # plot
+    fig = plt.figure()
+    fig.suptitle("Accuracy Value")
+    (ax1, ax2) = fig.subplots(nrows=2, sharex=True)
+    ax1 = tr_acc_df.plot(xticks=range(0, 20, 2), ax=ax1)
+    plt.gca().set_prop_cycle(None)
+    ax2 = va_acc_df.plot(xticks=range(0, 20, 2), ax=ax2,
+                         legend=False, linestyle='-.')
+
+    ax1.grid(True)
+    ax2.grid(True)
+    ax1.tick_params(grid_linestyle='dotted')
+    ax2.tick_params(grid_linestyle='dotted')
+
+    ax1.set_ylabel("Training Accuracy")
+    ax2.set_ylabel("Validation Accuracy")
+    ax2.set_xlabel("Epoch")
+    return fig
+
+
+def plot_train_loss(res_dir_list: List[str]) -> plt.Figure:
+    # load dataframes
+    df_union = get_union_df(res_dir_list, "train_logs.csv")
+    df_union.drop(list(df_union.filter(regex='epoch')), axis=1, inplace=True)
+
+    # select accuracy columns
+    tr_loss_df = pd.DataFrame(df_union.filter(regex=r"t_mean_loss$"))
+    tr_loss_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+    va_loss_df = pd.DataFrame(df_union.filter(regex=r"v_mean_loss$"))
+    va_loss_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+
+    # plot
+    fig = plt.figure()
+    fig.suptitle("Loss Value")
+    (ax1, ax2) = fig.subplots(nrows=2, sharex=True)
+    ax1 = tr_loss_df.plot(xticks=range(0, 20, 2), ax=ax1)
+    plt.gca().set_prop_cycle(None)
+    ax2 = va_loss_df.plot(xticks=range(0, 20, 2), ax=ax2,
+                          legend=False, linestyle='-.')
+
+    ax1.grid(True)
+    ax2.grid(True)
+    ax1.tick_params(grid_linestyle='dotted')
+    ax2.tick_params(grid_linestyle='dotted')
+
+    ax1.set_ylabel("Training Loss")
+    ax2.set_ylabel("Validation Loss")
+    ax2.set_xlabel("Epoch")
+
+    return fig
+
+
+def plot_train_brier(res_dir_list: List[str]) -> plt.Figure:
+    # load dataframes
+    df_union = get_union_df(res_dir_list, "train_logs.csv")
+    df_union.drop(list(df_union.filter(regex='epoch')), axis=1, inplace=True)
+
+    # select accuracy columns
+    tr_brier_df = pd.DataFrame(df_union.filter(regex=r"t_mean_brier$"))
+    tr_brier_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+    va_brier_df = pd.DataFrame(df_union.filter(regex=r"_v_mean_brier"))
+    va_brier_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+    ov_brier_df = pd.DataFrame(df_union.filter(regex=r"ov_mean_brier$"))
+    ov_brier_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+
+    # plot
+    fig = plt.figure()
+    fig.suptitle("Brier Score")
+    (ax1, ax2, ax3) = fig.subplots(nrows=3, sharex=True)
+
+    ax1 = tr_brier_df.plot(xticks=range(0, 20, 2), ax=ax1)
+    plt.gca().set_prop_cycle(None)
+    ax2 = va_brier_df.plot(xticks=range(0, 20, 2), ax=ax2,
+                           legend=False, linestyle='-.')
+    plt.gca().set_prop_cycle(None)
+    ax3 = ov_brier_df.plot(xticks=range(0, 20, 2), ax=ax3,
+                           legend=False, linestyle='dashed')
+
+    ax1.grid(True)
+    ax2.grid(True)
+    ax3.grid(True)
+    ax1.tick_params(grid_linestyle='dotted')
+    ax2.tick_params(grid_linestyle='dotted')
+    ax3.tick_params(grid_linestyle='dotted')
+
+    ax1.set_ylabel("Training Brier")
+    ax2.set_ylabel("Validation Brier")
+    ax3.set_ylabel("OOD Validation Brier")
+    ax3.set_xlabel("Epoch")
+
+    return fig
+
+
+def plot_train_entropy(res_dir_list: List[str]) -> plt.Figure:
+    # load dataframes
+    df_union = get_union_df(res_dir_list, "train_logs.csv")
+    df_union.drop(list(df_union.filter(regex='epoch')), axis=1, inplace=True)
+
+    # select accuracy columns
+    tr_ent_df = pd.DataFrame(df_union.filter(regex=r"t_mean_entropy$"))
+    tr_ent_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+    va_ent_df = pd.DataFrame(df_union.filter(regex=r"_v_mean_entropy"))
+    va_ent_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+    ov_ent_df = pd.DataFrame(df_union.filter(regex=r"ov_mean_entropy$"))
+    ov_ent_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
+
+    # plot
+    fig = plt.figure()
+    fig.suptitle("Entropy Value")
+    (ax1, ax2, ax3) = fig.subplots(nrows=3, sharex=True)
+
+    ax1 = tr_ent_df.plot(xticks=range(0, 20, 2), ax=ax1)
+    plt.gca().set_prop_cycle(None)
+    ax2 = va_ent_df.plot(xticks=range(0, 20, 2), ax=ax2,
+                         legend=False, linestyle='-.')
+    plt.gca().set_prop_cycle(None)
+    ax3 = ov_ent_df.plot(xticks=range(0, 20, 2), ax=ax3,
+                         legend=False, linestyle='dashed')
+
+    ax1.grid(True)
+    ax2.grid(True)
+    ax3.grid(True)
+    ax1.tick_params(grid_linestyle='dotted')
+    ax2.tick_params(grid_linestyle='dotted')
+    ax3.tick_params(grid_linestyle='dotted')
+
+    ax1.set_ylabel("Training Entropy")
+    ax2.set_ylabel("Validation Entropy")
+    ax3.set_ylabel("OOD Validation Entropy")
+    ax3.set_xlabel("Epoch")
+
     return fig
 
 
 if __name__ == "__main__":
+    ENABLE_SAVE_FIGURES = False
+    RESULTS_DIRECTORY = os.path.relpath('data-results')
+
     parser = argparse.ArgumentParser(description="Analyze data.")
     parser.add_argument('-data', type=str, default=None,
                         action='store', help='Data folder name.')
     args = parser.parse_args()
-
-    ENABLE_SAVE_FIGURES = True
-
-    # results data
-    RESULTS_DIRECTORY = os.path.relpath('data-results')
-    log.debug(f"Results directory: {RESULTS_DIRECTORY}")
 
     # set data folders
     res_dir_list = list()
@@ -425,19 +572,24 @@ if __name__ == "__main__":
         res_dir_list.append(os.path.relpath(args.data))
         log.debug(f"Result directory: {os.path.relpath(args.data)}")
     else:
-        res_dir_list = [os.path.join(RESULTS_DIRECTORY, path) for path in os.listdir(
-            RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
+        res_dir_list = glob.glob(f"{RESULTS_DIRECTORY}/lenet5*")
         log.debug(f"Result directories: {res_dir_list}")
 
     # PLOT
     figures = dict()
-    figures["rotated.png"] = plot_rotated(res_dir_list)
-    figures["shifted.png"] = plot_shifted(res_dir_list)
-    figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
-    figures["count_acc60.png"] = plot_count_vs_confidence_60(res_dir_list)
-    figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
-    figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
+    # train data
+    plot_train_accuracy(res_dir_list)
+    plot_train_loss(res_dir_list)
+    plot_train_brier(res_dir_list)
+    plot_train_entropy(res_dir_list)
 
+    # test data
+    # figures["rotated.png"] = plot_rotated(res_dir_list)
+    # figures["shifted.png"] = plot_shifted(res_dir_list)
+    # figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
+    # figures["count_acc60.png"] = plot_confidence_vs_count_60(res_dir_list)
+    # figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
+    # figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
     plt.show()
 
     if ENABLE_SAVE_FIGURES:
