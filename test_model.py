@@ -23,6 +23,7 @@ DATA_DICT = {
 
 
 DEVICE = 'cpu'
+BATCH_SIZE = 32
 
 
 def get_device():
@@ -102,7 +103,7 @@ def test_regular_data(model, dataset_name="mnist"):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
-        batch_size=32,
+        batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=None
     ).build(train_mode=False, max_items=-1, validation_ratio=0)
@@ -117,7 +118,7 @@ def test_ood_data(model, dataset_name="no-mnist"):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
-        batch_size=32,
+        batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=None
     ).build(train_mode=False, max_items=-1, validation_ratio=0)
@@ -138,7 +139,7 @@ def test_rotated_data(model, dataset_name="mnist", rotation_value=45):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
-        batch_size=32,
+        batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=transformation
     ).build(train_mode=False, max_items=-1, validation_ratio=.0)
@@ -159,7 +160,7 @@ def test_shifted_data(model, dataset_name="mnist", shift_value=.5):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
-        batch_size=32,
+        batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=transformation
     ).build(train_mode=False, max_items=-1, validation_ratio=.0)
@@ -178,7 +179,12 @@ if __name__ == '__main__':
                         action='store', help='Model class name.')
     parser.add_argument('-o', '--outdir', type=str,
                         action='store', help='Test results output directory.')
+    parser.add_argument('-batch', '--batch-size', type=int,
+                        action='store', help='Test batch size.')
     args = parser.parse_args()
+
+    if args.batch_size is not None:
+        BATCH_SIZE = args.batch_size
 
     ###############
     # TEST MODEL #

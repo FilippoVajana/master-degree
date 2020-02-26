@@ -31,11 +31,13 @@
             "program": "${workspaceFolder}/test_model.py",
             "args": [
                 "--mstate",
-                "./runs/TEST/LeNet5/LeNet5.pt",
+                "./runs/TEST/lenet5simplelldropout/LeNet5SimpleLLDropout.pt",
                 "--mname",
-                "LeNet5",
+                "LeNet5SimpleLLDropout",
                 "--outdir",
-                "./runs/TEST/LeNet5"
+                "./runs/TEST/lenet5simplelldropout",
+                "--batch-size",
+                "1"
             ],
             "console": "integratedTerminal"
         },
