@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import trange
 import numpy as np
 import torch
+from random import randint
 
 
 log.basicConfig(level=log.DEBUG,
@@ -25,7 +26,9 @@ def timer(func):
 
 
 class GenericTrainer():
-    def __init__(self, cfg: RunConfig, device):
+    BINOMIAL_DIST = torch.distributions.Binomial(total_count=1, probs=1)
+
+    def __init__(self, cfg: RunConfig, device: str):
         self.device = device
         self.model = cfg.model
         self.optimizer = torch.optim.Adam(
@@ -36,6 +39,9 @@ class GenericTrainer():
             eps=cfg.optimizer_args['eps']
         )
         self.loss_fn = torch.nn.MSELoss()
+        self.dirty_labels_prob = cfg.dirty_labels
+        self.BINOMIAL_DIST = torch.distributions.Binomial(
+            total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
 
         # train metrics
         self.train_logs = {
@@ -155,16 +161,28 @@ class GenericTrainer():
 
         return best_model, df
 
+    def __drop_labels(self, labels: torch.Tensor) -> torch.Tensor:
+        if self.dirty_labels_prob == 0.0:
+            return labels
+        else:
+            # random extraction
+            extr = self.BINOMIAL_DIST.sample()
+            for idx, v in enumerate(extr):
+                if v == 1:
+                    labels[idx] = randint(0, 9)
+        return labels
+
     def __train_batch(self, batch):
         """
         Train over a batch of data.
         """
 
         examples, labels = batch
+        # randomly drop labels
 
         # move data to device
         examples = examples.to(self.device)
-        labels = labels.to(self.device)
+        labels = self.__drop_labels(labels).to(self.device)
 
         # reset gradient computation
         self.optimizer.zero_grad()
@@ -224,6 +242,7 @@ class GenericTrainer():
         # return (accuracy, brier, entropy, loss.item())
         return (accuracy, brier, entropy, loss.item())
 
+    # METRICS
     # @timer
     def get_accuracy(self, predictions, labels):
         t_predicted_class = predictions.argmax(dim=1)

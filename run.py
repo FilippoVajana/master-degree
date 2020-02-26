@@ -7,6 +7,9 @@ import glob
 import engine
 import train_model as trm
 import test_model as tem
+import numpy as np
+import copy
+from typing import List, Dict
 
 log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
@@ -17,6 +20,8 @@ RUN_CONFIGS = [
     'LeNet5SimpleLLDropout_runcfg.json',
     'LeNet5SimpleDropout_runcfg.json'
 ]
+
+# RUN_CONFIGS = ['LeNet5_runcfg.json']
 
 
 def get_id() -> str:
@@ -48,24 +53,39 @@ def create_run_folder(model_name: str, run_id=None):
 
     # create run folder
     path = os.path.join(RUN_ROOT, r_id, model_name.lower())
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     return path
 
 
+def create_labeldropout_configs(cfg: engine.RunConfig, dropout: np.ndarray) -> Dict[str, engine.RunConfig]:
+    dl_configs = dict()
+    for drop_v in dropout:
+        dl_cfg = copy.copy(cfg)
+        dl_cfg.dirty_labels = float("{0:.2f}".format(drop_v))
+        key = f"{dl_cfg.model.__class__.__name__}_labdrop{dl_cfg.dirty_labels}"
+        dl_configs[key] = dl_cfg
+        log.info(f"Created Label Dropout config: {key}")
+    return dl_configs
+
+
 if __name__ == '__main__':
-    # detect models config json
-    cfg_regex = f"{RUN_ROOT}/*_runcfg.json"
-    cfg_paths = glob.glob(cfg_regex)
-    log.debug(f"glob result: {cfg_paths}")
+    ENABLE_DIRTY_LABELS = True
+    ENABLE_SHORT_TRAIN = False
 
     # load cfg objects
-    cfg_list = list()
-    for p in cfg_paths:
-        cfg_obj = engine.RunConfig.load(p)
-        cfg_obj.model = getattr(engine, cfg_obj.model)()
-        cfg_list.append(cfg_obj)
-        log.info(
-            f"Loaded configuration for {cfg_obj.model.__class__.__name__}")
+    run_configurations = dict()
+    for cfg in RUN_CONFIGS:
+        cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, cfg))
+        cfg.model = getattr(engine, cfg.model)()
+        key = cfg.model.__class__.__name__
+        run_configurations[key] = cfg
+        log.info(f"Loaded configuration for {key}")
+
+    if ENABLE_DIRTY_LABELS:
+        lenet5_cfg = run_configurations["LeNet5"]
+        dl_values = np.arange(.02, .10, .02)
+        run_configurations.update(
+            create_labeldropout_configs(lenet5_cfg, dl_values))
 
     # get device
     r_device = get_device()
@@ -74,11 +94,15 @@ if __name__ == '__main__':
     r_id = get_id()
 
     # create run folders
-    for cfg in cfg_list:
+    for k in run_configurations:
+        cfg = run_configurations[k]
         run_dir = create_run_folder(
-            model_name=cfg.model.__class__.__name__, run_id=r_id)
+            model_name=k, run_id=r_id)
 
         # performs training
+        if ENABLE_SHORT_TRAIN:
+            cfg.max_items = 1500
+
         trm.do_train(model=cfg.model, device=r_device,
                      config=cfg, directory=run_dir)
 
