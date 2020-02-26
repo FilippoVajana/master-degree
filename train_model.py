@@ -20,7 +20,7 @@ RUN_CFG_PATH = './runconfig.json'
 RUNS_ROOT = './runs/'
 
 
-def get_id():
+def get_id() -> str:
     '''Returns run id as a time string.
     '''
     time = dt.datetime.now()
@@ -29,7 +29,7 @@ def get_id():
     return t_id
 
 
-def create_run_folders(model_name: str, train=True, test=False):
+def create_run_folders(model_name: str, train=True, test=False) -> (str, str):
     '''Creates "runs/" root directory, "run_id/" folder and 
     "train/" and "test/" run subdirectories.
     '''
@@ -52,7 +52,7 @@ def create_run_folders(model_name: str, train=True, test=False):
     return tr_path, te_path
 
 
-def get_device():
+def get_device() -> str:
     '''Returns the best available compute device.
     '''
     device = "cpu"  # default device
@@ -68,7 +68,7 @@ def do_train(model: Module, device: str, config: engine.RunConfig, directory: st
     '''Trains the input model.
     The methods saves train logs as .csv and the final model state dict.     
     '''
-    log.info("Started training phase")
+    log.info(f"Started training phase for: {model.__class__.__name__}")
     train_model, train_df = model.start_training(config, device)
 
     # save model dict
