@@ -63,7 +63,7 @@ def create_labeldropout_configs(cfg: engine.RunConfig, dropout: np.ndarray) -> D
     for drop_v in dropout:
         dl_cfg = copy.copy(cfg)
         dl_cfg.dirty_labels = float("{0:.2f}".format(drop_v))
-        key = f"{dl_cfg.model.__class__.__name__}_labdrop{dl_cfg.dirty_labels}"
+        key = f"{dl_cfg.model.__class__.__name__}labdrop{dl_cfg.dirty_labels}"
         dl_configs[key] = dl_cfg
         log.info(f"Created Label Dropout config: {key}")
     return dl_configs
