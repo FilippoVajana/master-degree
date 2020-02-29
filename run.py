@@ -22,7 +22,7 @@ RUN_CONFIGS = [
     'LeNet5ConcreteDropout_runcfg.json'
 ]
 
-# RUN_CONFIGS = ['LeNet5_runcfg.json']
+#RUN_CONFIGS = ['LeNet5_runcfg.json']
 
 
 def get_id() -> str:
@@ -100,14 +100,13 @@ if __name__ == '__main__':
         run_dir = create_run_folder(
             model_name=k, run_id=r_id)
 
-        # performs training
+        # training
         if ENABLE_SHORT_TRAIN:
             cfg.max_items = 1500
-
         trm.do_train(model=cfg.model, device=r_device,
                      config=cfg, directory=run_dir)
 
-        # performs testing
+        # testing
         pt_path = glob.glob(
             f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=cfg.model.__class__.__name__,

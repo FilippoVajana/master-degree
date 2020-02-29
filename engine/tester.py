@@ -5,6 +5,10 @@ from tqdm import tqdm
 from scipy.stats import entropy
 from engine.runconfig import RunConfig
 
+import logging as log
+log.basicConfig(level=log.DEBUG,
+                format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
+
 
 class Tester():
     def __init__(self, model, device="cpu", is_ood=False):
@@ -18,6 +22,7 @@ class Tester():
             "t_brier": [],
             "t_entropy": [],
             "t_confidence": [],
+            "t_output": []
         }
 
     def get_predicted_class(self, t_predictions):
@@ -68,15 +73,15 @@ class Tester():
 
         return brier_score.to("cpu")
 
-    def get_nll(self, t_predictions):
-        # softmax of prediction tensor
-        t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
+    # def get_nll(self, t_predictions):
+    #     # softmax of prediction tensor
+    #     t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
 
-        # negative log of softmax
-        t_nll = torch.log(t_softmax) * -1
-        return t_nll.to("cpu")
+    #     # negative log of softmax
+    #     t_nll = torch.log(t_softmax) * -1
+    #     return t_nll.to("cpu")
 
-    def test(self, test_dataloader=None):
+    def test(self, test_dataloader=None) -> pd.DataFrame:
         """
         Tests the model.
         """
@@ -109,8 +114,10 @@ class Tester():
                     t_confidence = self.get_confidence(t_predictions, t_labels)
                 else:
                     t_confidence = self.get_ood_confidence(t_predictions)
-
                 self.test_logs["t_confidence"].extend(list(t_confidence))
+
+                for t in t_predictions:
+                    self.test_logs["t_output"].append(t.numpy())
 
         # build dataframe from logs
         df = pd.DataFrame(data=self.test_logs)
