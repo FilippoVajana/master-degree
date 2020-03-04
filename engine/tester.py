@@ -64,7 +64,7 @@ class Tester():
 
         # softmax of prediction tensor
         prediction_softmax = torch.nn.functional.log_softmax(
-            predictions.detach().cpu(), 1)
+            predictions.detach(), 1)
 
         # brier score
         diff = prediction_softmax - onehot_true
@@ -73,13 +73,13 @@ class Tester():
 
         return brier_score.to("cpu")
 
-    def get_nll(self, t_predictions):
-        # softmax of prediction tensor
-        t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
+    # def get_nll(self, t_predictions, t_labels):
+    #     # softmax of prediction tensor
+    #     t_softmax = torch.nn.Softmax(dim=1)(t_predictions.detach())
 
-        # negative log of softmax
-        t_nll = torch.log(t_softmax) * -1
-        return t_nll.to("cpu")
+    #     # negative log of softmax
+    #     t_nll = torch.log(t_softmax) * -1
+    #     return t_nll.to("cpu")
 
     def test(self, test_dataloader=None) -> pd.DataFrame:
         """
@@ -110,8 +110,8 @@ class Tester():
                 t_entropy = self.get_entropy(t_predictions)
                 self.test_logs["t_entropy"].extend(list(t_entropy.numpy()))
 
-                t_nll = self.get_nll(t_predictions)
-                self.test_logs["t_nll"].extend(list(t_nll.numpy()))
+                # t_nll = self.get_nll(t_predictions)
+                # self.test_logs["t_nll"].extend(list(t_nll.numpy()))
 
                 if self.is_ood == False:
                     t_confidence = self.get_confidence(t_predictions, t_labels)
