@@ -187,7 +187,7 @@ class GenericTrainer():
         t_predictions = self.model(t_examples)
 
         # compute loss
-        t_softmax_predictions = torch.nn.LogSoftmax(dim=1)(t_predictions)
+        t_softmax_predictions = torch.nn.Softmax(dim=1)(t_predictions)
         loss = self.loss_fn(t_softmax_predictions, t_labels)
 
         # backpropagation and gradients computation
@@ -250,7 +250,7 @@ class GenericTrainer():
     # @timer
     def get_entropy(self, predictions) -> float:
         t_entropy = torch.distributions.Categorical(
-            torch.nn.Softmax(dim=1)(predictions.detach())).entropy()
+            torch.nn.LogSoftmax(dim=1)(predictions.detach())).entropy()
         return t_entropy.to("cpu").median()
 
     # @timer
@@ -258,7 +258,7 @@ class GenericTrainer():
         onehot_true = torch.zeros(predictions.size())
         onehot_true[torch.arange(len(predictions)), labels] = 1
         # softmax of prediction tensor
-        prediction_softmax = torch.nn.functional.softmax(
+        prediction_softmax = torch.nn.functional.log_softmax(
             predictions.detach().cpu(), 1)
         # brier score
         diff = prediction_softmax - onehot_true

@@ -37,7 +37,7 @@ class Tester():
 
     def get_confidence(self, t_predictions, t_labels):
         # softmax
-        t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
+        t_softmax = torch.nn.LogSoftmax(dim=1)(t_predictions)
 
         # HACK by Daniele Ciriello
         # t_softmax[torch.arange(len(t_softmax)), t_labels]
@@ -47,7 +47,7 @@ class Tester():
 
     def get_ood_confidence(self, t_predictions):
         # softmax
-        t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
+        t_softmax = torch.nn.LogSoftmax(dim=1)(t_predictions)
 
         # prediction confidence as max prob after softmax
         t_confidence = t_softmax.max(dim=1)[0]
@@ -55,7 +55,7 @@ class Tester():
 
     def get_entropy(self, predictions):
         t_entropy = torch.distributions.Categorical(
-            torch.nn.Softmax(dim=1)(predictions.detach())).entropy()
+            torch.nn.LogSoftmax(dim=1)(predictions.detach())).entropy()
         return t_entropy.to("cpu")
 
     def get_brier_score(self, predictions, labels):
@@ -63,7 +63,7 @@ class Tester():
         onehot_true[torch.arange(len(predictions)), labels] = 1
 
         # softmax of prediction tensor
-        prediction_softmax = torch.nn.functional.softmax(
+        prediction_softmax = torch.nn.functional.log_softmax(
             predictions.detach().cpu(), 1)
 
         # brier score
