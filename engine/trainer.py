@@ -48,7 +48,8 @@ class GenericTrainer():
             "t_mean_accuracy": [],
             "t_mean_brier": [],
             "t_mean_entropy": [],
-            "t_mean_loss": []
+            "t_mean_loss": [],
+            "t_mean_nll": []
         }
 
         # validation metrics
@@ -56,13 +57,15 @@ class GenericTrainer():
             "v_mean_accuracy": [],
             "v_mean_brier": [],
             "v_mean_entropy": [],
-            "v_mean_loss": []
+            "v_mean_loss": [],
+            "v_mean_nll": []
         }
 
         # out-of-distribution metrics and dataloader
         self.ood_logs = {
             "ov_mean_brier": [],
-            "ov_mean_entropy": []
+            "ov_mean_entropy": [],
+            "ov_mean_nll": []
         }
 
         self.ood_dataloader = ImageDataLoader(
@@ -132,7 +135,7 @@ class GenericTrainer():
                 for batch in self.ood_dataloader[0]:
                     result = self.__validate_batch(batch)
                     # result === (brier, entropy)
-                    result = (result[1], result[2])
+                    result = (result[1], result[2], result[4])
                     ov_tmp_metrics.append(result)
 
             # update ood log
@@ -140,6 +143,7 @@ class GenericTrainer():
             ov_metrics = np.median(ov_metrics, axis=0)  # epoch values
             self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
             self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
+            self.ood_logs["ov_mean_nll"].append(ov_metrics[2])
 
             # save checkpoint
             if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
@@ -187,8 +191,7 @@ class GenericTrainer():
         t_predictions = self.model(t_examples)
 
         # compute loss
-        t_softmax_predictions = torch.nn.Softmax(dim=1)(t_predictions)
-        loss = self.loss_fn(t_softmax_predictions, t_labels)
+        loss = self.loss_fn(t_predictions, t_labels)
 
         # backpropagation and gradients computation
         loss.backward()
@@ -205,39 +208,43 @@ class GenericTrainer():
         # compute brier
         brier = self.get_brier_score(t_predictions, t_labels)
 
-        # return (accuracy, brier, entropy, loss.item())
-        return (accuracy, brier, entropy, loss.item())
+        # compute nll
+        nll = self.get_nll(t_predictions)
+
+        return (accuracy, brier, entropy, loss.item(), nll)
 
     def __validate_batch(self, batch):
         """
         Validate over a batch of data.
         """
 
-        examples, labels = batch
+        t_examples, t_labels = batch
 
         # move data to device
-        examples = examples.to(self.device)
-        labels = labels.to(self.device)
+        t_examples = t_examples.to(self.device)
+        t_labels = t_labels.to(self.device)
 
         # forward
-        predictions = self.model(examples)
+        t_predictions = self.model(t_examples)
 
         # compute loss
-        if labels.min() >= 65:
-            labels.add_(-65)
-        loss = self.loss_fn(predictions, labels)
+        if t_labels.min() >= 65:
+            t_labels.add_(-65)
+        loss = self.loss_fn(t_predictions, t_labels)
 
         # compute accuracy
-        accuracy = self.get_accuracy(predictions, labels)
+        accuracy = self.get_accuracy(t_predictions, t_labels)
 
         # compute entropy
-        entropy = self.get_entropy(predictions)
+        entropy = self.get_entropy(t_predictions)
 
         # compute brier
-        brier = self.get_brier_score(predictions, labels)
+        brier = self.get_brier_score(t_predictions, t_labels)
 
-        # return (accuracy, brier, entropy, loss.item())
-        return (accuracy, brier, entropy, loss.item())
+        # compute nll
+        nll = self.get_nll(t_predictions)
+
+        return (accuracy, brier, entropy, loss.item(), nll)
 
     # METRICS
     # @timer
@@ -265,3 +272,11 @@ class GenericTrainer():
         square_diff = torch.pow(diff, 2)
         brier_score = torch.sum(square_diff, dim=1)
         return brier_score.to("cpu").median()
+
+    def get_nll(self, predictions):
+        # softmax of prediction tensor
+        t_softmax = torch.nn.Softmax(dim=1)(predictions)
+
+        # negative log of softmax
+        t_nll = torch.log(t_softmax) * -1
+        return t_nll.to("cpu").median()
