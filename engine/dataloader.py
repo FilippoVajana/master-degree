@@ -1,4 +1,5 @@
 import os
+import torch
 from torch.utils.data import DataLoader as TorchDataLoader
 
 from .dataset import CustomDataset
@@ -12,32 +13,48 @@ class ImageDataLoader():
     cfg_file_path: string
         Path to the configuration file.
     """
-    def __init__(self, data_folder: str, batch_size: int, shuffle: bool, train_mode: bool, max_items: int):
+
+    def __init__(self, data_folder: str, batch_size: int, shuffle: bool, transformation=None):
         self.data_folder = data_folder
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.train_mode = train_mode
-        self.max_items = max_items
+        self.transformation = transformation
 
-        if self.train_mode:
-            data = os.path.join(self.data_folder, 'train')
+    def build(self, train_mode: bool, max_items: int, validation_ratio=0.0):
+        """
+        Builds the dataloader based on input params.
+
+        Returns a tuple (train_dl, validation_dl).
+        """
+        # check validation_ratio
+        if validation_ratio < 0 or validation_ratio > 1:
+            raise ValueError("validation_ratio must be in [0,1] interval")
+
+        # check type of dataloader required
+        if train_mode:
+            self.data_folder = os.path.join(self.data_folder, 'train')
         else:
-            data = os.path.join(self.data_folder, 'test')
+            self.data_folder = os.path.join(self.data_folder, 'test')
+            validation_ratio = 0.0
 
-        self.dataset = self._build_dataset(data)
-        self.dataloader = self._build_dataloader(self.batch_size, self.shuffle)
+        # build base dataset
+        base_set = CustomDataset(self.data_folder, self.transformation)
 
+        # check items count
+        if (len(base_set) > max_items) and (max_items > 0):
+            base_set.images = base_set.images[:max_items]
+            base_set.labels = base_set.labels[:max_items]
 
-    def _build_dataset(self, data_folder):
-        dataset = CustomDataset(data_folder)
+        # split base dataset into Subset
+        main_set_len = int(len(base_set) - (len(base_set) * validation_ratio))
+        val_set_len = len(base_set) - main_set_len
+        main_set, val_set = torch.utils.data.random_split(
+            base_set, [main_set_len, val_set_len])
 
-        if (len(dataset) > self.max_items) and (self.max_items > 0):
-            dataset.data = dataset.data[:self.max_items]
+        # build dataloaders
+        self.main_dl = TorchDataLoader(
+            main_set, batch_size=self.batch_size, shuffle=self.shuffle, drop_last=True)
+        self.val_dl = TorchDataLoader(
+            val_set, batch_size=self.batch_size, shuffle=False, drop_last=True)
 
-        return dataset
-
-
-    def _build_dataloader(self, batch_size, shuffle):
-        dataloader = TorchDataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle)
-
-        return dataloader
+        return (self.main_dl, self.val_dl)
