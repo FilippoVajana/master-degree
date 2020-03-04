@@ -1,7 +1,6 @@
-# Metrics for uncertainty evaluation in deep learning models blah blah
+# Valutazione di metriche di incertezza per reti neurali
 
-# TODO:
-instructions for gewtting data
+Obiettivo di questo lavoro è sviluppare metodologie per monitorare il grado di incertezza insito negli output di una rete neurale.
 
 # Basic usage:
 
@@ -21,4 +20,3 @@ usa le impostazioni in runconfig.json per addestrare da zero la LeNet5 su MNIST.
     $ python test_model.py
 
 testa il modello e tira fuori le metriche.
-
