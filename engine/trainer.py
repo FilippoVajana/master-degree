@@ -13,18 +13,6 @@ log.basicConfig(level=log.INFO,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 
-def timer(func):
-    def wrapper(*args):
-        start_time = time.perf_counter()
-        value = func(*args)
-        end_time = time.perf_counter()
-        elapsed_time = end_time - start_time
-        log.debug(
-            f"[{func.__name__!r}] Execution time: {elapsed_time*1000:.4f} ms")
-        return value
-    return wrapper
-
-
 class GenericTrainer():
     BINOMIAL_DIST = torch.distributions.Binomial(total_count=1, probs=1)
 
@@ -209,7 +197,7 @@ class GenericTrainer():
         brier = self.get_brier_score(t_predictions, t_labels)
 
         # compute nll
-        nll = self.get_nll(t_predictions)
+        nll = self.get_nll(t_predictions, t_labels)
 
         return (accuracy, brier, entropy, loss.item(), nll)
 
@@ -242,25 +230,23 @@ class GenericTrainer():
         brier = self.get_brier_score(t_predictions, t_labels)
 
         # compute nll
-        nll = self.get_nll(t_predictions)
+        nll = self.get_nll(t_predictions, t_labels)
 
         return (accuracy, brier, entropy, loss.item(), nll)
 
     # METRICS
-    # @timer
+
     def get_accuracy(self, predictions, labels) -> float:
         t_predicted_class = predictions.argmax(dim=1)
         res = (t_predicted_class == labels).sum().float() / \
             len(t_predicted_class)
         return res.to("cpu")
 
-    # @timer
     def get_entropy(self, predictions) -> float:
         t_entropy = torch.distributions.Categorical(
             torch.nn.LogSoftmax(dim=1)(predictions.detach())).entropy()
         return t_entropy.to("cpu").median()
 
-    # @timer
     def get_brier_score(self, predictions, labels) -> float:
         onehot_true = torch.zeros(predictions.size())
         onehot_true[torch.arange(len(predictions)), labels] = 1
@@ -273,10 +259,12 @@ class GenericTrainer():
         brier_score = torch.sum(square_diff, dim=1)
         return brier_score.to("cpu").median()
 
-    def get_nll(self, predictions):
+    def get_nll(self, predictions, labels):
         # softmax of prediction tensor
-        t_softmax = torch.nn.Softmax(dim=1)(predictions)
+        t_softmax = torch.nn.LogSoftmax(dim=1)(predictions.detach())
 
         # negative log of softmax
-        t_nll = torch.log(t_softmax) * -1
-        return t_nll.to("cpu").median()
+        t_nll = [-1 * t_softmax[idx, l].to("cpu")
+                 for idx, l in enumerate(labels)]
+        # t_nll = torch.log(t_softmax) * -1
+        return np.median(t_nll)

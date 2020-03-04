@@ -21,8 +21,7 @@ class Tester():
             "t_good_pred": [],
             "t_brier": [],
             "t_entropy": [],
-            "t_confidence": [],
-            "t_nll": []
+            "t_confidence": []
         }
 
     def get_predicted_class(self, t_predictions):
