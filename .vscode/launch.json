@@ -18,7 +18,7 @@
             "program": "${workspaceFolder}/train_model.py",
             "args": [
                 "-cfg",
-                "./runconfig.json",
+                "./runs/TEST/LeNet5TEST_runcfg.json",
                 "--outdir",
                 "./runs/TEST"
             ],
@@ -31,11 +31,11 @@
             "program": "${workspaceFolder}/test_model.py",
             "args": [
                 "--mstate",
-                "./runs/TEST/lenet5simplelldropout/LeNet5SimpleLLDropout.pt",
+                "./runs/TEST/LeNet5/LeNet5.pt",
                 "--mname",
-                "LeNet5SimpleLLDropout",
+                "LeNet5",
                 "--outdir",
-                "./runs/TEST/lenet5simplelldropout",
+                "./runs/TEST/LeNet5",
                 "--batch-size",
                 "1"
             ],

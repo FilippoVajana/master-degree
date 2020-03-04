@@ -1,4 +1,5 @@
 import datetime as dt
+import argparse
 import logging as log
 import os
 import torch.cuda as tcuda
@@ -15,21 +16,21 @@ log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 RUN_ROOT = './runs'
-RUN_CONFIGS = [
-    'LeNet5_runcfg.json',
-    'LeNet5SimpleLLDropout_runcfg.json',
-    'LeNet5SimpleDropout_runcfg.json',
-    'LeNet5ConcreteDropout_runcfg.json'
-]
+# RUN_CONFIGS = [
+#     'LeNet5_runcfg.json',
+#     'LeNet5SimpleLLDropout_runcfg.json',
+#     'LeNet5SimpleDropout_runcfg.json',
+#     'LeNet5ConcreteDropout_runcfg.json'
+# ]
 
-# RUN_CONFIGS = ['LeNet5_runcfg.json']
+RUN_CONFIGS = ['LeNet5_runcfg.json']
 
 
 def get_id() -> str:
     '''Returns run id as a time string.
     '''
     time = dt.datetime.now()
-    t_id = time.strftime("%d%m_%H%M")
+    t_id = time.strftime("%m%d_%H%M")
     log.debug(f"Created ID: {t_id}")
     return t_id
 
@@ -63,15 +64,22 @@ def create_labeldropout_configs(cfg: engine.RunConfig, dropout: np.ndarray) -> D
     for drop_v in dropout:
         dl_cfg = copy.copy(cfg)
         dl_cfg.dirty_labels = float("{0:.2f}".format(drop_v))
-        key = f"{dl_cfg.model.__class__.__name__}_labdrop{dl_cfg.dirty_labels}"
+        key = f"{dl_cfg.model.__class__.__name__}labdrop{dl_cfg.dirty_labels}"
         dl_configs[key] = dl_cfg
         log.info(f"Created Label Dropout config: {key}")
     return dl_configs
 
 
 if __name__ == '__main__':
-    ENABLE_DIRTY_LABELS = True
-    ENABLE_SHORT_TRAIN = False
+    parser = argparse.ArgumentParser(description="Analyze data.")
+    parser.add_argument('-dirty', default=False,
+                        action='store_true', help='Train with Label Drop.')
+    parser.add_argument('-short', default=False,
+                        action='store_true', help='Train with less examples.')
+    args = parser.parse_args()
+
+    ENABLE_DIRTY_LABELS = args.dirty
+    ENABLE_SHORT_TRAIN = args.short
 
     # load cfg objects
     run_configurations = dict()
@@ -84,7 +92,7 @@ if __name__ == '__main__':
 
     if ENABLE_DIRTY_LABELS:
         lenet5_cfg = run_configurations["LeNet5"]
-        dl_values = [0.10, 0.20]
+        dl_values = np.arange(0.10, 0.90, 0.20)
         run_configurations.update(
             create_labeldropout_configs(lenet5_cfg, dl_values))
 
@@ -100,14 +108,13 @@ if __name__ == '__main__':
         run_dir = create_run_folder(
             model_name=k, run_id=r_id)
 
-        # performs training
+        # training
         if ENABLE_SHORT_TRAIN:
             cfg.max_items = 1500
-
         trm.do_train(model=cfg.model, device=r_device,
                      config=cfg, directory=run_dir)
 
-        # performs testing
+        # testing
         pt_path = glob.glob(
             f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=cfg.model.__class__.__name__,

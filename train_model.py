@@ -113,7 +113,7 @@ if __name__ == '__main__':
             model_name=run_cfg.model.__class__.__name__)
     else:
         train_dir = os.path.join(args.outdir, run_cfg.model.__class__.__name__)
-        os.makedirs(train_dir)
+        os.makedirs(train_dir, exist_ok=True)
         log.info(f"Created train folder: {args.outdir}")
 
     # performs training
