@@ -251,7 +251,7 @@ class GenericTrainer():
         onehot_true = torch.zeros(predictions.size())
         onehot_true[torch.arange(len(predictions)), labels] = 1
         # softmax of prediction tensor
-        prediction_softmax = torch.nn.functional.log_softmax(
+        prediction_softmax = torch.nn.functional.softmax(
             predictions.detach().cpu(), 1)
         # brier score
         diff = prediction_softmax - onehot_true

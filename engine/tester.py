@@ -21,7 +21,8 @@ class Tester():
             "t_good_pred": [],
             "t_brier": [],
             "t_entropy": [],
-            "t_confidence": []
+            "t_confidence": [],
+            "t_nll": []
         }
 
     def get_predicted_class(self, t_predictions):
@@ -36,7 +37,7 @@ class Tester():
 
     def get_confidence(self, t_predictions, t_labels):
         # softmax
-        t_softmax = torch.nn.LogSoftmax(dim=1)(t_predictions)
+        t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
 
         # HACK by Daniele Ciriello
         # t_softmax[torch.arange(len(t_softmax)), t_labels]
@@ -46,7 +47,7 @@ class Tester():
 
     def get_ood_confidence(self, t_predictions):
         # softmax
-        t_softmax = torch.nn.LogSoftmax(dim=1)(t_predictions)
+        t_softmax = torch.nn.Softmax(dim=1)(t_predictions)
 
         # prediction confidence as max prob after softmax
         t_confidence = t_softmax.max(dim=1)[0]
@@ -62,7 +63,7 @@ class Tester():
         onehot_true[torch.arange(len(predictions)), labels] = 1
 
         # softmax of prediction tensor
-        prediction_softmax = torch.nn.functional.log_softmax(
+        prediction_softmax = torch.nn.functional.softmax(
             predictions.detach(), 1)
 
         # brier score
@@ -72,13 +73,13 @@ class Tester():
 
         return brier_score.to("cpu")
 
-    # def get_nll(self, t_predictions, t_labels):
-    #     # softmax of prediction tensor
-    #     t_softmax = torch.nn.Softmax(dim=1)(t_predictions.detach())
+    def get_nll(self, t_predictions, t_labels):
+        # softmax of prediction tensor
+        t_softmax = torch.nn.LogSoftmax(dim=1)(t_predictions.detach())
 
-    #     # negative log of softmax
-    #     t_nll = torch.log(t_softmax) * -1
-    #     return t_nll.to("cpu")
+        # negative log of softmax
+        t_nll = [-1 * t_softmax[idx, l] for idx, l in enumerate(t_labels)]
+        return torch.tensor(t_nll).to("cpu")
 
     def test(self, test_dataloader=None) -> pd.DataFrame:
         """
@@ -109,8 +110,8 @@ class Tester():
                 t_entropy = self.get_entropy(t_predictions)
                 self.test_logs["t_entropy"].extend(list(t_entropy.numpy()))
 
-                # t_nll = self.get_nll(t_predictions)
-                # self.test_logs["t_nll"].extend(list(t_nll.numpy()))
+                t_nll = self.get_nll(t_predictions, t_labels)
+                self.test_logs["t_nll"].extend(list(t_nll.numpy()))
 
                 if self.is_ood == False:
                     t_confidence = self.get_confidence(t_predictions, t_labels)

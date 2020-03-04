@@ -563,7 +563,7 @@ if __name__ == "__main__":
     RESULTS_DIRECTORY = os.path.relpath('data-results')
     run_dirs = [path for path in os.listdir(
         RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
-    RUN_ID = natsort.natsorted(run_dirs, reverse=False)[0]
+    RUN_ID = natsort.natsorted(run_dirs, reverse=True)[0]
     # RUN_ID = os.path.basename(max([os.path.join(RESULTS_DIRECTORY, p) for p in run_dirs], key=os.path.getmtime))
 
     IMGS_PATH = None
