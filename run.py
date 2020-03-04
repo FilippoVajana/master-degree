@@ -1,4 +1,5 @@
 import datetime as dt
+import argparse
 import logging as log
 import os
 import torch.cuda as tcuda
@@ -29,7 +30,7 @@ def get_id() -> str:
     '''Returns run id as a time string.
     '''
     time = dt.datetime.now()
-    t_id = time.strftime("%d%m_%H%M")
+    t_id = time.strftime("%m%d_%H%M")
     log.debug(f"Created ID: {t_id}")
     return t_id
 
@@ -70,8 +71,15 @@ def create_labeldropout_configs(cfg: engine.RunConfig, dropout: np.ndarray) -> D
 
 
 if __name__ == '__main__':
-    ENABLE_DIRTY_LABELS = True
-    ENABLE_SHORT_TRAIN = False
+    parser = argparse.ArgumentParser(description="Analyze data.")
+    parser.add_argument('-dirty', default=False,
+                        action='store_true', help='Train with Label Drop.')
+    parser.add_argument('-short', default=False,
+                        action='store_true', help='Train with less examples.')
+    args = parser.parse_args()
+
+    ENABLE_DIRTY_LABELS = args.dirty
+    ENABLE_SHORT_TRAIN = args.short
 
     # load cfg objects
     run_configurations = dict()
