@@ -12,10 +12,6 @@ import engine
 log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(levelname)-7s: %(message)s', datefmt='%H:%M:%S')
 
-# getattr(engine, config['model'])()
-MODELS = {
-    'LeNet5': engine.LeNet5()
-}
 RUN_CFG_PATH = './runconfig.json'
 RUNS_ROOT = './runs/'
 
@@ -95,9 +91,8 @@ if __name__ == '__main__':
     run_cfg = engine.RunConfig().load(args.cfg)
     log.info(f"Loaded run configuration file: {args.cfg}")
 
-    # get model
-    model = MODELS[run_cfg.model]
-    run_cfg.model = model  # swaps model classname with proper model instance
+    # swaps model classname with proper model instance
+    run_cfg.model = getattr(engine, run_cfg.model)()
     log.info(f"Loaded model: {run_cfg.model.__class__.__name__}")
 
     # set compute device
