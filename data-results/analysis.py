@@ -564,7 +564,7 @@ if __name__ == "__main__":
     run_dirs = [path for path in os.listdir(
         RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
     RUN_ID = natsort.natsorted(run_dirs, reverse=True)[0]
-    # RUN_ID = os.path.basename(max([os.path.join(RESULTS_DIRECTORY, p) for p in run_dirs], key=os.path.getmtime))
+    # RUN_ID = "0304_2320"
 
     IMGS_PATH = None
 
