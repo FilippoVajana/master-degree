@@ -60,13 +60,20 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_labeldropout_configs(cfg: engine.RunConfig, dropout: np.ndarray) -> Dict[str, engine.RunConfig]:
+def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
-    for drop_v in dropout:
-        dl_cfg = copy.copy(cfg)
-        dl_cfg.dirty_labels = float("{0:.2f}".format(drop_v))
-        key = f"{dl_cfg.model.__class__.__name__}labdrop{dl_cfg.dirty_labels}"
-        dl_configs[key] = dl_cfg
+    for val in dropout_probs:
+        cfg = copy.copy(reference_cfg)
+        # hack the config
+        cfg.models = None
+        if labeldrop_ver == 2:
+            setattr(cfg, 'model', engine.LeNet5LabelDrop())
+        else:
+            setattr(cfg, 'model', engine.LeNet5())
+        cfg.dirty_labels = float("{0:.2f}".format(val))
+        # save LD config
+        key = f"{cfg.model.__class__.__name__}labdrop{cfg.dirty_labels}"
+        dl_configs[key] = cfg
         log.info(f"Created Label Dropout config: {key}")
     return dl_configs
 
@@ -99,9 +106,9 @@ if __name__ == '__main__':
         log.info(f"Loaded configuration for {key}")
 
     if ENABLE_DIRTY_LABELS:
-        lenet5_cfg = run_configurations["LeNet5"]
         ldrop_values = np.arange(0.10, 0.30, 0.10)
-        ldrop_configs = create_labeldropout_configs(lenet5_cfg, ldrop_values)
+        ldrop_configs = create_labeldropout_configs(
+            reference_cfg, ldrop_values)
         run_configurations.update(ldrop_configs)
 
     # get device
