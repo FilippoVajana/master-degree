@@ -16,13 +16,14 @@ log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 RUN_ROOT = './runs'
-RUN_CONFIGS = [
-    'LeNet5_runcfg.json',
-    'LeNet5SimpleLLDropout_runcfg.json',
-    'LeNet5SimpleDropout_runcfg.json',
-    'LeNet5ConcreteDropout_runcfg.json'
-]
+RUN_CFG = 'default_runcfg.json'
 
+# RUN_CONFIGS = [
+#     'LeNet5_runcfg.json',
+#     'LeNet5SimpleLLDropout_runcfg.json',
+#     'LeNet5SimpleDropout_runcfg.json',
+#     'LeNet5ConcreteDropout_runcfg.json'
+# ]
 # RUN_CONFIGS = ['LeNet5_runcfg.json']
 
 
@@ -59,13 +60,20 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_labeldropout_configs(cfg: engine.RunConfig, dropout: np.ndarray) -> Dict[str, engine.RunConfig]:
+def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
-    for drop_v in dropout:
-        dl_cfg = copy.copy(cfg)
-        dl_cfg.dirty_labels = float("{0:.2f}".format(drop_v))
-        key = f"{dl_cfg.model.__class__.__name__}labdrop{dl_cfg.dirty_labels}"
-        dl_configs[key] = dl_cfg
+    for val in dropout_probs:
+        cfg = copy.copy(reference_cfg)
+        # hack the config
+        cfg.models = None
+        if labeldrop_ver == 2:
+            setattr(cfg, 'model', engine.LeNet5LabelDrop())
+        else:
+            setattr(cfg, 'model', engine.LeNet5())
+        cfg.dirty_labels = float("{0:.2f}".format(val))
+        # save LD config
+        key = f"{cfg.model.__class__.__name__}labdrop{cfg.dirty_labels}"
+        dl_configs[key] = cfg
         log.info(f"Created Label Dropout config: {key}")
     return dl_configs
 
@@ -76,25 +84,32 @@ if __name__ == '__main__':
                         action='store_true', help='Train with Label Drop.')
     parser.add_argument('-short', default=False,
                         action='store_true', help='Train with less examples.')
+    parser.add_argument('-cfg', default=RUN_CFG,
+                        action='store', help='Run configuration file.')
     args = parser.parse_args()
 
     ENABLE_DIRTY_LABELS = args.dirty
     ENABLE_SHORT_TRAIN = args.short
+    RUN_CFG = args.cfg
 
     # load cfg objects
     run_configurations = dict()
-    for cfg in RUN_CONFIGS:
-        cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, cfg))
-        cfg.model = getattr(engine, cfg.model)()
-        key = cfg.model.__class__.__name__
+    reference_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
+    for model in reference_cfg.models:
+        # swaps model classname with proper model instance
+        model = getattr(engine, model)()
+        cfg = copy.copy(reference_cfg)
+        cfg.models = None
+        setattr(cfg, 'model', model)  # HACK: stinky code!
+        key = model.__class__.__name__
         run_configurations[key] = cfg
         log.info(f"Loaded configuration for {key}")
 
     if ENABLE_DIRTY_LABELS:
-        lenet5_cfg = run_configurations["LeNet5"]
-        dl_values = np.arange(0.10, 0.30, 0.10)
-        run_configurations.update(
-            create_labeldropout_configs(lenet5_cfg, dl_values))
+        ldrop_values = np.arange(0.10, 0.50, 0.10)
+        ldrop_configs = create_labeldropout_configs(
+            reference_cfg, ldrop_values)
+        run_configurations.update(ldrop_configs)
 
     # get device
     r_device = get_device()
@@ -104,18 +119,18 @@ if __name__ == '__main__':
 
     # create run folders
     for k in run_configurations:
-        cfg = run_configurations[k]
+        reference_cfg = run_configurations[k]
         run_dir = create_run_folder(
             model_name=k, run_id=r_id)
 
         # training
         if ENABLE_SHORT_TRAIN:
-            cfg.max_items = 1500
-        trm.do_train(model=cfg.model, device=r_device,
-                     config=cfg, directory=run_dir)
+            reference_cfg.max_items = 1500
+        trm.do_train(model=reference_cfg.model, device=r_device,
+                     config=reference_cfg, directory=run_dir)
 
         # testing
         pt_path = glob.glob(
-            f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=cfg.model.__class__.__name__,
+            f"{run_dir}/{reference_cfg.model.__class__.__name__}.pt")[0]
+        tem.do_test(model_name=reference_cfg.model.__class__.__name__,
                     state_dict_path=pt_path, device=r_device, directory=run_dir)

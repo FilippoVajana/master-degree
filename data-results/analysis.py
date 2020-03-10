@@ -13,8 +13,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
-prop_cycle = plt.rcParams['axes.prop_cycle']
-mycolors = prop_cycle.by_key()['color']
+plt.style.use('tableau-colorblind10')
+N = 7
+plt.rcParams["axes.prop_cycle"] = plt.cycler(
+    "color", plt.cm.viridis(np.linspace(0, 1, N)))
+# prop_cycle = plt.rcParams['axes.prop_cycle']
+# mycolors = prop_cycle.by_key()['color']
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
@@ -248,7 +252,8 @@ def plot_train_brier(res_dir_list: List[str]) -> plt.Figure:
     tr_brier_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
     va_brier_df = pd.DataFrame(df_union.filter(regex=r"_v_mean_brier"))
     va_brier_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
-    ov_brier_df = pd.DataFrame(df_union.filter(regex=r"ov_mean_brier$"))
+    ov_brier_df = pd.DataFrame(df_union.filter(
+        regex=r"ov_mean_brier$")).round(decimals=2)
     ov_brier_df.rename(columns=lambda cn: str(cn).split('_')[0], inplace=True)
 
     # plot

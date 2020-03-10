@@ -10,7 +10,11 @@ class RunConfig():
         self.shuffle = True
 
         # trainer params
-        self.model = 'LeNet5'
+        self.models = [
+            'LeNet5',
+            'LeNet5SimpleDropout',
+            'LeNet5ConcreteDropout'
+        ]
         self.epochs = 20
         self.optimizer_args = {
             'lr': 0.01,

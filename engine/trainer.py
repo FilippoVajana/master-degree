@@ -149,15 +149,26 @@ class GenericTrainer():
 
         return best_model, df
 
-    def __drop_labels(self, labels: torch.Tensor) -> torch.Tensor:
+    def __labels_drop(self, labels: torch.Tensor) -> torch.Tensor:
+        '''Randomly change the labels for a part of the original labels.
+        '''
         if self.dirty_labels_prob == 0.0:
             return labels
         else:
             # random extraction
             extr = self.BINOMIAL_DIST.sample()
-            for idx, v in enumerate(extr):
-                if v == 1:
-                    labels[idx] = randint(0, 9)
+            labels[extr > 0] = randint(0, 9)
+        return labels
+
+    def __labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
+        '''Randomly set the labels for a part of the original labels to an extra class.
+        '''
+        if self.dirty_labels_prob == 0.0:
+            return labels
+        else:
+            # random extraction
+            extr = self.BINOMIAL_DIST.sample()
+            labels[extr > 0] = 10
         return labels
 
     def __train_batch(self, batch):
@@ -170,7 +181,8 @@ class GenericTrainer():
         t_examples = t_examples.to(self.device)
 
         # drop labels
-        t_labels = self.__drop_labels(t_labels).to(self.device)
+        # t_labels = self.__labels_drop(t_labels).to(self.device)
+        t_labels = self.__labels_drop_v2(t_labels).to(self.device)
 
         # reset gradient computation
         self.optimizer.zero_grad()
