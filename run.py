@@ -18,14 +18,6 @@ log.basicConfig(level=log.DEBUG,
 RUN_ROOT = './runs'
 RUN_CFG = 'default_runcfg.json'
 
-# RUN_CONFIGS = [
-#     'LeNet5_runcfg.json',
-#     'LeNet5SimpleLLDropout_runcfg.json',
-#     'LeNet5SimpleDropout_runcfg.json',
-#     'LeNet5ConcreteDropout_runcfg.json'
-# ]
-# RUN_CONFIGS = ['LeNet5_runcfg.json']
-
 
 def get_id() -> str:
     '''Returns run id as a time string.
@@ -79,7 +71,7 @@ def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: 
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Analyze data.")
+    parser = argparse.ArgumentParser(description="Train and Test models.")
     parser.add_argument('-dirty', default=False,
                         action='store_true', help='Train with Label Drop.')
     parser.add_argument('-short', default=False,
