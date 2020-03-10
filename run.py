@@ -106,7 +106,7 @@ if __name__ == '__main__':
         log.info(f"Loaded configuration for {key}")
 
     if ENABLE_DIRTY_LABELS:
-        ldrop_values = np.arange(0.10, 0.30, 0.10)
+        ldrop_values = np.arange(0.10, 0.50, 0.10)
         ldrop_configs = create_labeldropout_configs(
             reference_cfg, ldrop_values)
         run_configurations.update(ldrop_configs)
