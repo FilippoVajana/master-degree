@@ -108,26 +108,25 @@ if __name__ == '__main__':
         log.info(f"Loaded configuration for {model.__class__.__name__}")
 
     # TRAIN & TEST LENET5 VANILLA
-    log.info("TRAIN & TEST LENET5 VANILLA")
-    VANILLA_MODELS = list()
-    for m_name in train_configs:
-        m_config = train_configs[m_name]
+    log.info("TRAIN & TEST LENET5 VANILLA")    
+    for model in train_configs:
+        t_config = train_configs[model]
         run_dir = create_run_folder(
-            model_name=m_name, run_id=R_ID)
+            model_name=model, run_id=R_ID)
 
         if ENABLE_SHORT_TRAIN:
-            m_config.max_items = 1500
+            t_config.max_items = 1500
 
         # train
-        trained_model = trm.do_train(model=m_config.model, device=DEVICE,
-                                     config=m_config, directory=run_dir)
-        VANILLA_MODELS.append(trained_model)
-
+        trained_model = trm.do_train(model=model, device=DEVICE,
+                                     config=t_config, directory=run_dir)
         # test
         pt_path = glob.glob(
-            f"{run_dir}/{m_config.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=m_config.model.__class__.__name__,
+            f"{run_dir}/{model.__class__.__name__}.pt")[0]
+        tem.do_test(model_name=model.__class__.__name__,
                     state_dict_path=pt_path, device=DEVICE, directory=run_dir)
+        # substitute plain model instance with trained model
+        train_configs[model] = trained_model
 
 
     # PREPARE FOR TRANSFER LEARNING
