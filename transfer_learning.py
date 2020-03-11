@@ -20,7 +20,7 @@ log.basicConfig(level=log.DEBUG,
 
 
 RUN_ROOT = './runs'
-RUN_CFG = 'default_runcfg.json'
+REFERENCE_CONFIG = 'transfer_runcfg.json'
 
 
 def get_id() -> str:
@@ -53,10 +53,11 @@ def create_run_folder(model_name: str, run_id=None):
     # create run folder
     path = os.path.join(RUN_ROOT, r_id, model_name.lower())
     os.makedirs(path, exist_ok=True)
+    log.info(f"Created run folder: {path}")
     return path
 
 
-def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
+def create_tl_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
     for val in dropout_probs:
         cfg = copy(reference_cfg)
@@ -77,27 +78,30 @@ def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Train LeNet5 and then perform Transfer Learning with LabelDrop.")
-    parser.add_argument('-cfg', default=RUN_CFG,
+    parser.add_argument('-cfg', default=REFERENCE_CONFIG,
                         action='store', help='Run configuration file.')
+    parser.add_argument('-short', default=False,
+                        action='store_true', help='Train with less examples.')
     args = parser.parse_args()
 
-    ENABLE_DIRTY_LABELS = args.dirty
     ENABLE_SHORT_TRAIN = args.short
-    RUN_CFG = args.cfg
+    cfg_path = os.path.join(RUN_ROOT, args.cfg)
+    REFERENCE_CONFIG = engine.RunConfig.load(cfg_path)
+    log.info(f"Loaded reference config: {cfg_path}")
 
     # get device
-    r_device = get_device()
+    DEVICE = get_device()
 
     # get run id
-    r_id = get_id()
+    R_ID = get_id()
 
+    # TODO: create mapping Model->RunConfig
     # load cfg objects
     train_configs: Dict[str, engine.RunConfig] = dict()
-    ref_config = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
-    for model in ref_config.models:
+    for model in REFERENCE_CONFIG.models:
         # swaps model classname with proper model instance
         model = getattr(engine, model)()
-        cfg = copy(ref_config)
+        cfg = copy(REFERENCE_CONFIG)
         cfg.models = None
         setattr(cfg, 'model', model)  # HACK: stinky code!
         key = model.__class__.__name__
@@ -106,58 +110,64 @@ if __name__ == '__main__':
 
     # TRAIN & TEST LENET5 VANILLA
     log.info("TRAIN & TEST LENET5 VANILLA")
-    vanilla_models: List[torch.nn.Module] = list()
+    VANILLA_MODELS = list()
     for m_name in train_configs:
-        ref_config = train_configs[m_name]
+        m_config = train_configs[m_name]
         run_dir = create_run_folder(
-            model_name=m_name, run_id=r_id)
+            model_name=m_name, run_id=R_ID)
 
         if ENABLE_SHORT_TRAIN:
-            ref_config.max_items = 1500
+            m_config.max_items = 1500
 
         # train
-        trained_model: torch.nn.Module = trm.do_train(model=ref_config.model, device=r_device,
-                                                      config=ref_config, directory=run_dir)
-        vanilla_models.append(trained_model)
+        trained_model = trm.do_train(model=m_config.model, device=DEVICE,
+                                     config=m_config, directory=run_dir)
+        VANILLA_MODELS.append(trained_model)
 
         # test
         pt_path = glob.glob(
-            f"{run_dir}/{ref_config.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=ref_config.model.__class__.__name__,
-                    state_dict_path=pt_path, device=r_device, directory=run_dir)
+            f"{run_dir}/{m_config.model.__class__.__name__}.pt")[0]
+        tem.do_test(model_name=m_config.model.__class__.__name__,
+                    state_dict_path=pt_path, device=DEVICE, directory=run_dir)
+
 
     # PREPARE FOR TRANSFER LEARNING
     log.info("PREPARE FOR TRANSFER LEARNING")
-    tl_models: List[torch.nn.Module] = list()
-    for vm in vanilla_models:
-        prepared_model = copy(vm)
-        # TODO: prepare model
-        tl_models.append(prepared_model)
+    TL_MODELS = list()
+    for vm in VANILLA_MODELS:
+        pm = copy(vm)
+        # reset last fully connected layer
+        in_features = pm.fc3.in_features
+        out_features = pm.fc3.out_features
+        pm.fc3 = torch.nn.Linear(
+            in_features=in_features, out_features=out_features)
+        TL_MODELS.append(pm)
 
     # CREATE LABELDROP CONFIGS
     log.info("CREATE LABELDROP CONFIGS")
-    tl_configs: Dict[str, engine.RunConfig] = dict()
-    ldrop_configs = create_labeldropout_configs(
-        ref_config, np.arange(0.10, 0.50, 0.10))
-    tl_configs.update(ldrop_configs)
+    tl_configs: Dict[torch.nn.Module, engine.RunConfig] = dict()
+    tl_range = np.arange(0.10, 0.50, 0.10)
+    for model in TL_MODELS:
+        ldrop_configs = create_tl_labdrop_configs(REFERENCE_CONFIG, tl_range)
+        tl_configs.update(ldrop_configs)
 
     # TRAIN & TEST TR_LENET5
     log.info("TRAIN & TEST TR_LENET5")
     for m_name in tl_configs:
-        ref_config = tl_configs[m_name]
+        tlm_config = tl_configs[m_name]
         run_dir = create_run_folder(
-            model_name=m_name, run_id=r_id)
+            model_name=m_name, run_id=R_ID)
 
         if ENABLE_SHORT_TRAIN:
-            ref_config.max_items = 1500
+            tlm_config.max_items = 1500
 
         # train
-        model: torch.nn.Module = trm.do_train(model=ref_config.model, device=r_device,
-                                              config=ref_config, directory=run_dir)
-        tl_models.append(model)
+        model: torch.nn.Module = trm.do_train(model=tlm_config.model, device=DEVICE,
+                                              config=tlm_config, directory=run_dir)
+        TL_MODELS.append(model)
 
         # test
         pt_path = glob.glob(
-            f"{run_dir}/{ref_config.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=ref_config.model.__class__.__name__,
-                    state_dict_path=pt_path, device=r_device, directory=run_dir)
+            f"{run_dir}/{tlm_config.model.__class__.__name__}.pt")[0]
+        tem.do_test(model_name=tlm_config.model.__class__.__name__,
+                    state_dict_path=pt_path, device=DEVICE, directory=run_dir)
