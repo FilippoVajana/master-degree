@@ -60,7 +60,7 @@ def get_device() -> str:
     return device
 
 
-def do_train(model: Module, device: str, config: engine.RunConfig, directory: str) -> torch.nn.Module:
+def do_train(model: Module, device: str, config: engine.RunConfig, directory: str) -> Module:
     '''Trains the input model.
     The methods saves train logs as .csv and the final model state dict.     
     '''
@@ -70,7 +70,7 @@ def do_train(model: Module, device: str, config: engine.RunConfig, directory: st
     # save model dict
     state_dict_path = os.path.join(
         directory, f"{config.model.__class__.__name__}.pt")
-    save(trained_model, state_dict_path)
+    save(trained_model.state_dict(), state_dict_path)
     log.info("Saved model state dict: %s", state_dict_path)
 
     # save training logs
@@ -113,4 +113,4 @@ if __name__ == '__main__':
         log.info(f"Created train folder: {args.outdir}")
 
     # performs training
-    do_train(model, device, run_cfg, train_dir)
+    do_train(run_cfg.model, device, run_cfg, train_dir)

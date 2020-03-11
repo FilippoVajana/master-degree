@@ -133,10 +133,10 @@ class GenericTrainer():
             self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
             self.ood_logs["ov_mean_nll"].append(ov_metrics[2])
 
-            # save checkpoint
-            if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
-                best_loss = self.validation_logs["v_mean_loss"][-1]
-                best_model = self.model.state_dict()
+            # # save checkpoint
+            # if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
+            #     best_loss = self.validation_logs["v_mean_loss"][-1]
+            #     best_model = self.model.state_dict()
 
         # merge train and validation logs
         data = {"epoch": range(epochs)}
@@ -147,7 +147,7 @@ class GenericTrainer():
         # build dataframe from logs
         df = pd.DataFrame(data=data)
 
-        return best_model, df
+        return self.model, df
 
     def __labels_drop(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly change the labels for a part of the original labels.
