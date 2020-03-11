@@ -10,7 +10,7 @@ import numpy as np
 import torch.cuda as tcuda
 import train_model as trm
 import test_model as tem
-import torch
+from torch.nn import Module
 import numpy as np
 
 import engine
@@ -96,17 +96,16 @@ if __name__ == '__main__':
     R_ID = get_id()
 
     # TODO: create mapping Model->RunConfig
-    # load cfg objects
-    train_configs: Dict[str, engine.RunConfig] = dict()
-    for model in REFERENCE_CONFIG.models:
-        # swaps model classname with proper model instance
-        model = getattr(engine, model)()
+    # load and hack train configurations
+    train_configs: Dict[Module, engine.RunConfig] = dict()
+    for m_name in REFERENCE_CONFIG.models:
         cfg = copy(REFERENCE_CONFIG)
-        cfg.models = None
+        # swaps model classname with proper model instance
+        model = getattr(engine, m_name)()
+        delattr(cfg, "models")
         setattr(cfg, 'model', model)  # HACK: stinky code!
-        key = model.__class__.__name__
-        train_configs[key] = cfg
-        log.info(f"Loaded configuration for {key}")
+        train_configs[model] = cfg
+        log.info(f"Loaded configuration for {model.__class__.__name__}")
 
     # TRAIN & TEST LENET5 VANILLA
     log.info("TRAIN & TEST LENET5 VANILLA")
