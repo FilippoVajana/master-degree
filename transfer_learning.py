@@ -3,10 +3,11 @@ import datetime as dt
 import logging as log
 import os
 from copy import copy
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import glob
 import GPUtil
 import numpy as np
+import torch.nn
 import torch.cuda as tcuda
 import train_model as trm
 import test_model as tem
@@ -99,74 +100,82 @@ if __name__ == '__main__':
     # load and hack train configurations
     train_configs: Dict[Module, engine.RunConfig] = dict()
     for m_name in REFERENCE_CONFIG.models:
-        cfg = copy(REFERENCE_CONFIG)
+        config = copy(REFERENCE_CONFIG)
         # swaps model classname with proper model instance
         model = getattr(engine, m_name)()
-        delattr(cfg, "models")
-        setattr(cfg, 'model', model)  # HACK: stinky code!
-        train_configs[model] = cfg
+        delattr(config, "models")
+        setattr(config, 'model', model)  # HACK: stinky code!
+        train_configs[model] = config
         log.info(f"Loaded configuration for {model.__class__.__name__}")
 
     # TRAIN & TEST LENET5 VANILLA
     TRAINED_MODELS: Dict[Module, engine.RunConfig] = dict()
     log.info("TRAIN & TEST LENET5 VANILLA")
     for model in train_configs:
-        t_config = train_configs[model]
+        config = train_configs[model]
+        name = model.__class__.__name__
         run_dir = create_run_folder(
-            model_name=model, run_id=R_ID)
+            model_name=name, run_id=R_ID)
 
         if ENABLE_SHORT_TRAIN:
-            t_config.max_items = 1500
+            config.max_items = 1500
 
         # train
         t_model = trm.do_train(model=model, device=DEVICE,
-                               config=t_config, directory=run_dir)
+                               config=config, directory=run_dir)
         # test
         pt_path = glob.glob(
             f"{run_dir}/{model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=model.__class__.__name__,
                     state_dict_path=pt_path, device=DEVICE, directory=run_dir)
         # save trained model
-        TRAINED_MODELS[t_model] = t_config
+        TRAINED_MODELS[t_model] = config
 
     # TODO: create mapping TL_Model->RunConfig
     # PREPARE FOR TRANSFER LEARNING
     log.info("PREPARE FOR TRANSFER LEARNING")
-    TL_MODELS = list()
-    for vm in VANILLA_MODELS:
-        pm = copy(vm)
+    TRLEARN_MODELS: Dict[Module, engine.RunConfig] = dict()
+    for t_model in TRAINED_MODELS:
+        model = copy(t_model)
         # reset last fully connected layer
-        in_features = pm.fc3.in_features
-        out_features = pm.fc3.out_features
-        pm.fc3 = torch.nn.Linear(
+        in_features = model.fc3.in_features
+        out_features = model.fc3.out_features
+        model.fc3 = torch.nn.Linear(
             in_features=in_features, out_features=out_features)
-        TL_MODELS.append(pm)
+        t_cfg = TRAINED_MODELS[t_model]
+        TRLEARN_MODELS[model] = t_cfg
 
     # CREATE LABELDROP CONFIGS
     log.info("CREATE LABELDROP CONFIGS")
-    tl_configs: Dict[torch.nn.Module, engine.RunConfig] = dict()
+    # Module -> (model_folder, config)
+    tl_configs: Dict[Module, Tuple[str, engine.RunConfig]] = dict()
     tl_range = np.arange(0.10, 0.50, 0.10)
-    for model in TL_MODELS:
-        ldrop_configs = create_tl_labdrop_configs(REFERENCE_CONFIG, tl_range)
-        tl_configs.update(ldrop_configs)
+    for model in TRLEARN_MODELS:
+        config = TRLEARN_MODELS[model]
+        ldrop_configs = create_tl_labdrop_configs(config, tl_range)
+        for name in ldrop_configs:
+            tl_configs[copy(model)] = (name, ldrop_configs[name])
 
     # TRAIN & TEST TR_LENET5
+    FINAL_MODELS: List[Module] = list()
     log.info("TRAIN & TEST TR_LENET5")
-    for m_name in tl_configs:
-        tlm_config = tl_configs[m_name]
+    for model in tl_configs:
+        name = tl_configs[model][0]
+        config = tl_configs[model][1]
+
         run_dir = create_run_folder(
-            model_name=m_name, run_id=R_ID)
+            model_name=name, run_id=R_ID)
 
         if ENABLE_SHORT_TRAIN:
-            tlm_config.max_items = 1500
+            config.max_items = 1500
 
         # train
-        model: torch.nn.Module = trm.do_train(model=tlm_config.model, device=DEVICE,
-                                              config=tlm_config, directory=run_dir)
-        TL_MODELS.append(model)
+        t_model: torch.nn.Module = trm.do_train(model=model, device=DEVICE,
+                                                config=config, directory=run_dir)
+        FINAL_MODELS.append(copy(t_model))
 
         # test
         pt_path = glob.glob(
-            f"{run_dir}/{tlm_config.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=tlm_config.model.__class__.__name__,
+            f"{run_dir}/{t_model.__class__.__name__}.pt")[0]
+        tem.do_test(model_name=t_model.__class__.__name__,
                     state_dict_path=pt_path, device=DEVICE, directory=run_dir)
