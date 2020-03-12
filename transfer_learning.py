@@ -108,7 +108,8 @@ if __name__ == '__main__':
         log.info(f"Loaded configuration for {model.__class__.__name__}")
 
     # TRAIN & TEST LENET5 VANILLA
-    log.info("TRAIN & TEST LENET5 VANILLA")    
+    TRAINED_MODELS: Dict[Module, engine.RunConfig] = dict()
+    log.info("TRAIN & TEST LENET5 VANILLA")
     for model in train_configs:
         t_config = train_configs[model]
         run_dir = create_run_folder(
@@ -118,17 +119,17 @@ if __name__ == '__main__':
             t_config.max_items = 1500
 
         # train
-        trained_model = trm.do_train(model=model, device=DEVICE,
-                                     config=t_config, directory=run_dir)
+        t_model = trm.do_train(model=model, device=DEVICE,
+                               config=t_config, directory=run_dir)
         # test
         pt_path = glob.glob(
             f"{run_dir}/{model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=model.__class__.__name__,
                     state_dict_path=pt_path, device=DEVICE, directory=run_dir)
-        # substitute plain model instance with trained model
-        train_configs[model] = trained_model
+        # save trained model
+        TRAINED_MODELS[t_model] = t_config
 
-
+    # TODO: create mapping TL_Model->RunConfig
     # PREPARE FOR TRANSFER LEARNING
     log.info("PREPARE FOR TRANSFER LEARNING")
     TL_MODELS = list()
