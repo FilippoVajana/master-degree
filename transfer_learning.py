@@ -133,15 +133,21 @@ if __name__ == '__main__':
 
     # TODO: train the last layer only
     def prepare_model(model: Module):
-        model.do_transfer_learn = True
-        # disable all layers
-        for param in model.parameters():
-            param.requires_grad = False
+        # mantains the gradients locked inside GenericTrainer
+        # model.do_transfer_learn = True
+
+        # # disable all layers
+        # for param in model.parameters():
+        #     param.requires_grad = False
+
         # reset last fully connected layer
         in_features = model.fc3.in_features
         out_features = model.fc3.out_features
         model.fc3 = torch.nn.Linear(
             in_features=in_features, out_features=out_features)
+        # for name, param in model.named_parameters():
+        #     print(name, param.requires_grad)
+
         return model
 
     for t_model in TRAINED_MODELS:
@@ -158,7 +164,7 @@ if __name__ == '__main__':
         config = TRLEARN_MODELS[model]
         ldrop_configs = create_tl_labdrop_configs(config, tl_range)
         for name in ldrop_configs:
-            tl_configs[model] = (name, ldrop_configs[name])
+            tl_configs[copy(model)] = (name, ldrop_configs[name])
 
     # TRAIN & TEST TR_LENET5
     FINAL_MODELS: List[Module] = list()

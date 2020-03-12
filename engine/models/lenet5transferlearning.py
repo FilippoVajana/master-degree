@@ -58,10 +58,11 @@ class LeNet5TL(torch.nn.Module):
 class LeNet5TLTrainer(GenericTrainer):
     def __init__(self, cfg: RunConfig, device):
         super().__init__(cfg, device)
-        if self.model.do_transfer_learn == False:
-            model_params = self.model.parameters()
-        else:
-            model_params = self.model.fc3.parameters()
+        # if self.model.do_transfer_learn == False:
+        #     model_params = self.model.parameters()
+        # else:
+        #     model_params = self.model.fc3.parameters()
+        model_params = self.model.parameters()
 
         self.optimizer = torch.optim.Adam(
             model_params,
