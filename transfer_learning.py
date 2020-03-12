@@ -58,17 +58,12 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_tl_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
+def create_tl_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
     for val in dropout_probs:
         cfg = copy(reference_cfg)
-        # hack the config
-        cfg.models = None
-        if labeldrop_ver == 2:
-            setattr(cfg, 'model', engine.LeNet5LabelDrop())
-        else:
-            setattr(cfg, 'model', engine.LeNet5())
         cfg.dirty_labels = float("{0:.2f}".format(val))
+
         # save LD config
         key = f"{cfg.model.__class__.__name__}tl-labdrop{cfg.dirty_labels}"
         dl_configs[key] = cfg
@@ -86,6 +81,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     ENABLE_SHORT_TRAIN = args.short
+    ENABLE_TESTING = True
     cfg_path = os.path.join(RUN_ROOT, args.cfg)
     REFERENCE_CONFIG = engine.RunConfig.load(cfg_path)
     log.info(f"Loaded reference config: {cfg_path}")
@@ -96,7 +92,6 @@ if __name__ == '__main__':
     # get run id
     R_ID = get_id()
 
-    # TODO: create mapping Model->RunConfig
     # load and hack train configurations
     train_configs: Dict[Module, engine.RunConfig] = dict()
     for m_name in REFERENCE_CONFIG.models:
@@ -124,26 +119,35 @@ if __name__ == '__main__':
         t_model = trm.do_train(model=model, device=DEVICE,
                                config=config, directory=run_dir)
         # test
-        pt_path = glob.glob(
-            f"{run_dir}/{model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=model.__class__.__name__,
-                    state_dict_path=pt_path, device=DEVICE, directory=run_dir)
+        if ENABLE_TESTING:
+            pt_path = glob.glob(
+                f"{run_dir}/{model.__class__.__name__}.pt")[0]
+            tem.do_test(model_name=model.__class__.__name__,
+                        state_dict_path=pt_path, device=DEVICE, directory=run_dir)
         # save trained model
         TRAINED_MODELS[t_model] = config
 
-    # TODO: create mapping TL_Model->RunConfig
     # PREPARE FOR TRANSFER LEARNING
     log.info("PREPARE FOR TRANSFER LEARNING")
     TRLEARN_MODELS: Dict[Module, engine.RunConfig] = dict()
-    for t_model in TRAINED_MODELS:
-        model = copy(t_model)
+
+    # TODO: train the last layer only
+    def prepare_model(model: Module):
+        model.do_transfer_learn = True
+        # disable all layers
+        for param in model.parameters():
+            param.requires_grad = False
         # reset last fully connected layer
         in_features = model.fc3.in_features
         out_features = model.fc3.out_features
         model.fc3 = torch.nn.Linear(
             in_features=in_features, out_features=out_features)
+        return model
+
+    for t_model in TRAINED_MODELS:
         t_cfg = TRAINED_MODELS[t_model]
-        TRLEARN_MODELS[model] = t_cfg
+        p_model = prepare_model(copy(t_model))
+        TRLEARN_MODELS[p_model] = t_cfg
 
     # CREATE LABELDROP CONFIGS
     log.info("CREATE LABELDROP CONFIGS")
@@ -154,7 +158,7 @@ if __name__ == '__main__':
         config = TRLEARN_MODELS[model]
         ldrop_configs = create_tl_labdrop_configs(config, tl_range)
         for name in ldrop_configs:
-            tl_configs[copy(model)] = (name, ldrop_configs[name])
+            tl_configs[model] = (name, ldrop_configs[name])
 
     # TRAIN & TEST TR_LENET5
     FINAL_MODELS: List[Module] = list()
@@ -175,7 +179,8 @@ if __name__ == '__main__':
         FINAL_MODELS.append(copy(t_model))
 
         # test
-        pt_path = glob.glob(
-            f"{run_dir}/{t_model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=t_model.__class__.__name__,
-                    state_dict_path=pt_path, device=DEVICE, directory=run_dir)
+        if ENABLE_TESTING:
+            pt_path = glob.glob(
+                f"{run_dir}/{t_model.__class__.__name__}.pt")[0]
+            tem.do_test(model_name=t_model.__class__.__name__,
+                        state_dict_path=pt_path, device=DEVICE, directory=run_dir)
