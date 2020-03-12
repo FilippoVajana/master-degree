@@ -26,7 +26,7 @@ class GenericTrainer():
             betas=cfg.optimizer_args['betas'],
             eps=cfg.optimizer_args['eps']
         )
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.CrossEntropyLoss()
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
@@ -75,8 +75,8 @@ class GenericTrainer():
             raise Exception("Validation set too small")
 
         self.model = self.model.to(self.device)
-        best_model = self.model.state_dict()
-        best_loss = None
+        # best_model = self.model.state_dict()
+        # best_loss = None
 
         for _ in trange(epochs):
             # TRAIN LOOP
@@ -150,17 +150,6 @@ class GenericTrainer():
         return self.model, df
 
     def __labels_drop(self, labels: torch.Tensor) -> torch.Tensor:
-        '''Randomly change the labels for a part of the original labels.
-        '''
-        if self.dirty_labels_prob == 0.0:
-            return labels
-        else:
-            # random extraction
-            extr = self.BINOMIAL_DIST.sample()
-            labels[extr > 0] = randint(0, 9)
-        return labels
-
-    def __labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly set the labels for a part of the original labels to an extra class.
         '''
         if self.dirty_labels_prob == 0.0:
@@ -181,8 +170,7 @@ class GenericTrainer():
         t_examples = t_examples.to(self.device)
 
         # drop labels
-        # t_labels = self.__labels_drop(t_labels).to(self.device)
-        t_labels = self.__labels_drop_v2(t_labels).to(self.device)
+        t_labels = self.__labels_drop(t_labels).to(self.device)
 
         # reset gradient computation
         self.optimizer.zero_grad()
