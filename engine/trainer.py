@@ -149,7 +149,7 @@ class GenericTrainer():
 
         return self.model, df
 
-    def __labels_drop(self, labels: torch.Tensor) -> torch.Tensor:
+    def __labels_drop_v1(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly change the labels for a part of the original labels.
         '''
         if self.dirty_labels_prob == 0.0:
