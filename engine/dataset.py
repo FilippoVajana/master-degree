@@ -24,7 +24,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.images)
 
-    # @cachetools.cachedmethod(lambda self: self.cache)
+    @cachetools.cachedmethod(lambda self: self.cache)
     def __getitem__(self, index):
         image = torch.Tensor(self.images[index])
 
