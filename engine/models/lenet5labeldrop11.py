@@ -3,14 +3,14 @@ import torch.nn
 import torch.optim
 import torch.nn.functional as F
 
-from ..trainer import GenericTrainer
 from ..runconfig import RunConfig
 from ..dataloader import ImageDataLoader
+from engine.models.lenet5 import LeNet5Trainer
 
 
-class LeNet5LabelDrop(torch.nn.Module):
+class LeNet5LabelDrop11(torch.nn.Module):
     def __init__(self):
-        super(LeNet5LabelDrop, self).__init__()
+        super(LeNet5LabelDrop11, self).__init__()
         self.conv1 = torch.nn.Conv2d(
             in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
         self.max_pool1 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -52,27 +52,3 @@ class LeNet5LabelDrop(torch.nn.Module):
         )
 
         return model, data
-
-
-class LeNet5Trainer(GenericTrainer):
-    """
-    LeNet and MLP were trained for 20 epochs using the Adam optimizer (Kingma &
-    Ba, 2014) and used ReLU activation functions. For stochastic methods, we averaged 300 sample
-    predictions to yield a predictive distribution, and the ensemble model used 10 instances trained from
-    independent random initializations. The LeNet architecture (LeCun et al.,
-    1998) applies two convolutional layers 3x3 kernels of 32 and 64 filters respectively) followed by two
-    fully-connected layers with one hidden layer of 128 activations; dropout was applied before each
-    fully-connected layer. We employed hyperparameter tuning (See Section A.7) to select the training
-    batch size, learning rate, and dropout rate.
-    """
-
-    def __init__(self, cfg: RunConfig, device):
-        super().__init__(cfg, device)
-        self.optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=cfg.optimizer_args['lr'],
-            weight_decay=cfg.optimizer_args['weight_decay'],
-            betas=cfg.optimizer_args['betas'],
-            eps=cfg.optimizer_args['eps']
-        )
-        self.loss_fn = torch.nn.CrossEntropyLoss()
