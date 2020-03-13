@@ -8,9 +8,9 @@ from ..dataloader import ImageDataLoader
 from engine.models.lenet5 import LeNet5Trainer
 
 
-class LeNet5ConcreteDropout(torch.nn.Module):
+class LeNet5MCDropout(torch.nn.Module):
     def __init__(self):
-        super(LeNet5ConcreteDropout, self).__init__()
+        super(LeNet5MCDropout, self).__init__()
         self.conv1 = torch.nn.Conv2d(
             in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
 
