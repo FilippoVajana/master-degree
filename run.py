@@ -52,16 +52,13 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
+def create_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
     for val in dropout_probs:
         cfg = copy.copy(reference_cfg)
         # hack the config
         cfg.models = None
-        if labeldrop_ver == 2:
-            setattr(cfg, 'model', engine.LeNet5LabelDrop())
-        else:
-            setattr(cfg, 'model', engine.LeNet5())
+        setattr(cfg, 'model', engine.LeNet5())
         cfg.dirty_labels = float("{0:.2f}".format(val))
         # save LD config
         key = f"{cfg.model.__class__.__name__}labdrop{cfg.dirty_labels}"
