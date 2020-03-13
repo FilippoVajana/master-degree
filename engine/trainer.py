@@ -27,7 +27,6 @@ class GenericTrainer():
             eps=cfg.optimizer_args['eps']
         )
         self.loss_fn = torch.nn.CrossEntropyLoss()
-        self.labeldrop_function = self.labels_drop_v2
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
@@ -80,6 +79,7 @@ class GenericTrainer():
         # best_loss = None
 
         for _ in trange(epochs):
+            # REVIEW: check TL
             if hasattr(self.model, 'do_transfer_learn') and self.model.do_transfer_learn == True:
                 # this condition is True only when the model is prepared for TL (see transfer_learning.py)
                 continue
@@ -165,16 +165,16 @@ class GenericTrainer():
             labels[extr > 0] = randint(0, 9)
         return labels
 
-    def labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
-        '''Randomly set the labels for a part of the original labels to an extra class.
-        '''
-        if self.dirty_labels_prob == 0.0:
-            return labels
-        else:
-            # random extraction
-            extr = self.BINOMIAL_DIST.sample()
-            labels[extr > 0] = 10
-        return labels
+    # def labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
+    #     '''Randomly set the labels for a part of the original labels to an extra class.
+    #     '''
+    #     if self.dirty_labels_prob == 0.0:
+    #         return labels
+    #     else:
+    #         # random extraction
+    #         extr = self.BINOMIAL_DIST.sample()
+    #         labels[extr > 0] = 10
+    #     return labels
 
     def __train_batch(self, batch):
         """
@@ -186,7 +186,7 @@ class GenericTrainer():
         t_examples = t_examples.to(self.device)
 
         # drop labels
-        t_labels = self.labeldrop_function(self, t_labels).to(self.device)
+        t_labels = self.labels_drop_v1(t_labels).to(self.device)
 
         # reset gradient computation
         self.optimizer.zero_grad()
@@ -229,6 +229,8 @@ class GenericTrainer():
         t_labels = t_labels.to(self.device)
 
         # forward
+        # TODO: MC dropout loop
+        # TODO: MC dropout metrics
         t_predictions = self.model(t_examples)
 
         # compute loss
