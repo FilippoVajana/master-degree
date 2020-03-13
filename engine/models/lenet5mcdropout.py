@@ -11,6 +11,9 @@ from engine.models.lenet5 import LeNet5Trainer
 class LeNet5MCDropout(torch.nn.Module):
     def __init__(self):
         super(LeNet5MCDropout, self).__init__()
+        self.do_mcdropout = True
+        self.do_transferlearn = False
+
         self.conv1 = torch.nn.Conv2d(
             in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
 
@@ -26,6 +29,12 @@ class LeNet5MCDropout(torch.nn.Module):
         self.fc2 = torch.nn.Linear(in_features=120, out_features=84)
         self.fc3 = torch.nn.Linear(in_features=84, out_features=10)
 
+    def train(self, mode):
+        return super().train(mode)
+
+    def eval(self):
+        return
+
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.max_pool1(x))
@@ -36,13 +45,13 @@ class LeNet5MCDropout(torch.nn.Module):
         #x = x.view(-1, 16*5*5)
         x = self.flat(x)
 
-        x = F.dropout(x, p=0.5)
+        # x = F.dropout(x, p=0.5, training=True, inplace=False)
         x = F.relu(self.fc1(x))
 
-        x = F.dropout(x, p=0.5)
+        x = F.dropout(x, p=0.5, training=True, inplace=False)
         x = F.relu(self.fc2(x))
 
-        x = F.dropout(x, p=0.5)
+        x = F.dropout(x, p=0.5, training=True, inplace=False)
         x = self.fc3(x)
         return x  # softmax values must be evaluated during inference.
 

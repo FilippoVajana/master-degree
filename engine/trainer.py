@@ -15,6 +15,7 @@ log.basicConfig(level=log.INFO,
 
 class GenericTrainer():
     BINOMIAL_DIST = torch.distributions.Binomial(total_count=1, probs=1)
+    MC_DROPOUT_PASS = 50
 
     def __init__(self, cfg: RunConfig, device: str):
         self.device = device
@@ -30,6 +31,7 @@ class GenericTrainer():
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
+        self.MC_DROPOUT_PASS = 20
 
         # train metrics
         self.train_logs = {
@@ -41,6 +43,7 @@ class GenericTrainer():
         }
 
         # validation metrics
+        # TODO: MC dropout metrics
         self.validation_logs = {
             "v_mean_accuracy": [],
             "v_mean_brier": [],
@@ -50,6 +53,7 @@ class GenericTrainer():
         }
 
         # out-of-distribution metrics and dataloader
+        # TODO: MC dropout metrics
         self.ood_logs = {
             "ov_mean_brier": [],
             "ov_mean_entropy": [],
@@ -79,12 +83,12 @@ class GenericTrainer():
         # best_loss = None
 
         for _ in trange(epochs):
-            # REVIEW: check TL
-            if hasattr(self.model, 'do_transfer_learn') and self.model.do_transfer_learn == True:
+            # REVIEW: check MC
+            if self.model.do_transferlearn == True:
                 # this condition is True only when the model is prepared for TL (see transfer_learning.py)
                 continue
             else:
-                self.model.train()
+                self.model.train(True)
 
             # TRAIN LOOP
             t_tmp_metrics = []
@@ -103,6 +107,7 @@ class GenericTrainer():
                 self.train_logs[k].append(t_metrics_dict[k])
 
             # VALIDATION LOOP
+            # REVIEW: check MC
             self.model.eval()
             v_tmp_metrics = []
 
@@ -229,9 +234,17 @@ class GenericTrainer():
         t_labels = t_labels.to(self.device)
 
         # forward
-        # TODO: MC dropout loop
+        # REVIEW: MC dropout loop
         # TODO: MC dropout metrics
-        t_predictions = self.model(t_examples)
+        if self.model.do_mcdropout == True:
+            mc_out = [self.model(t_examples)
+                      for _ in range(0, self.MC_DROPOUT_PASS, 1)]
+            t_stack = torch.stack(mc_out, dim=2)
+            t_mc_mean = t_stack.mean(dim=2)
+            t_mc_std = t_stack.std(dim=2)
+            t_predictions = t_mc_mean
+        else:
+            t_predictions = self.model(t_examples)
 
         # compute loss
         if t_labels.min() >= 65:
