@@ -26,7 +26,8 @@ class GenericTrainer():
             betas=cfg.optimizer_args['betas'],
             eps=cfg.optimizer_args['eps']
         )
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+        self.labeldrop_function = self.labels_drop_v2
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
@@ -75,14 +76,18 @@ class GenericTrainer():
             raise Exception("Validation set too small")
 
         self.model = self.model.to(self.device)
-        best_model = self.model.state_dict()
-        best_loss = None
+        # best_model = self.model.state_dict()
+        # best_loss = None
 
         for _ in trange(epochs):
-            # TRAIN LOOP
-            self.model.train()
-            t_tmp_metrics = []
+            if hasattr(self.model, 'do_transfer_learn') and self.model.do_transfer_learn == True:
+                # this condition is True only when the model is prepared for TL (see transfer_learning.py)
+                continue
+            else:
+                self.model.train()
 
+            # TRAIN LOOP
+            t_tmp_metrics = []
             for batch in train_dataloader:
                 # result === (accuracy, brier, entropy, loss)
                 result = self.__train_batch(batch)
@@ -133,10 +138,10 @@ class GenericTrainer():
             self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
             self.ood_logs["ov_mean_nll"].append(ov_metrics[2])
 
-            # save checkpoint
-            if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
-                best_loss = self.validation_logs["v_mean_loss"][-1]
-                best_model = self.model.state_dict()
+            # # save checkpoint
+            # if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
+            #     best_loss = self.validation_logs["v_mean_loss"][-1]
+            #     best_model = self.model.state_dict()
 
         # merge train and validation logs
         data = {"epoch": range(epochs)}
@@ -147,9 +152,9 @@ class GenericTrainer():
         # build dataframe from logs
         df = pd.DataFrame(data=data)
 
-        return best_model, df
+        return self.model, df
 
-    def __labels_drop(self, labels: torch.Tensor) -> torch.Tensor:
+    def labels_drop_v1(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly change the labels for a part of the original labels.
         '''
         if self.dirty_labels_prob == 0.0:
@@ -160,7 +165,7 @@ class GenericTrainer():
             labels[extr > 0] = randint(0, 9)
         return labels
 
-    def __labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
+    def labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly set the labels for a part of the original labels to an extra class.
         '''
         if self.dirty_labels_prob == 0.0:
@@ -181,8 +186,7 @@ class GenericTrainer():
         t_examples = t_examples.to(self.device)
 
         # drop labels
-        # t_labels = self.__labels_drop(t_labels).to(self.device)
-        t_labels = self.__labels_drop_v2(t_labels).to(self.device)
+        t_labels = self.labeldrop_function(self, t_labels).to(self.device)
 
         # reset gradient computation
         self.optimizer.zero_grad()

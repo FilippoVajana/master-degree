@@ -42,6 +42,18 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Transfer Learning",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/transfer_learning.py",
+            "args": [
+                "-cfg",
+                "transfer_runcfg.json",
+                "-short"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Fetch MNIST Data",
             "type": "python",
             "request": "launch",

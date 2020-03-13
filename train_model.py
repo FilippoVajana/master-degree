@@ -60,23 +60,24 @@ def get_device() -> str:
     return device
 
 
-def do_train(model: Module, device: str, config: engine.RunConfig, directory: str):
+def do_train(model: Module, device: str, config: engine.RunConfig, directory: str) -> Module:
     '''Trains the input model.
     The methods saves train logs as .csv and the final model state dict.     
     '''
     log.info(f"Started training phase for: {model.__class__.__name__}")
-    train_model, train_df = model.start_training(config, device)
+    trained_model, train_df = model.start_training(config, device)
 
     # save model dict
     state_dict_path = os.path.join(
         directory, f"{config.model.__class__.__name__}.pt")
-    save(train_model, state_dict_path)
+    save(trained_model.state_dict(), state_dict_path)
     log.info("Saved model state dict: %s", state_dict_path)
 
     # save training logs
     train_logs_path = os.path.join(directory, 'train_logs.csv')
     train_df.to_csv(train_logs_path, index=True)
     log.info("Saved train logs: %s", train_logs_path)
+    return trained_model
 
 
 if __name__ == '__main__':
@@ -112,4 +113,4 @@ if __name__ == '__main__':
         log.info(f"Created train folder: {args.outdir}")
 
     # performs training
-    do_train(model, device, run_cfg, train_dir)
+    do_train(run_cfg.model, device, run_cfg, train_dir)

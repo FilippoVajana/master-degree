@@ -18,14 +18,6 @@ log.basicConfig(level=log.DEBUG,
 RUN_ROOT = './runs'
 RUN_CFG = 'default_runcfg.json'
 
-# RUN_CONFIGS = [
-#     'LeNet5_runcfg.json',
-#     'LeNet5SimpleLLDropout_runcfg.json',
-#     'LeNet5SimpleDropout_runcfg.json',
-#     'LeNet5ConcreteDropout_runcfg.json'
-# ]
-# RUN_CONFIGS = ['LeNet5_runcfg.json']
-
 
 def get_id() -> str:
     '''Returns run id as a time string.
@@ -60,7 +52,7 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
+def create_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray, labeldrop_ver=2) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
     for val in dropout_probs:
         cfg = copy.copy(reference_cfg)
@@ -79,7 +71,7 @@ def create_labeldropout_configs(reference_cfg: engine.RunConfig, dropout_probs: 
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Analyze data.")
+    parser = argparse.ArgumentParser(description="Train and Test models.")
     parser.add_argument('-dirty', default=False,
                         action='store_true', help='Train with Label Drop.')
     parser.add_argument('-short', default=False,
@@ -107,7 +99,7 @@ if __name__ == '__main__':
 
     if ENABLE_DIRTY_LABELS:
         ldrop_values = np.arange(0.10, 0.50, 0.10)
-        ldrop_configs = create_labeldropout_configs(
+        ldrop_configs = create_labdrop_configs(
             reference_cfg, ldrop_values)
         run_configurations.update(ldrop_configs)
 

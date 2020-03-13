@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
 plt.style.use('tableau-colorblind10')
-N = 7
+N = 5
 plt.rcParams["axes.prop_cycle"] = plt.cycler(
-    "color", plt.cm.viridis(np.linspace(0, 1, N)))
+    "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
 # prop_cycle = plt.rcParams['axes.prop_cycle']
 # mycolors = prop_cycle.by_key()['color']
 
@@ -427,7 +427,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidence vs Acc Rotated 60°")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
@@ -466,7 +466,7 @@ def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidence vs Count Rotated 60°")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
@@ -494,12 +494,13 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     # count examples based on entropy value
     for k in df_dict:
         # compute df entropy range
-        ent_range = np.arange(df_dict[k].min(), df_dict[k].max()*1,
-                              (df_dict[k].max() - df_dict[k].min())/25)
+        # ent_range = np.arange(df_dict[k].min(), df_dict[k].max(),
+        #                       (df_dict[k].max() - df_dict[k].min())/25)
+        ent_range = np.arange(1.9, 2.2, 0.005)
 
         count_list = list()
         for ev in ent_range:
-            count_df = df_dict[k].loc[df_dict[k] >= ev]
+            count_df = df_dict[k].loc[df_dict[k] <= ev]
             count_list.append(count_df.count())
 
         # save grouped data
@@ -509,7 +510,7 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Entropy on OOD")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
@@ -518,7 +519,7 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     for k in res_df:
         ax1.plot(res_df[k], label=k)
 
-    ax1.set_ylabel("Number of examples")
+    ax1.set_ylabel(r"Number of examples $p(y|x) \leq \tau$")
     ax1.set_xlabel("Entropy (Nats)")
     ax1.legend()
     return fig
@@ -530,7 +531,7 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
         os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
-    confidence_range = np.arange(0, 1, .01)
+    confidence_range = np.arange(0, 1, .005)
     for k in df_dict:
         # select data based on confidence value
         count_list = list()
@@ -546,7 +547,7 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidence on OOD")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
