@@ -17,6 +17,7 @@ class Tester():
         self.is_ood = is_ood
 
         # test metrics
+        # TODO: MC dropout metrics
         self.test_logs = {
             "t_good_pred": [],
             "t_brier": [],
@@ -99,6 +100,8 @@ class Tester():
                 t_labels = t_labels.to(self.device)
 
                 # predict tensor
+                # TODO: MC dropout loop
+                # TODO: MC dropout metrics
                 t_predictions = self.model(t_examples)
 
                 t_accuracy = self.check_prediction(t_predictions, t_labels)

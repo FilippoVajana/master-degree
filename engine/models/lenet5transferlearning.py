@@ -9,9 +9,12 @@ from ..dataloader import ImageDataLoader
 
 
 class LeNet5TL(torch.nn.Module):
+    # TODO: remove class, use base classes
     def __init__(self):
         super(LeNet5TL, self).__init__()
-        self.do_transfer_learn = False
+        self.do_mcdropout = False
+        self.do_transferlearn = False
+
         self.conv1 = torch.nn.Conv2d(
             in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
         self.max_pool1 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -31,7 +34,6 @@ class LeNet5TL(torch.nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-
         return x  # softmax values must be evaluated during inference.
 
     def start_training(self, cfg: RunConfig, device):

@@ -61,7 +61,7 @@ def create_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.nd
         setattr(cfg, 'model', engine.LeNet5())
         cfg.dirty_labels = float("{0:.2f}".format(val))
         # save LD config
-        key = f"{cfg.model.__class__.__name__}labdrop{cfg.dirty_labels}"
+        key = f"{cfg.model.__class__.__name__}-labdrop{cfg.dirty_labels}"
         dl_configs[key] = cfg
         log.info(f"Created Label Dropout config: {key}")
     return dl_configs

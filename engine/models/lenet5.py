@@ -11,6 +11,9 @@ from ..dataloader import ImageDataLoader
 class LeNet5(torch.nn.Module):
     def __init__(self):
         super(LeNet5, self).__init__()
+        self.do_mcdropout = False
+        self.do_transferlearn = False
+
         self.conv1 = torch.nn.Conv2d(
             in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
         self.max_pool1 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
