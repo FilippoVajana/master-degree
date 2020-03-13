@@ -427,7 +427,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidence vs Acc Rotated 60°")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
@@ -466,7 +466,7 @@ def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidence vs Count Rotated 60°")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
@@ -547,7 +547,7 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidence on OOD")
-    formatter = ticker.FormatStrFormatter("%.1f")
+    formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
