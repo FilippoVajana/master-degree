@@ -75,4 +75,3 @@ class LeNet5Trainer(GenericTrainer):
             betas=cfg.optimizer_args['betas'],
             eps=cfg.optimizer_args['eps']
         )
-        self.loss_fn = torch.nn.CrossEntropyLoss()
