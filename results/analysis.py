@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
 plt.style.use('tableau-colorblind10')
-N = 5
+N = 7
 plt.rcParams["axes.prop_cycle"] = plt.cycler(
     "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
 # prop_cycle = plt.rcParams['axes.prop_cycle']
@@ -568,7 +568,7 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
 
 if __name__ == "__main__":
     ENABLE_SAVE_FIGURES = True
-    RESULTS_DIRECTORY = os.path.relpath('data-results')
+    RESULTS_DIRECTORY = os.path.relpath('results')
     run_dirs = [path for path in os.listdir(
         RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
     RUN_ID = natsort.natsorted(run_dirs, reverse=True)[0]
