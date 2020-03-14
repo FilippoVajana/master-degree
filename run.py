@@ -57,7 +57,7 @@ def create_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.nd
     for val in dropout_probs:
         cfg = copy.copy(reference_cfg)
         # hack the config
-        cfg.models = None
+        delattr(cfg, 'models')
         setattr(cfg, 'model', engine.LeNet5())
         cfg.dirty_labels = float("{0:.2f}".format(val))
         # save LD config
@@ -81,45 +81,45 @@ if __name__ == '__main__':
     ENABLE_SHORT_TRAIN = args.short
     RUN_CFG = args.cfg
 
-    # load cfg objects
-    run_configurations = dict()
-    reference_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
-    for model in reference_cfg.models:
-        # swaps model classname with proper model instance
-        model = getattr(engine, model)()
-        cfg = copy.copy(reference_cfg)
-        cfg.models = None
-        setattr(cfg, 'model', model)  # HACK: stinky code!
-        key = model.__class__.__name__
-        run_configurations[key] = cfg
-        log.info(f"Loaded configuration for {key}")
-
-    if ENABLE_DIRTY_LABELS:
-        ldrop_values = np.arange(0.10, 0.50, 0.10)
-        ldrop_configs = create_labdrop_configs(
-            reference_cfg, ldrop_values)
-        run_configurations.update(ldrop_configs)
-
     # get device
     r_device = get_device()
-
     # get run id
     r_id = get_id()
 
+    # load cfg objects
+    run_configurations = dict()
+    with engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG)) as ref_cfg:
+        for model in ref_cfg.models:
+            # swaps model classname with proper model instance
+            model = getattr(engine, model)()
+            cfg = copy.copy(ref_cfg)
+            delattr(cfg, 'models')
+            setattr(cfg, 'model', model)  # HACK: stinky code!
+            key = model.__class__.__name__
+            run_configurations[key] = cfg
+            log.info(f"Loaded configuration for {key}")
+
+    if ENABLE_DIRTY_LABELS:
+        with engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG)) as ref_cfg:
+            values = np.arange(0.05, 0.15, 0.05)
+            configs = create_labdrop_configs(ref_cfg, values)
+            run_configurations.update(configs)
+
     # create run folders
     for k in run_configurations:
-        reference_cfg = run_configurations[k]
+        cfg = run_configurations[k]
         run_dir = create_run_folder(
             model_name=k, run_id=r_id)
 
-        # training
         if ENABLE_SHORT_TRAIN:
-            reference_cfg.max_items = 1500
-        trm.do_train(model=reference_cfg.model, device=r_device,
-                     config=reference_cfg, directory=run_dir)
+            cfg.max_items = 1500
+
+        # training
+        trm.do_train(model=cfg.model, device=r_device,
+                     config=cfg, directory=run_dir)
 
         # testing
         pt_path = glob.glob(
-            f"{run_dir}/{reference_cfg.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=reference_cfg.model.__class__.__name__,
+            f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
+        tem.do_test(model_name=cfg.model.__class__.__name__,
                     state_dict_path=pt_path, device=r_device, directory=run_dir)

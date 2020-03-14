@@ -11,10 +11,13 @@ log.basicConfig(level=log.DEBUG,
 
 
 class Tester():
+    MC_DROPOUT_PASS = 25
+
     def __init__(self, model, device="cpu", is_ood=False):
         self.device = device
         self.model = model.to(device)
         self.is_ood = is_ood
+        self.MC_DROPOUT_PASS = 25
 
         # test metrics
         # TODO: MC dropout metrics
@@ -100,9 +103,16 @@ class Tester():
                 t_labels = t_labels.to(self.device)
 
                 # predict tensor
-                # TODO: MC dropout loop
-                # TODO: MC dropout metrics
-                t_predictions = self.model(t_examples)
+                # REVIEW: MC dropout loop
+                if self.model.do_mcdropout == True:
+                    mc_out = [self.model(t_examples)
+                              for _ in range(0, self.MC_DROPOUT_PASS, 1)]
+                    t_stack = torch.stack(mc_out, dim=2)
+                    t_mc_mean = t_stack.mean(dim=2)
+                    t_mc_std = t_stack.std(dim=2)
+                    t_predictions = t_mc_mean
+                else:
+                    t_predictions = self.model(t_examples)
 
                 t_accuracy = self.check_prediction(t_predictions, t_labels)
                 self.test_logs["t_good_pred"].extend(list(t_accuracy.numpy()))

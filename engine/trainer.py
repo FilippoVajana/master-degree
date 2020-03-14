@@ -15,7 +15,7 @@ log.basicConfig(level=log.INFO,
 
 class GenericTrainer():
     BINOMIAL_DIST = torch.distributions.Binomial(total_count=1, probs=1)
-    MC_DROPOUT_PASS = 50
+    MC_DROPOUT_PASS = 25
 
     def __init__(self, cfg: RunConfig, device: str):
         self.device = device
@@ -31,8 +31,7 @@ class GenericTrainer():
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
-        self.MC_DROPOUT_PASS = 20
-
+        self.MC_DROPOUT_PASS = 25
         # train metrics
         self.train_logs = {
             "t_mean_accuracy": [],
@@ -79,6 +78,7 @@ class GenericTrainer():
             raise Exception("Validation set too small")
 
         self.model = self.model.to(self.device)
+        log.info(f"Train with MC dropout: {self.model.do_mcdropout}")
         # best_model = self.model.state_dict()
         # best_loss = None
 
@@ -235,7 +235,6 @@ class GenericTrainer():
 
         # forward
         # REVIEW: MC dropout loop
-        # TODO: MC dropout metrics
         if self.model.do_mcdropout == True:
             mc_out = [self.model(t_examples)
                       for _ in range(0, self.MC_DROPOUT_PASS, 1)]
