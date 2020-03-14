@@ -10,6 +10,7 @@ import train_model as trm
 import test_model as tem
 import numpy as np
 import copy
+import results
 from typing import List, Dict
 
 log.basicConfig(level=log.DEBUG,
@@ -101,7 +102,7 @@ if __name__ == '__main__':
 
     if ENABLE_DIRTY_LABELS:
         ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
-        values = np.arange(0.10, 0.50, 0.05)
+        values = np.arange(0.15, 0.35, 0.15)
         configs = create_labdrop_configs(ref_cfg, values)
         run_configurations.update(configs)
 
@@ -123,3 +124,13 @@ if __name__ == '__main__':
             f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=cfg.model.__class__.__name__,
                     state_dict_path=pt_path, device=r_device, directory=run_dir)
+
+    # # move to data-results folder
+    # import shutil
+    # src = os.path.join(RUN_ROOT, r_id)
+    # dst = os.path.join(os.getcwd(), 'results', r_id)
+    # shutil.move(src=src, dst=dst)
+
+    # # run analysis
+    # import subprocess
+    # subprocess.call(" python ./results/analysis.py")

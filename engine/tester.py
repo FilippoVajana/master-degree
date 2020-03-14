@@ -89,6 +89,7 @@ class Tester():
         """
         Tests the model.
         """
+        log.info(f"Test dataset: {len(test_dataloader.dataset)}")
         self.model.eval()
         with torch.no_grad():
             for batch in tqdm(test_dataloader):
