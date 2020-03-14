@@ -106,7 +106,7 @@ class Tester():
                 # REVIEW: MC dropout loop
                 if self.model.do_mcdropout == True:
                     mc_out = [self.model(t_examples)
-                              for _ in range(0, self.MC_DROPOUT_PASS, 1)]
+                              for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
                     t_stack = torch.stack(mc_out, dim=2)
                     t_mc_mean = t_stack.mean(dim=2)
                     t_mc_std = t_stack.std(dim=2)

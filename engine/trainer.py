@@ -15,7 +15,7 @@ log.basicConfig(level=log.INFO,
 
 class GenericTrainer():
     BINOMIAL_DIST = torch.distributions.Binomial(total_count=1, probs=1)
-    MC_DROPOUT_PASS = 25
+    MC_DROPOUT_PASS = 0
 
     def __init__(self, cfg: RunConfig, device: str):
         self.device = device
@@ -31,7 +31,7 @@ class GenericTrainer():
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
-        self.MC_DROPOUT_PASS = 25
+        self.MC_DROPOUT_PASS = 0
         # train metrics
         self.train_logs = {
             "t_mean_accuracy": [],
@@ -79,6 +79,8 @@ class GenericTrainer():
 
         self.model = self.model.to(self.device)
         log.info(f"Train with MC dropout: {self.model.do_mcdropout}")
+        log.info(f"Train dataset: {len(train_dataloader.dataset)}")
+        log.info(f"Validation dataset: {len(validation_dataloader.dataset)}")
         # best_model = self.model.state_dict()
         # best_loss = None
 
@@ -237,7 +239,7 @@ class GenericTrainer():
         # REVIEW: MC dropout loop
         if self.model.do_mcdropout == True:
             mc_out = [self.model(t_examples)
-                      for _ in range(0, self.MC_DROPOUT_PASS, 1)]
+                      for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
             t_stack = torch.stack(mc_out, dim=2)
             t_mc_mean = t_stack.mean(dim=2)
             t_mc_std = t_stack.std(dim=2)

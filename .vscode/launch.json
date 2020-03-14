@@ -18,7 +18,7 @@
             "program": "${workspaceFolder}/train_model.py",
             "args": [
                 "-cfg",
-                "./runs/TEST/LeNet5TEST_runcfg.json",
+                "./runs/TEST/test_full_runcfg.json",
                 "--outdir",
                 "./runs/TEST"
             ],
@@ -48,7 +48,7 @@
             "program": "${workspaceFolder}/run.py",
             "args": [
                 "-cfg",
-                "TEST/full_runcfg.json"
+                "TEST/test_full_runcfg.json"
             ],
             "console": "integratedTerminal"
         },

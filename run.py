@@ -88,22 +88,22 @@ if __name__ == '__main__':
 
     # load cfg objects
     run_configurations = dict()
-    with engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG)) as ref_cfg:
-        for model in ref_cfg.models:
-            # swaps model classname with proper model instance
-            model = getattr(engine, model)()
-            cfg = copy.copy(ref_cfg)
-            delattr(cfg, 'models')
-            setattr(cfg, 'model', model)  # HACK: stinky code!
-            key = model.__class__.__name__
-            run_configurations[key] = cfg
-            log.info(f"Loaded configuration for {key}")
+    ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
+    for model in ref_cfg.models:
+        # swaps model classname with proper model instance
+        model = getattr(engine, model)()
+        cfg = copy.copy(ref_cfg)
+        delattr(cfg, 'models')
+        setattr(cfg, 'model', model)  # HACK: stinky code!
+        key = model.__class__.__name__
+        run_configurations[key] = cfg
+        log.info(f"Loaded configuration for {key}")
 
     if ENABLE_DIRTY_LABELS:
-        with engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG)) as ref_cfg:
-            values = np.arange(0.05, 0.15, 0.05)
-            configs = create_labdrop_configs(ref_cfg, values)
-            run_configurations.update(configs)
+        ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
+        values = np.arange(0.10, 0.50, 0.05)
+        configs = create_labdrop_configs(ref_cfg, values)
+        run_configurations.update(configs)
 
     # create run folders
     for k in run_configurations:
