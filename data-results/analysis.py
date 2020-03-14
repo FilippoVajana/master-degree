@@ -331,7 +331,7 @@ def plot_train_entropy(res_dir_list: List[str]) -> plt.Figure:
 # METRICS HELPERS
 def get_accuracy(df: pd.DataFrame):
     accuracy_row = df['t_good_pred']
-    accuracy = accuracy_row.sum() / accuracy_row.count()
+    accuracy = accuracy_row.sum() / accuracy_row.count() if accuracy_row.count() >= 0 else 0
     return accuracy
 
 
@@ -411,7 +411,8 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
         path, 'mnist_rotate60.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
-    confidence_range = np.arange(0, 1, .01)
+    X_MAX = .55
+    confidence_range = np.arange(0, X_MAX, .01)
     for k in df_dict:
         # select data based on confidence value
         acc_list = list()
@@ -432,7 +433,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
-    ax1.set_xlim(0, 1)
+    ax1.set_xlim(0, X_MAX)
     xticks = confidence_range
 
     for k in res_df:
@@ -519,7 +520,7 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     for k in res_df:
         ax1.plot(res_df[k], label=k)
 
-    ax1.set_ylabel(r"Number of examples $p(y|x) \leq \tau$")
+    ax1.set_ylabel(r"Number of examples $H \leq \tau$")
     ax1.set_xlabel("Entropy (Nats)")
     ax1.legend()
     return fig
@@ -531,7 +532,8 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
         os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
-    confidence_range = np.arange(0, 1, .005)
+    X_MIN = 0.45
+    confidence_range = np.arange(X_MIN, 1, .005)
     for k in df_dict:
         # select data based on confidence value
         count_list = list()
@@ -552,7 +554,7 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
-    ax1.set_xlim(0, 1)
+    ax1.set_xlim(X_MIN, 1)
     xticks = confidence_range
 
     for k in res_df:
