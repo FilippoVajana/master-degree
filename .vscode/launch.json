@@ -42,6 +42,17 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Train + Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "args": [
+                "-cfg",
+                "TEST/full_runcfg.json"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Transfer Learning",
             "type": "python",
             "request": "launch",
