@@ -18,7 +18,7 @@
             "program": "${workspaceFolder}/train_model.py",
             "args": [
                 "-cfg",
-                "./runs/TEST/LeNet5TEST_runcfg.json",
+                "./runs/TEST/test_full_runcfg.json",
                 "--outdir",
                 "./runs/TEST"
             ],
@@ -38,6 +38,17 @@
                 "./runs/TEST/LeNet5",
                 "--batch-size",
                 "1"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Train + Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "args": [
+                "-cfg",
+                "TEST/test_full_runcfg.json"
             ],
             "console": "integratedTerminal"
         },

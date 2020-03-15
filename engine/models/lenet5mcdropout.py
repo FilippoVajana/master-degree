@@ -8,9 +8,12 @@ from ..dataloader import ImageDataLoader
 from engine.models.lenet5 import LeNet5Trainer
 
 
-class LeNet5SimpleDropout(torch.nn.Module):
+class LeNet5MCDropout(torch.nn.Module):
     def __init__(self):
-        super(LeNet5SimpleDropout, self).__init__()
+        super(LeNet5MCDropout, self).__init__()
+        self.do_mcdropout = True
+        self.do_transferlearn = False
+
         self.conv1 = torch.nn.Conv2d(
             in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
 
@@ -22,12 +25,15 @@ class LeNet5SimpleDropout(torch.nn.Module):
         self.max_pool2 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
 
         self.flat = torch.nn.Flatten()
-        self.drop1 = torch.nn.Dropout(p=0.5)
         self.fc1 = torch.nn.Linear(in_features=16*5*5, out_features=120)
-        self.drop2 = torch.nn.Dropout(p=0.5)
         self.fc2 = torch.nn.Linear(in_features=120, out_features=84)
-        self.drop3 = torch.nn.Dropout(p=0.5)
         self.fc3 = torch.nn.Linear(in_features=84, out_features=10)
+
+    def train(self, mode):
+        return super().train(mode)
+
+    def eval(self):
+        return
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -39,13 +45,13 @@ class LeNet5SimpleDropout(torch.nn.Module):
         #x = x.view(-1, 16*5*5)
         x = self.flat(x)
 
-        x = self.drop1(x)
+        # x = F.dropout(x, p=0.5, training=True, inplace=False)
         x = F.relu(self.fc1(x))
 
-        x = self.drop2(x)
+        x = F.dropout(x, p=0.5, training=True, inplace=False)
         x = F.relu(self.fc2(x))
 
-        x = self.drop3(x)
+        x = F.dropout(x, p=0.5, training=True, inplace=False)
         x = self.fc3(x)
         return x  # softmax values must be evaluated during inference.
 

@@ -93,7 +93,7 @@ if __name__ == '__main__':
     log.info(f"Loaded run configuration file: {args.cfg}")
 
     # swaps model classname with proper model instance
-    run_cfg.model = getattr(engine, run_cfg.model)()
+    run_cfg.model = getattr(engine, run_cfg.models[0])()
     log.info(f"Loaded model: {run_cfg.model.__class__.__name__}")
 
     # set compute device
