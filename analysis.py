@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
     RUN_ID = natsort.natsorted(run_dirs, reverse=True)[0]
     log.info("Run id: %s", RUN_ID)
-    # RUN_ID = "0304_2320"
+    #RUN_ID = "0314_2037"
 
     IMGS_PATH = None
 
@@ -245,15 +245,15 @@ if __name__ == "__main__":
     # # shifted data
     figures["rotated.png"] = shift_plt.plot_rotated(res_dir_list)
     figures["shifted.png"] = shift_plt.plot_shifted(res_dir_list)
-    # figures["conf_acc60.png"] = shift_plt.plot_confidence_vs_accuracy_60(
-    #     res_dir_list)
-    # figures["count_acc60.png"] = shift_plt.plot_confidence_vs_count_60(
-    #     res_dir_list)
+    figures["conf_acc60.png"] = shift_plt.plot_confidence_vs_accuracy_60(
+        res_dir_list)
+    figures["count_acc60.png"] = shift_plt.plot_confidence_vs_count_60(
+        res_dir_list)
     # # plt.show()
 
     # ood data
-    # figures["ood_entropy.png"] = ood_plt.plot_entropy_ood(res_dir_list)
-    # figures["ood_confidence.png"] = ood_plt.plot_confidence_ood(res_dir_list)
+    figures["ood_entropy.png"] = ood_plt.plot_entropy_ood(res_dir_list)
+    figures["ood_confidence.png"] = ood_plt.plot_confidence_ood(res_dir_list)
     # plt.show()
 
     log.info("cwd: %s", os.getcwd())

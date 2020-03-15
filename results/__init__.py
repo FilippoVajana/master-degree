@@ -8,7 +8,6 @@ import logging as log
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
-# plt.style.use('tableau-colorblind10')
 N = 4
 plt.rcParams["axes.prop_cycle"] = plt.cycler(
     "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
