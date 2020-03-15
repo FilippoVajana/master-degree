@@ -236,10 +236,10 @@ if __name__ == "__main__":
     figures = dict()
 
     # # train data
-    # figures["train_accuracy"] = plot_train_accuracy(res_dir_list)
-    # figures["train_loss"] = plot_train_loss(res_dir_list)
-    # figures["train_brier"] = plot_train_brier(res_dir_list)
-    # figures["train_entropy"] = plot_train_entropy(res_dir_list)
+    figures["train_accuracy"] = plot_train_accuracy(res_dir_list)
+    figures["train_loss"] = plot_train_loss(res_dir_list)
+    figures["train_brier"] = plot_train_brier(res_dir_list)
+    figures["train_entropy"] = plot_train_entropy(res_dir_list)
     # # plt.show()
 
     # # shifted data
