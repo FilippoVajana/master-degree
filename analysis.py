@@ -1,3 +1,5 @@
+from results import ood_plt
+from results.utils import *
 import datetime as dt
 from typing import Dict, List
 import pandas as pd
@@ -17,8 +19,6 @@ plt.style.use('tableau-colorblind10')
 N = 4
 plt.rcParams["axes.prop_cycle"] = plt.cycler(
     "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
-# prop_cycle = plt.rcParams['axes.prop_cycle']
-# mycolors = prop_cycle.by_key()['color']
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
@@ -29,21 +29,21 @@ log.basicConfig(level=log.INFO,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
 
-def get_id() -> str:
-    '''Returns run id as a time string.
-    '''
-    time = dt.datetime.now()
-    t_id = time.strftime("%d%m_%H%M")
-    log.debug(f"Created ID: {t_id}")
-    return t_id
+# def get_id() -> str:
+#     '''Returns run id as a time string.
+#     '''
+#     time = dt.datetime.now()
+#     t_id = time.strftime("%d%m_%H%M")
+#     log.debug(f"Created ID: {t_id}")
+#     return t_id
 
 
-def load_csv(filename: str):
-    '''Loads data from csv file and return as DataFrame.
-    '''
-    data = pd.read_csv(filename, index_col=[0])
-    log.info(f"Loaded csv file: {filename}")
-    return data
+# def load_csv(filename: str):
+#     '''Loads data from csv file and return as DataFrame.
+#     '''
+#     data = pd.read_csv(filename, index_col=[0])
+#     log.info(f"Loaded csv file: {filename}")
+#     return data
 
 #####################
 # DATAFRAME HELPERS #
@@ -484,48 +484,6 @@ def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     return fig
 
 
-def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
-    # load nomnist dataframe
-    df_dict = {
-        os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
-        for path in res_dir_list
-    }
-    res_df = pd.DataFrame()
-
-    # count examples based on entropy value
-    for k in df_dict:
-        # compute df entropy range
-        # ent_range = np.arange(df_dict[k].min(), df_dict[k].max(),
-        #                       (df_dict[k].max() - df_dict[k].min())/25)
-        ent_range = np.arange(1.9, 2.2, 0.005)
-
-        count_list = list()
-        for ev in ent_range:
-            count_df = df_dict[k].loc[df_dict[k] <= ev]
-            count_list.append(count_df.count())
-
-        # save grouped data
-        res_df[k] = pd.Series(count_list, index=list(ent_range))
-
-    # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Entropy on OOD")
-    formatter = ticker.FormatStrFormatter("%.2f")
-
-    ax1.xaxis.set_major_formatter(formatter)
-    ax1.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-
-    for k in res_df:
-        ax1.plot(res_df[k], label=k)
-
-    ax1.set_ylabel(r"Number of examples $H \leq \tau$")
-    ax1.set_xlabel("Entropy (Nats)")
-    ax1.legend()
-    return fig
-
-
 def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
     # load nomnist dataframe
     df_dict = {os.path.basename(path): load_csv(
@@ -568,10 +526,18 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
 
 if __name__ == "__main__":
     ENABLE_SAVE_FIGURES = True
-    RESULTS_DIRECTORY = os.path.relpath('results')
-    run_dirs = [path for path in os.listdir(
-        RESULTS_DIRECTORY) if os.path.isdir(os.path.join(RESULTS_DIRECTORY, path))]
+    RESULTS_DIRECTORY = os.path.relpath(os.path.join(os.getcwd(), 'results'))
+    log.info("Results directory: %s", RESULTS_DIRECTORY)
+
+    items = [path for path in os.listdir(RESULTS_DIRECTORY)]
+    log.info("Items: %s", items)
+
+    run_dirs = [item for item in items if os.path.isdir(
+        os.path.join('results', item)) and not("__" in item)]
+    log.info("Runs: %s", run_dirs)
+
     RUN_ID = natsort.natsorted(run_dirs, reverse=True)[0]
+    log.info("Run id: %s", RUN_ID)
     # RUN_ID = "0304_2320"
 
     IMGS_PATH = None
@@ -595,25 +561,32 @@ if __name__ == "__main__":
     # PLOT
     figures = dict()
 
-    # train data
-    figures["train_accuracy"] = plot_train_accuracy(res_dir_list)
-    figures["train_loss"] = plot_train_loss(res_dir_list)
-    figures["train_brier"] = plot_train_brier(res_dir_list)
-    figures["train_entropy"] = plot_train_entropy(res_dir_list)
-    # plt.show()
+    # # train data
+    # figures["train_accuracy"] = plot_train_accuracy(res_dir_list)
+    # figures["train_loss"] = plot_train_loss(res_dir_list)
+    # figures["train_brier"] = plot_train_brier(res_dir_list)
+    # figures["train_entropy"] = plot_train_entropy(res_dir_list)
+    # # plt.show()
 
-    # test data
-    figures["rotated.png"] = plot_rotated(res_dir_list)
-    figures["shifted.png"] = plot_shifted(res_dir_list)
-    figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
-    figures["count_acc60.png"] = plot_confidence_vs_count_60(res_dir_list)
-    figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
+    # # shifted data
+    # figures["rotated.png"] = plot_rotated(res_dir_list)
+    # figures["shifted.png"] = plot_shifted(res_dir_list)
+    # figures["conf_acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
+    # figures["count_acc60.png"] = plot_confidence_vs_count_60(res_dir_list)
+    # # plt.show()
+
+    # ood data
+    # figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
+
+    figures["ood_entropy.png"] = ood_plt.plot_entropy_ood(res_dir_list)
     figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
     # plt.show()
 
+    log.info("cwd: %s", os.getcwd())
     if ENABLE_SAVE_FIGURES:
         log.info("Saving plots")
         # create save folder
+        log.info("image path: %s", IMGS_PATH)
         os.makedirs(IMGS_PATH, exist_ok=True)
         # save loop
         for fn in figures:
