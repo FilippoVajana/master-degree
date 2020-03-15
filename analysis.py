@@ -15,10 +15,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
-plt.style.use('tableau-colorblind10')
-N = 4
-plt.rcParams["axes.prop_cycle"] = plt.cycler(
-    "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
 
 print("numpy:", np.__version__)
 print("matplotlib:", matplotlib.__version__)
@@ -27,23 +23,6 @@ print("pandas:", pd.__version__)
 
 log.basicConfig(level=log.INFO,
                 format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
-
-
-# def get_id() -> str:
-#     '''Returns run id as a time string.
-#     '''
-#     time = dt.datetime.now()
-#     t_id = time.strftime("%d%m_%H%M")
-#     log.debug(f"Created ID: {t_id}")
-#     return t_id
-
-
-# def load_csv(filename: str):
-#     '''Loads data from csv file and return as DataFrame.
-#     '''
-#     data = pd.read_csv(filename, index_col=[0])
-#     log.info(f"Loaded csv file: {filename}")
-#     return data
 
 #####################
 # DATAFRAME HELPERS #
@@ -484,46 +463,6 @@ def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     return fig
 
 
-def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
-    # load nomnist dataframe
-    df_dict = {os.path.basename(path): load_csv(
-        os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
-    res_df = pd.DataFrame()
-
-    X_MIN = 0.45
-    confidence_range = np.arange(X_MIN, 1, .005)
-    for k in df_dict:
-        # select data based on confidence value
-        count_list = list()
-        for cv in confidence_range:
-            count_df = df_dict[k].loc[df_dict[k]['t_confidence'] >= cv]
-            count = count_df.iloc[:, 0].count()
-            count_list.append(count)
-
-        # save grouped data
-        res_df[k] = pd.Series(count_list, index=list(confidence_range))
-
-    # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Confidence on OOD")
-    formatter = ticker.FormatStrFormatter("%.2f")
-
-    ax1.xaxis.set_major_formatter(formatter)
-    ax1.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-    ax1.set_xlim(X_MIN, 1)
-    xticks = confidence_range
-
-    for k in res_df:
-        ax1.plot(xticks, list(res_df[k]), label=k)
-
-    ax1.set_ylabel(r"Number of examples $p(y|x) \geq \tau$")
-    ax1.set_xlabel(r"$\tau$")
-    ax1.legend()
-    return fig
-
-
 if __name__ == "__main__":
     ENABLE_SAVE_FIGURES = True
     RESULTS_DIRECTORY = os.path.relpath(os.path.join(os.getcwd(), 'results'))
@@ -579,7 +518,7 @@ if __name__ == "__main__":
     # figures["ood_entropy.png"] = plot_entropy_ood(res_dir_list)
 
     figures["ood_entropy.png"] = ood_plt.plot_entropy_ood(res_dir_list)
-    figures["ood_confidence.png"] = plot_confidence_ood(res_dir_list)
+    figures["ood_confidence.png"] = ood_plt.plot_confidence_ood(res_dir_list)
     # plt.show()
 
     log.info("cwd: %s", os.getcwd())

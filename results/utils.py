@@ -18,3 +18,10 @@ def load_csv(filename: str):
     data = pd.read_csv(filename, index_col=[0])
     res.LOGGER.info(f"Loaded csv file: {filename}")
     return data
+
+
+def side_legend(ax):
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.85, box.height])
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
