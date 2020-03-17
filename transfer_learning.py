@@ -22,9 +22,11 @@ log.basicConfig(level=log.DEBUG,
 
 RUN_ROOT = './runs'
 REFERENCE_CONFIG = 'transfer_runcfg.json'
-ENABLE_SHORT_TRAIN = True
-SHORT_TRAIN_EXAMPLES = 1000
-ENABLE_TESTING = False
+DO_SHORT = True
+DO_TEST = False
+MAX_ITEMS = 500
+DEVICE = 'cpu'
+R_ID = '0000_0000'
 
 
 def get_id() -> str:
@@ -61,34 +63,69 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_tl_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray) -> Dict[str, engine.RunConfig]:
-    dl_configs = dict()
-    for val in dropout_probs:
-        cfg = copy(reference_cfg)
-        cfg.dirty_labels = float("{0:.2f}".format(val))
+def prepare_for_labeldrop(models: Dict[str, Tuple[Module, engine.RunConfig]], dropout_probs: np.ndarray) -> Dict[str, Tuple[Module, engine.RunConfig]]:
+    labeldrop = dict()
+    for m_name in models:
+        log.info(f"Prepare {m_name} for LabelDrop")
+        model = copy(models[m_name][0])
+        config = copy(models[m_name][1])
 
-        # save LD config
-        key = f"{cfg.model.__class__.__name__}tl-labdrop{cfg.dirty_labels}"
-        dl_configs[key] = cfg
-        log.info(f"Created Label Dropout config: {key}")
-    return dl_configs
+        for p in dropout_probs:
+            config.dirty_labels = float("{0:.2f}".format(p))
+
+            # add to models dict
+            name = f"{m_name}-{config.dirty_labels}"
+            labeldrop[name] = (model, config)
+
+    labeldrop.update(models)
+    return labeldrop
 
 
-def prepare_model(model: Module):
-    # REVIEW: train the last layer only
-    # mantains the gradients locked inside GenericTrainer
-    # model.do_transfer_learn = True
+def train_and_test(models: Dict[str, Tuple[Module, engine.RunConfig]], do_test=True, max_items=-1) -> Dict[str, Tuple[Module, engine.RunConfig]]:
+    trained: Dict[str, (Module, engine.RunConfig)] = dict()
+    for m_name in models:
+        model = copy(models[m_name][0])
+        config = copy(models[m_name][1])
+        log.info(f"Train & Test: {m_name}")
 
-    # disable all layers
-    for param in model.parameters():
-        param.requires_grad = False
+        run_dir = create_run_folder(
+            model_name=m_name, run_id=R_ID)
 
-    # reset last fully connected layer
-    in_features = model.fc3.in_features
-    out_features = model.fc3.out_features
-    model.fc3 = torch.nn.Linear(
-        in_features=in_features, out_features=out_features)
-    return model
+        # train
+        t_model = trm.do_train(model=model, device=DEVICE,
+                               config=config, directory=run_dir)
+        # test
+        if do_test:
+            pt_path = glob.glob(
+                f"{run_dir}/{m_name}.pt")[0]
+            tem.do_test(model_name=m_name,
+                        state_dict_path=pt_path, device=DEVICE, directory=run_dir, max_items=max_items)
+        # save trained model
+        trained[m_name] = (t_model, config)
+    return trained
+
+
+def prepare_for_tl(models: Dict[str, Tuple[Module, engine.RunConfig]]) -> Dict[str, Tuple[Module, engine.RunConfig]]:
+    prepared = dict()
+    for m_name in models:
+        log.info(f"Prepare {m_name} to Transfer Learning")
+        model = copy(models[m_name][0])
+        config = copy(models[m_name][1])
+
+        # disable all layers
+        for param in model.parameters():
+            param.requires_grad = False
+
+        # reset last fully connected layer
+        in_features = model.fc3.in_features
+        out_features = model.fc3.out_features
+        model.fc3 = torch.nn.Linear(in_features=in_features, out_features=out_features)
+
+        # add to models dict
+        name = f"{m_name}TL"
+        prepared[name] = (model, config)
+    prepared.update(models)
+    return prepared
 
 
 if __name__ == '__main__':
@@ -105,14 +142,16 @@ if __name__ == '__main__':
                         action='store_true', help='Do testing.')
     args = parser.parse_args()
 
-    ENABLE_SHORT_TRAIN = args.short
-    ENABLE_TESTING = args.test
+    DO_SHORT = args.short
+    DO_TEST = args.test
+    MAX_ITEMS = MAX_ITEMS if DO_SHORT else -1
+
     cfg_path = os.path.join(RUN_ROOT, args.cfg)
     REFERENCE_CONFIG = engine.RunConfig.load(cfg_path)
     log.info(f"Loaded reference config: {cfg_path}")
 
     # load and hack train configurations
-    train_configs: Dict[Module, engine.RunConfig] = dict()
+    train_configs: Dict[str, Tuple[Module, engine.RunConfig]] = dict()
     for m_name in REFERENCE_CONFIG.models:
         log.info(f"Load & Hack configuration for {m_name}")
         config = copy(REFERENCE_CONFIG)
@@ -120,69 +159,38 @@ if __name__ == '__main__':
         model = getattr(engine, m_name)()
         delattr(config, "models")
         setattr(config, 'model', model)  # HACK: stinky code!
-        if ENABLE_SHORT_TRAIN:
-            config.max_items = SHORT_TRAIN_EXAMPLES
-        train_configs[model] = config
+        if DO_SHORT:
+            config.max_items = MAX_ITEMS
+        train_configs[m_name] = (model, config)
 
     # TRAIN & TEST LENET5 VANILLA
-    TRAINED_MODELS: Dict[Module, engine.RunConfig] = dict()
-    for model in train_configs:
-        config = train_configs[model]
-        name = model.__class__.__name__
-        run_dir = create_run_folder(
-            model_name=name, run_id=R_ID)
-
-        log.info(f"Train & Test: {name}")
-
-        # train
-        t_model = trm.do_train(model=model, device=DEVICE,
-                               config=config, directory=run_dir)
-        # test
-        if ENABLE_TESTING:
-            pt_path = glob.glob(
-                f"{run_dir}/{model.__class__.__name__}.pt")[0]
-            tem.do_test(model_name=model.__class__.__name__,
-                        state_dict_path=pt_path, device=DEVICE, directory=run_dir)
-        # save trained model
-        TRAINED_MODELS[t_model] = config
+    TRAINED_MODELS = train_and_test(train_configs, DO_TEST, MAX_ITEMS)
 
     # PREPARE FOR TRANSFER LEARNING
-    TRLEARN_MODELS: Dict[Module, engine.RunConfig] = dict()
-    for model in TRAINED_MODELS:
-        log.info(f"Prepare {model.__class__.__name__} to Transfer Learning")
-        config = TRAINED_MODELS[t_model]
-        p_model = prepare_model(copy(model))
-        TRLEARN_MODELS[p_model] = config
+    TL_MODELS = prepare_for_tl(TRAINED_MODELS)
 
     # CREATE LABELDROP CONFIGS
-    # Module -> (model_folder, config)
-    tl_configs: Dict[Module, Tuple[str, engine.RunConfig]] = dict()
-    tl_range = np.arange(0.10, 0.50, 0.10)
-    for model in TRLEARN_MODELS:
-        log.info(f"Create LabelDrop configs for {model.__class__.__name__}")
-        config = TRLEARN_MODELS[model]
-        ldrop_configs = create_tl_labdrop_configs(config, tl_range)
-        for name in ldrop_configs:
-            tl_configs[copy(model)] = (name, ldrop_configs[name])
+    tl_range = np.arange(0.15, 0.30, 0.10)
+    LABELDROP_MODELS = prepare_for_labeldrop(TL_MODELS, tl_range)
 
     # TRAIN & TEST TR_LENET5
-    FINAL_MODELS: List[Module] = list()
-    for model in tl_configs:
-        name = tl_configs[model][0]
-        config = tl_configs[model][1]
+    RESULTS = train_and_test(LABELDROP_MODELS, do_test=DO_TEST, max_items=MAX_ITEMS)
+    # for m_name in LABELDROP_MODELS:
+    #     model = LABELDROP_MODELS[m_name][0]
+    #     config = LABELDROP_MODELS[m_name][1]
 
-        run_dir = create_run_folder(
-            model_name=name, run_id=R_ID)
+    #     run_dir = create_run_folder(
+    #         model_name=m_name, run_id=R_ID)
 
-        log.info(f"Train & Test: {name}")
-        # train
-        t_model: torch.nn.Module = trm.do_train(model=model, device=DEVICE,
-                                                config=config, directory=run_dir)
-        FINAL_MODELS.append(copy(t_model))
+    #     log.info(f"Train & Test: {m_name}")
+    #     # train
+    #     t_model: torch.nn.Module = trm.do_train(model=model, device=DEVICE,
+    #                                             config=config, directory=run_dir)
+    #     TL_MODELS.append(t_model)
 
-        # test
-        if ENABLE_TESTING:
-            pt_path = glob.glob(
-                f"{run_dir}/{t_model.__class__.__name__}.pt")[0]
-            tem.do_test(model_name=t_model.__class__.__name__,
-                        state_dict_path=pt_path, device=DEVICE, directory=run_dir)
+    #     # test
+    #     if DO_TEST:
+    #         pt_path = glob.glob(
+    #             f"{run_dir}/{m_name}.pt")[0]
+    #         tem.do_test(model_name=m_name,
+    #                     state_dict_path=pt_path, device=DEVICE, directory=run_dir)

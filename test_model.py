@@ -23,8 +23,8 @@ DATA_DICT = {
 
 
 DEVICE = 'cpu'
-BATCH_SIZE = 32
-MAX_ITEMS = -1
+BATCH_SIZE = 64
+MAX_ITEMS = 500
 
 
 def get_device():
@@ -62,7 +62,6 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str, 
     The method saves results as .csv files and returns the results dictionary.
     '''
     log.info("Started testing phase.")
-    MAX_ITEMS = max_items
 
     # check device
     if device is None:
@@ -74,17 +73,17 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str, 
     # in distribution mnist
     t_res_dict = dict()
     log.info("Testing MNIST")
-    t_res_dict["mnist.csv"] = test_regular_data(model_obj)
+    t_res_dict["mnist.csv"] = test_regular_data(model_obj, max_items=max_items)
 
     # out-of-distribution notmnist
     log.info("Testing Out-Of-Distribution")
-    t_res_dict["nomnist.csv"] = test_ood_data(model_obj)
+    t_res_dict["nomnist.csv"] = test_ood_data(model_obj, max_items=max_items)
 
     # rotation skew
     rotation_range = range(15, 180 + 15, 15)
     for rotation_value in rotation_range:
         log.info(f"Testing Rotated {rotation_value} MNIST")
-        df = test_rotated_data(model_obj, "mnist", rotation_value)
+        df = test_rotated_data(model_obj, "mnist", rotation_value, max_items=max_items)
         t_res_dict[f"mnist_rotate{rotation_value}.csv"] = df
 
     # pixel shift skew
@@ -93,7 +92,7 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str, 
     for shift_value in shift_range:
         shift_value /= img_size
         log.info(f"Testing Shifted {int(shift_value * img_size)}px MNIST")
-        df = test_shifted_data(model_obj, "mnist", shift_value)
+        df = test_shifted_data(model_obj, "mnist", shift_value, max_items=max_items)
         t_res_dict[f"mnist_shift{int(shift_value * img_size)}.csv"] = df
 
     # save test results
@@ -102,7 +101,7 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str, 
     return t_res_dict
 
 
-def test_regular_data(model, dataset_name="mnist"):
+def test_regular_data(model, dataset_name="mnist", max_items=MAX_ITEMS):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
@@ -117,7 +116,7 @@ def test_regular_data(model, dataset_name="mnist"):
     return df
 
 
-def test_ood_data(model, dataset_name="no-mnist"):
+def test_ood_data(model, dataset_name="no-mnist", max_items=MAX_ITEMS):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
@@ -132,7 +131,7 @@ def test_ood_data(model, dataset_name="no-mnist"):
     return df
 
 
-def test_rotated_data(model, dataset_name="mnist", rotation_value=45):
+def test_rotated_data(model, dataset_name="mnist", rotation_value=45, max_items=MAX_ITEMS):
     transformation = transforms.Compose([
         transforms.ToPILImage(),
         transforms.RandomRotation((rotation_value, rotation_value)),
@@ -153,7 +152,7 @@ def test_rotated_data(model, dataset_name="mnist", rotation_value=45):
     return df
 
 
-def test_shifted_data(model, dataset_name="mnist", shift_value=.5):
+def test_shifted_data(model, dataset_name="mnist", shift_value=.5, max_items=MAX_ITEMS):
     transformation = transforms.Compose([
         transforms.ToPILImage(),
         transforms.RandomAffine(0, translate=(shift_value, shift_value)),

@@ -67,9 +67,9 @@ def plot_train_accuracy(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     fig.suptitle("Accuracy Value")
     (ax1, ax2) = fig.subplots(nrows=2, sharex=True)
-    ax1 = tr_acc_df.plot(xticks=range(0, 20, 2), ax=ax1)
+    ax1 = tr_acc_df.plot(xticks=range(0, 20, 1), ax=ax1)
     plt.gca().set_prop_cycle(None)
-    ax2 = va_acc_df.plot(xticks=range(0, 20, 2), ax=ax2,
+    ax2 = va_acc_df.plot(xticks=range(0, 20, 1), ax=ax2,
                          legend=False, linestyle='-.')
 
     ax1.grid(True)
@@ -235,12 +235,12 @@ if __name__ == "__main__":
     # PLOT
     figures = dict()
 
-    # # train data
+    # train data
     figures["train_accuracy"] = plot_train_accuracy(res_dir_list)
     figures["train_loss"] = plot_train_loss(res_dir_list)
     figures["train_brier"] = plot_train_brier(res_dir_list)
     figures["train_entropy"] = plot_train_entropy(res_dir_list)
-    # # plt.show()
+    # plt.show()
 
     # # shifted data
     figures["rotated.png"] = shift_plt.plot_rotated(res_dir_list)
