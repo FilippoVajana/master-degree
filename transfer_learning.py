@@ -22,6 +22,9 @@ log.basicConfig(level=log.DEBUG,
 
 RUN_ROOT = './runs'
 REFERENCE_CONFIG = 'transfer_runcfg.json'
+ENABLE_SHORT_TRAIN = True
+SHORT_TRAIN_EXAMPLES = 1000
+ENABLE_TESTING = False
 
 
 def get_id() -> str:
@@ -71,49 +74,65 @@ def create_tl_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np
     return dl_configs
 
 
+def prepare_model(model: Module):
+    # REVIEW: train the last layer only
+    # mantains the gradients locked inside GenericTrainer
+    # model.do_transfer_learn = True
+
+    # disable all layers
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # reset last fully connected layer
+    in_features = model.fc3.in_features
+    out_features = model.fc3.out_features
+    model.fc3 = torch.nn.Linear(
+        in_features=in_features, out_features=out_features)
+    return model
+
+
 if __name__ == '__main__':
+    DEVICE = get_device()
+    R_ID = get_id()
+
     parser = argparse.ArgumentParser(
         description="Train LeNet5 and then perform Transfer Learning with LabelDrop.")
     parser.add_argument('-cfg', default=REFERENCE_CONFIG,
                         action='store', help='Run configuration file.')
     parser.add_argument('-short', default=False,
                         action='store_true', help='Train with less examples.')
+    parser.add_argument('-test', default=False,
+                        action='store_true', help='Do testing.')
     args = parser.parse_args()
 
     ENABLE_SHORT_TRAIN = args.short
-    ENABLE_TESTING = True
+    ENABLE_TESTING = args.test
     cfg_path = os.path.join(RUN_ROOT, args.cfg)
     REFERENCE_CONFIG = engine.RunConfig.load(cfg_path)
     log.info(f"Loaded reference config: {cfg_path}")
 
-    # get device
-    DEVICE = get_device()
-
-    # get run id
-    R_ID = get_id()
-
     # load and hack train configurations
     train_configs: Dict[Module, engine.RunConfig] = dict()
     for m_name in REFERENCE_CONFIG.models:
+        log.info(f"Load & Hack configuration for {m_name}")
         config = copy(REFERENCE_CONFIG)
         # swaps model classname with proper model instance
         model = getattr(engine, m_name)()
         delattr(config, "models")
         setattr(config, 'model', model)  # HACK: stinky code!
+        if ENABLE_SHORT_TRAIN:
+            config.max_items = SHORT_TRAIN_EXAMPLES
         train_configs[model] = config
-        log.info(f"Loaded configuration for {model.__class__.__name__}")
 
     # TRAIN & TEST LENET5 VANILLA
     TRAINED_MODELS: Dict[Module, engine.RunConfig] = dict()
-    log.info("TRAIN & TEST LENET5 VANILLA")
     for model in train_configs:
         config = train_configs[model]
         name = model.__class__.__name__
         run_dir = create_run_folder(
             model_name=name, run_id=R_ID)
 
-        if ENABLE_SHORT_TRAIN:
-            config.max_items = 1500
+        log.info(f"Train & Test: {name}")
 
         # train
         t_model = trm.do_train(model=model, device=DEVICE,
@@ -128,39 +147,19 @@ if __name__ == '__main__':
         TRAINED_MODELS[t_model] = config
 
     # PREPARE FOR TRANSFER LEARNING
-    log.info("PREPARE FOR TRANSFER LEARNING")
     TRLEARN_MODELS: Dict[Module, engine.RunConfig] = dict()
-
-    # TODO: train the last layer only
-    def prepare_model(model: Module):
-        # mantains the gradients locked inside GenericTrainer
-        # model.do_transfer_learn = True
-
-        # # disable all layers
-        # for param in model.parameters():
-        #     param.requires_grad = False
-
-        # reset last fully connected layer
-        in_features = model.fc3.in_features
-        out_features = model.fc3.out_features
-        model.fc3 = torch.nn.Linear(
-            in_features=in_features, out_features=out_features)
-        # for name, param in model.named_parameters():
-        #     print(name, param.requires_grad)
-
-        return model
-
-    for t_model in TRAINED_MODELS:
-        t_cfg = TRAINED_MODELS[t_model]
-        p_model = prepare_model(copy(t_model))
-        TRLEARN_MODELS[p_model] = t_cfg
+    for model in TRAINED_MODELS:
+        log.info(f"Prepare {model.__class__.__name__} to Transfer Learning")
+        config = TRAINED_MODELS[t_model]
+        p_model = prepare_model(copy(model))
+        TRLEARN_MODELS[p_model] = config
 
     # CREATE LABELDROP CONFIGS
-    log.info("CREATE LABELDROP CONFIGS")
     # Module -> (model_folder, config)
     tl_configs: Dict[Module, Tuple[str, engine.RunConfig]] = dict()
     tl_range = np.arange(0.10, 0.50, 0.10)
     for model in TRLEARN_MODELS:
+        log.info(f"Create LabelDrop configs for {model.__class__.__name__}")
         config = TRLEARN_MODELS[model]
         ldrop_configs = create_tl_labdrop_configs(config, tl_range)
         for name in ldrop_configs:
@@ -168,7 +167,6 @@ if __name__ == '__main__':
 
     # TRAIN & TEST TR_LENET5
     FINAL_MODELS: List[Module] = list()
-    log.info("TRAIN & TEST TR_LENET5")
     for model in tl_configs:
         name = tl_configs[model][0]
         config = tl_configs[model][1]
@@ -176,9 +174,7 @@ if __name__ == '__main__':
         run_dir = create_run_folder(
             model_name=name, run_id=R_ID)
 
-        if ENABLE_SHORT_TRAIN:
-            config.max_items = 1500
-
+        log.info(f"Train & Test: {name}")
         # train
         t_model: torch.nn.Module = trm.do_train(model=model, device=DEVICE,
                                                 config=config, directory=run_dir)

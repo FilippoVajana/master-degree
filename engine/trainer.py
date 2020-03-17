@@ -86,11 +86,11 @@ class GenericTrainer():
 
         for _ in trange(epochs):
             # REVIEW: check MC
-            if self.model.do_transferlearn == True:
-                # this condition is True only when the model is prepared for TL (see transfer_learning.py)
-                continue
-            else:
-                self.model.train(True)
+            # if self.model.do_transferlearn == True:
+            #     # this condition is True only when the model is prepared for TL (see transfer_learning.py)
+            #     continue
+            # else:
+            #     self.model.train(True)
 
             # TRAIN LOOP
             t_tmp_metrics = []
@@ -108,11 +108,11 @@ class GenericTrainer():
             for k in self.train_logs.keys():
                 self.train_logs[k].append(t_metrics_dict[k])
 
-            # VALIDATION LOOP
             # REVIEW: check MC
-            self.model.eval()
+            # self.model.eval()
             v_tmp_metrics = []
 
+            # VALIDATION LOOP
             with torch.no_grad():
                 for batch in validation_dataloader:
                     # result === (accuracy, brier, entropy, loss)
