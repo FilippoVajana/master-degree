@@ -24,6 +24,7 @@ DATA_DICT = {
 
 DEVICE = 'cpu'
 BATCH_SIZE = 32
+MAX_ITEMS = -1
 
 
 def get_device():
@@ -56,11 +57,13 @@ def save_results(path: str, results: dict):
         log.info(f"Saved test result: {p}")
 
 
-def do_test(model_name: str, state_dict_path: str, device: str, directory: str):
+def do_test(model_name: str, state_dict_path: str, device: str, directory: str, max_items=-1):
     '''Loads a trained model and perform a list of tests.
     The method saves results as .csv files and returns the results dictionary.
     '''
     log.info("Started testing phase.")
+    MAX_ITEMS = max_items
+
     # check device
     if device is None:
         device = get_device()
@@ -106,7 +109,7 @@ def test_regular_data(model, dataset_name="mnist"):
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=None
-    ).build(train_mode=False, max_items=-1, validation_ratio=0)
+    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
@@ -121,7 +124,7 @@ def test_ood_data(model, dataset_name="no-mnist"):
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=None
-    ).build(train_mode=False, max_items=-1, validation_ratio=0)
+    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=True)
@@ -142,7 +145,7 @@ def test_rotated_data(model, dataset_name="mnist", rotation_value=45):
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=transformation
-    ).build(train_mode=False, max_items=-1, validation_ratio=.0)
+    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=.0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
@@ -163,7 +166,7 @@ def test_shifted_data(model, dataset_name="mnist", shift_value=.5):
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=transformation
-    ).build(train_mode=False, max_items=-1, validation_ratio=.0)
+    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=.0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
@@ -179,8 +182,10 @@ if __name__ == '__main__':
                         action='store', help='Model class name.')
     parser.add_argument('-o', '--outdir', type=str,
                         action='store', help='Test results output directory.')
-    parser.add_argument('-batch', '--batch-size', type=int,
+    parser.add_argument('--batch-size', type=int,
                         action='store', help='Test batch size.')
+    parser.add_argument('-short', action='store_true', default=False, help='Use less input data.')
+
     args = parser.parse_args()
 
     if args.batch_size is not None:
@@ -188,5 +193,10 @@ if __name__ == '__main__':
 
     ###############
     # TEST MODEL #
+    if args.short == True:
+        max_items = MAX_ITEMS
+    else:
+        max_items = -1
+
     results_df_dict = do_test(model_name=args.mname, state_dict_path=args.mstate,
-                              device=None, directory=args.outdir)
+                              device=None, directory=args.outdir, max_items=max_items)

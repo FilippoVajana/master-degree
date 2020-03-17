@@ -18,6 +18,7 @@ log.basicConfig(level=log.DEBUG,
 
 RUN_ROOT = './runs'
 RUN_CFG = 'default_runcfg.json'
+MAX_ITEMS = 1000
 
 
 def get_id() -> str:
@@ -113,7 +114,7 @@ if __name__ == '__main__':
             model_name=k, run_id=r_id)
 
         if ENABLE_SHORT_TRAIN:
-            cfg.max_items = 1500
+            cfg.max_items = MAX_ITEMS
 
         # training
         trm.do_train(model=cfg.model, device=r_device,
@@ -123,14 +124,4 @@ if __name__ == '__main__':
         pt_path = glob.glob(
             f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
         tem.do_test(model_name=cfg.model.__class__.__name__,
-                    state_dict_path=pt_path, device=r_device, directory=run_dir)
-
-    # # move to data-results folder
-    # import shutil
-    # src = os.path.join(RUN_ROOT, r_id)
-    # dst = os.path.join(os.getcwd(), 'results', r_id)
-    # shutil.move(src=src, dst=dst)
-
-    # # run analysis
-    # import subprocess
-    # subprocess.call(" python ./results/analysis.py")
+                    state_dict_path=pt_path, device=r_device, directory=run_dir, max_items=MAX_ITEMS)
