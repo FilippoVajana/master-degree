@@ -3,9 +3,11 @@ import torch.nn
 import torch.optim
 import torch.nn.functional as F
 
-from ..trainer import GenericTrainer
 from ..runconfig import RunConfig
 from ..dataloader import ImageDataLoader
+
+from ..trainer import GenericTrainer
+from engine.models.lenet5 import LeNet5Trainer
 
 
 class LeNet5TL(torch.nn.Module):
@@ -45,7 +47,7 @@ class LeNet5TL(torch.nn.Module):
         ).build(train_mode=True, max_items=cfg.max_items, validation_ratio=.2)
 
         # init model trainer
-        trainer = LeNet5TLTrainer(cfg, device)
+        trainer = LeNet5Trainer(cfg, device)
 
         # run training
         model, data = trainer.train(
@@ -57,13 +59,13 @@ class LeNet5TL(torch.nn.Module):
         return model, data
 
 
-class LeNet5TLTrainer(GenericTrainer):
-    def __init__(self, cfg: RunConfig, device):
-        super().__init__(cfg, device)
-        self.optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=cfg.optimizer_args['lr'],
-            weight_decay=cfg.optimizer_args['weight_decay'],
-            betas=cfg.optimizer_args['betas'],
-            eps=cfg.optimizer_args['eps']
-        )
+# class LeNet5TLTrainer(GenericTrainer):
+#     def __init__(self, cfg: RunConfig, device):
+#         super().__init__(cfg, device)
+#         self.optimizer = torch.optim.Adam(
+#             self.model.parameters(),
+#             lr=cfg.optimizer_args['lr'],
+#             weight_decay=cfg.optimizer_args['weight_decay'],
+#             betas=cfg.optimizer_args['betas'],
+#             eps=cfg.optimizer_args['eps']
+#         )
