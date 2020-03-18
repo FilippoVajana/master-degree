@@ -64,6 +64,7 @@ class LeNet5MCDropout(torch.nn.Module):
         ).build(train_mode=True, max_items=cfg.max_items, validation_ratio=.2)
 
         # init model trainer
+        cfg.model = self  # FIXME: change this horror
         trainer = LeNet5Trainer(cfg, device)
 
         # run training

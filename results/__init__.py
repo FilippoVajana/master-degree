@@ -8,7 +8,7 @@ import logging as log
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
-N = 7
+N = 6
 plt.rcParams["axes.prop_cycle"] = plt.cycler(
     "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
 

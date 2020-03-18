@@ -7,6 +7,12 @@ from ..trainer import GenericTrainer
 from ..runconfig import RunConfig
 from ..dataloader import ImageDataLoader
 
+import logging as log
+LOG_MODE = log.INFO
+log.basicConfig(level=LOG_MODE,
+                format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
+LOGGER = log.getLogger()
+
 
 class LeNet5(torch.nn.Module):
     def __init__(self):
@@ -45,6 +51,7 @@ class LeNet5(torch.nn.Module):
         ).build(train_mode=True, max_items=cfg.max_items, validation_ratio=.2)
 
         # init model trainer
+        cfg.model = self  # FIXME: change this horror
         trainer = LeNet5Trainer(cfg, device)
 
         # run training
@@ -71,10 +78,13 @@ class LeNet5Trainer(GenericTrainer):
 
     def __init__(self, cfg: RunConfig, device):
         super().__init__(cfg, device)
+
+        params = self.model.parameters()
+        weight_decay = cfg.optimizer_args['weight_decay']
         self.optimizer = torch.optim.Adam(
-            self.model.parameters(),
+            params=params,
             lr=cfg.optimizer_args['lr'],
-            weight_decay=cfg.optimizer_args['weight_decay'],
+            weight_decay=weight_decay,
             betas=cfg.optimizer_args['betas'],
             eps=cfg.optimizer_args['eps']
         )

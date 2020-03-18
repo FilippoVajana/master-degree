@@ -16,7 +16,7 @@ log.basicConfig(level=log.INFO,
 
 class GenericTrainer():
     BINOMIAL_DIST = torch.distributions.Binomial(total_count=1, probs=1)
-    MC_DROPOUT_PASS = 0
+    MC_DROPOUT_PASS = 25
 
     def __init__(self, cfg: RunConfig, device: str):
         self.device = device
@@ -32,7 +32,8 @@ class GenericTrainer():
         self.dirty_labels_prob = cfg.dirty_labels
         self.BINOMIAL_DIST = torch.distributions.Binomial(
             total_count=1, probs=torch.zeros(cfg.batch_size).fill_(self.dirty_labels_prob))
-        self.MC_DROPOUT_PASS = 0
+        self.MC_DROPOUT_PASS = 25
+
         # train metrics
         self.train_logs = {
             "t_mean_accuracy": [],
@@ -79,6 +80,9 @@ class GenericTrainer():
             raise Exception("Validation set too small")
 
         self.model = self.model.to(self.device)
+        log.info(f"do_mcdropout: {self.model.do_mcdropout}")
+        log.info(f"do_transferlearn: {self.model.do_transferlearn}")
+
         best_model = self.model
         best_loss = None
 
@@ -95,6 +99,7 @@ class GenericTrainer():
             #     self.model.train(True)
 
             # TRAIN LOOP
+            self.model.train(True)
             t_tmp_metrics = []
             for batch in train_dataloader:
                 # result === (accuracy, brier, entropy, loss)
@@ -111,7 +116,7 @@ class GenericTrainer():
                 self.train_logs[k].append(t_metrics_dict[k])
 
             # REVIEW: check MC
-            # self.model.eval()
+            self.model.eval()
             v_tmp_metrics = []
 
             # VALIDATION LOOP
@@ -151,7 +156,7 @@ class GenericTrainer():
             if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
                 best_loss = self.validation_logs["v_mean_loss"][-1]
                 best_model = copy(self.model)
-                log.info(f"Update best model (loss: {best_loss})")
+                # log.info(f"Update best model (loss: {best_loss})")
 
         # merge train and validation logs
         data = {"epoch": range(epochs)}
@@ -241,8 +246,7 @@ class GenericTrainer():
         # forward
         # REVIEW: MC dropout loop
         if self.model.do_mcdropout == True:
-            mc_out = [self.model(t_examples)
-                      for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
+            mc_out = [self.model(t_examples)for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
             t_stack = torch.stack(mc_out, dim=2)
             t_mc_mean = t_stack.mean(dim=2)
             t_mc_std = t_stack.std(dim=2)

@@ -66,8 +66,8 @@ def create_run_folder(model_name: str, run_id=None):
 def train_and_test(models: Dict[str, Tuple[Module, engine.RunConfig]], do_test=True, max_items=-1) -> Dict[str, Tuple[Module, engine.RunConfig]]:
     trained: Dict[str, (Module, engine.RunConfig)] = dict()
     for m_name in models:
-        model = copy(models[m_name][0])
-        config = copy(models[m_name][1])
+        model = models[m_name][0]
+        config = models[m_name][1]
         log.info(f"Train & Test: {m_name}")
 
         run_dir = create_run_folder(
@@ -94,11 +94,22 @@ def prepare_for_tl(tr_models: Dict[str, Tuple[Module, engine.RunConfig]]) -> Dic
         model = copy(tr_models[m_name][0])
         config = copy(tr_models[m_name][1])
 
-        # disable all layers
-        for param in model.parameters():
-            param.requires_grad = False
+        # set transfer learning flag
+        model.do_transferlearn = True
 
-        # reset last fully connected layer
+        # disable all layers
+        # for param in model.parameters():
+        #     param.requires_grad = False
+
+        # reset fully connected layers
+        in_features = model.fc1.in_features
+        out_features = model.fc1.out_features
+        model.fc1 = torch.nn.Linear(in_features=in_features, out_features=out_features)
+
+        in_features = model.fc2.in_features
+        out_features = model.fc2.out_features
+        model.fc2 = torch.nn.Linear(in_features=in_features, out_features=out_features)
+
         in_features = model.fc3.in_features
         out_features = model.fc3.out_features
         model.fc3 = torch.nn.Linear(in_features=in_features, out_features=out_features)
@@ -106,7 +117,6 @@ def prepare_for_tl(tr_models: Dict[str, Tuple[Module, engine.RunConfig]]) -> Dic
         # add to models dict
         name = f"{m_name}TL"
         prepared[name] = (model, config)
-    # prepared.update(models)
     return prepared
 
 
@@ -164,14 +174,14 @@ if __name__ == '__main__':
         train_configs[m_name] = (model, config)
 
     # TRAIN & TEST LENET5 VANILLA
-    TRAINED_MODELS = train_and_test(train_configs, DO_TEST, MAX_ITEMS)
+    models_dict = train_and_test(train_configs, DO_TEST, MAX_ITEMS)
 
     # PREPARE FOR TRANSFER LEARNING
-    TL_MODELS = prepare_for_tl(TRAINED_MODELS)
+    models_dict = prepare_for_tl(models_dict)
 
     # CREATE LABELDROP CONFIGS
-    tl_range = np.arange(0.05, 0.20, 0.05)
-    LABELDROP_MODELS = prepare_for_labeldrop(TL_MODELS, tl_range)
+    tl_range = np.arange(0.05, 0.20, 0.10)
+    models_dict = prepare_for_labeldrop(models_dict, tl_range)
 
     # TRAIN & TEST TR_LENET5
-    RESULTS = train_and_test(LABELDROP_MODELS, do_test=DO_TEST, max_items=MAX_ITEMS)
+    RESULTS = train_and_test(models_dict, do_test=DO_TEST, max_items=MAX_ITEMS)
