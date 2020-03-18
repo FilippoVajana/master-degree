@@ -60,7 +60,8 @@
             "args": [
                 "-cfg",
                 "transfer_runcfg.json",
-                "-test"
+                "-test",
+                "-short"
             ],
             "console": "integratedTerminal"
         },

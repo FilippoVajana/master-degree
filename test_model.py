@@ -32,10 +32,10 @@ def get_device():
     return DEVICE
 
 
-def load_model_state(model_name: str, model_path: str, device: str):
+def load_model_state(model_cls: str, model_path: str, device: str):
     try:
         # get model instance
-        model_obj = getattr(engine, model_name)()
+        model_obj = getattr(engine, model_cls)()
         log.debug(f"Initialized model: {model_obj.__class__.__name__}")
 
         # load model state dict
@@ -57,7 +57,7 @@ def save_results(path: str, results: dict):
         log.info(f"Saved test result: {p}")
 
 
-def do_test(model_name: str, state_dict_path: str, device: str, directory: str, max_items=-1):
+def do_test(model_cls: str, state_dict_path: str, device: str, directory: str, max_items=-1):
     '''Loads a trained model and perform a list of tests.
     The method saves results as .csv files and returns the results dictionary.
     '''
@@ -68,7 +68,7 @@ def do_test(model_name: str, state_dict_path: str, device: str, directory: str, 
         device = get_device()
 
     # load model
-    model_obj = load_model_state(model_name, state_dict_path, device)
+    model_obj = load_model_state(model_cls, state_dict_path, device)
 
     # in distribution mnist
     t_res_dict = dict()
@@ -197,5 +197,5 @@ if __name__ == '__main__':
     else:
         max_items = -1
 
-    results_df_dict = do_test(model_name=args.mname, state_dict_path=args.mstate,
+    results_df_dict = do_test(model_cls=args.mname, state_dict_path=args.mstate,
                               device=None, directory=args.outdir, max_items=max_items)

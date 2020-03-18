@@ -123,5 +123,5 @@ if __name__ == '__main__':
         # testing
         pt_path = glob.glob(
             f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
-        tem.do_test(model_name=cfg.model.__class__.__name__,
+        tem.do_test(model_cls=cfg.model.__class__.__name__,
                     state_dict_path=pt_path, device=r_device, directory=run_dir, max_items=MAX_ITEMS)
