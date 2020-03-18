@@ -7,6 +7,7 @@ from tqdm import trange
 import numpy as np
 import torch
 from random import randint
+from copy import copy
 
 
 log.basicConfig(level=log.INFO,
@@ -78,11 +79,12 @@ class GenericTrainer():
             raise Exception("Validation set too small")
 
         self.model = self.model.to(self.device)
-        log.info(f"Train with MC dropout: {self.model.do_mcdropout}")
+        best_model = self.model
+        best_loss = None
+
+        #log.info(f"Train with MC dropout: {self.model.do_mcdropout}")
         log.info(f"Train dataset: {len(train_dataloader.dataset)}")
         log.info(f"Validation dataset: {len(validation_dataloader.dataset)}")
-        # best_model = self.model.state_dict()
-        # best_loss = None
 
         for _ in trange(epochs):
             # REVIEW: check MC
@@ -145,10 +147,11 @@ class GenericTrainer():
             self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
             self.ood_logs["ov_mean_nll"].append(ov_metrics[2])
 
-            # # save checkpoint
-            # if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
-            #     best_loss = self.validation_logs["v_mean_loss"][-1]
-            #     best_model = self.model.state_dict()
+            # save checkpoint
+            if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
+                best_loss = self.validation_logs["v_mean_loss"][-1]
+                best_model = copy(self.model)
+                log.info(f"Update best model (loss: {best_loss})")
 
         # merge train and validation logs
         data = {"epoch": range(epochs)}
@@ -159,7 +162,7 @@ class GenericTrainer():
         # build dataframe from logs
         df = pd.DataFrame(data=data)
 
-        return self.model, df
+        return best_model, df
 
     def labels_drop_v1(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly change the labels for a part of the original labels.

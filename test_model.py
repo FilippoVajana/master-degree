@@ -24,7 +24,6 @@ DATA_DICT = {
 
 DEVICE = 'cpu'
 BATCH_SIZE = 64
-MAX_ITEMS = 500
 
 
 def get_device():
@@ -101,14 +100,14 @@ def do_test(model_cls: str, state_dict_path: str, device: str, directory: str, m
     return t_res_dict
 
 
-def test_regular_data(model, dataset_name="mnist", max_items=MAX_ITEMS):
+def test_regular_data(model, dataset_name="mnist", max_items=-1):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=None
-    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=0)
+    ).build(train_mode=False, max_items=max_items, validation_ratio=0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
@@ -116,14 +115,14 @@ def test_regular_data(model, dataset_name="mnist", max_items=MAX_ITEMS):
     return df
 
 
-def test_ood_data(model, dataset_name="no-mnist", max_items=MAX_ITEMS):
+def test_ood_data(model, dataset_name="no-mnist", max_items=-1):
     # get dataloader
     dataloader = engine.ImageDataLoader(
         data_folder=DATA_DICT[dataset_name],
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=None
-    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=0)
+    ).build(train_mode=False, max_items=max_items, validation_ratio=0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=True)
@@ -131,7 +130,7 @@ def test_ood_data(model, dataset_name="no-mnist", max_items=MAX_ITEMS):
     return df
 
 
-def test_rotated_data(model, dataset_name="mnist", rotation_value=45, max_items=MAX_ITEMS):
+def test_rotated_data(model, dataset_name="mnist", rotation_value=45, max_items=-1):
     transformation = transforms.Compose([
         transforms.ToPILImage(),
         transforms.RandomRotation((rotation_value, rotation_value)),
@@ -144,7 +143,7 @@ def test_rotated_data(model, dataset_name="mnist", rotation_value=45, max_items=
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=transformation
-    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=.0)
+    ).build(train_mode=False, max_items=max_items, validation_ratio=.0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
@@ -152,7 +151,7 @@ def test_rotated_data(model, dataset_name="mnist", rotation_value=45, max_items=
     return df
 
 
-def test_shifted_data(model, dataset_name="mnist", shift_value=.5, max_items=MAX_ITEMS):
+def test_shifted_data(model, dataset_name="mnist", shift_value=.5, max_items=-1):
     transformation = transforms.Compose([
         transforms.ToPILImage(),
         transforms.RandomAffine(0, translate=(shift_value, shift_value)),
@@ -165,7 +164,7 @@ def test_shifted_data(model, dataset_name="mnist", shift_value=.5, max_items=MAX
         batch_size=BATCH_SIZE,
         shuffle=False,
         transformation=transformation
-    ).build(train_mode=False, max_items=MAX_ITEMS, validation_ratio=.0)
+    ).build(train_mode=False, max_items=max_items, validation_ratio=.0)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
