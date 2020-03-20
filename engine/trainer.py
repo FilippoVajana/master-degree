@@ -91,13 +91,6 @@ class GenericTrainer():
         log.info(f"Validation dataset: {len(validation_dataloader.dataset)}")
 
         for _ in trange(epochs):
-            # REVIEW: check MC
-            # if self.model.do_transferlearn == True:
-            #     # this condition is True only when the model is prepared for TL (see transfer_learning.py)
-            #     continue
-            # else:
-            #     self.model.train(True)
-
             # TRAIN LOOP
             self.model.train(True)
             t_tmp_metrics = []
@@ -115,7 +108,6 @@ class GenericTrainer():
             for k in self.train_logs.keys():
                 self.train_logs[k].append(t_metrics_dict[k])
 
-            # REVIEW: check MC
             self.model.eval()
             v_tmp_metrics = []
 
@@ -179,17 +171,6 @@ class GenericTrainer():
             extr = self.BINOMIAL_DIST.sample()
             labels[extr > 0] = randint(0, 9)
         return labels
-
-    # def labels_drop_v2(self, labels: torch.Tensor) -> torch.Tensor:
-    #     '''Randomly set the labels for a part of the original labels to an extra class.
-    #     '''
-    #     if self.dirty_labels_prob == 0.0:
-    #         return labels
-    #     else:
-    #         # random extraction
-    #         extr = self.BINOMIAL_DIST.sample()
-    #         labels[extr > 0] = 10
-    #     return labels
 
     def __train_batch(self, batch):
         """

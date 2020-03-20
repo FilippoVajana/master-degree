@@ -24,7 +24,7 @@ RUN_ROOT = './runs'
 REFERENCE_CONFIG = 'transfer_runcfg.json'
 DO_SHORT = True
 DO_TEST = False
-MAX_ITEMS = 2500
+MAX_ITEMS = 7500
 DEVICE = 'cpu'
 R_ID = '0000_0000'
 
@@ -91,24 +91,24 @@ def prepare_for_tl(tr_models: Dict[str, Tuple[Module, engine.RunConfig]]) -> Dic
     prepared = dict()
     for m_name in tr_models:
         log.info(f"Prepare {m_name} to Transfer Learning")
-        model = copy(tr_models[m_name][0])
-        config = copy(tr_models[m_name][1])
+        model = tr_models[m_name][0]
+        config = tr_models[m_name][1]
 
         # set transfer learning flag
         model.do_transferlearn = True
 
         # disable all layers
-        # for param in model.parameters():
-        #     param.requires_grad = False
+        for param in model.parameters():
+            param.requires_grad = False
 
         # reset fully connected layers
-        in_features = model.fc1.in_features
-        out_features = model.fc1.out_features
-        model.fc1 = torch.nn.Linear(in_features=in_features, out_features=out_features)
+        # in_features = model.fc1.in_features
+        # out_features = model.fc1.out_features
+        # model.fc1 = torch.nn.Linear(in_features=in_features, out_features=out_features)
 
-        in_features = model.fc2.in_features
-        out_features = model.fc2.out_features
-        model.fc2 = torch.nn.Linear(in_features=in_features, out_features=out_features)
+        # in_features = model.fc2.in_features
+        # out_features = model.fc2.out_features
+        # model.fc2 = torch.nn.Linear(in_features=in_features, out_features=out_features)
 
         in_features = model.fc3.in_features
         out_features = model.fc3.out_features
@@ -124,17 +124,14 @@ def prepare_for_labeldrop(tl_models: Dict[str, Tuple[Module, engine.RunConfig]],
     labeldrop = dict()
     for m_name in tl_models:
         log.info(f"Prepare {m_name} for LabelDrop")
-        model = tl_models[m_name][0]
-        config = tl_models[m_name][1]
-
         for p in dropout_probs:
+            model = copy(tl_models[m_name][0])
+            config = copy(tl_models[m_name][1])
             config.dirty_labels = float("{0:.2f}".format(p))
 
             # add to models dict
             name = f"{m_name}-{config.dirty_labels}"
             labeldrop[name] = (model, config)
-
-    # labeldrop.update(models)
     return labeldrop
 
 
@@ -174,13 +171,13 @@ if __name__ == '__main__':
         train_configs[m_name] = (model, config)
 
     # TRAIN & TEST LENET5 VANILLA
-    models_dict = train_and_test(train_configs, DO_TEST, MAX_ITEMS)
+    models_dict = train_and_test(train_configs, DO_TEST, MAX_ITEMS)  # trained base model
 
     # PREPARE FOR TRANSFER LEARNING
     models_dict = prepare_for_tl(models_dict)
 
     # CREATE LABELDROP CONFIGS
-    tl_range = np.arange(0.05, 0.20, 0.10)
+    tl_range = np.arange(0.05, 0.40, 0.10)
     models_dict = prepare_for_labeldrop(models_dict, tl_range)
 
     # TRAIN & TEST TR_LENET5
