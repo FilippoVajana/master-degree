@@ -2,6 +2,7 @@ from typing import List
 import results.utils as utils
 import results.ood_plots as ood_plt
 import results.shifted_plots as shift_plt
+import results.train_plots as train_plt
 
 import numpy as np
 import logging as log
