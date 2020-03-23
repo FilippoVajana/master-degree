@@ -64,12 +64,12 @@ if __name__ == "__main__":
     # PLOT
     figures = dict()
 
-    # train data
-    figures["train_accuracy"] = train_plt.plot_train_accuracy(res_dir_list)
-    figures["train_loss"] = train_plt.plot_train_loss(res_dir_list)
-    figures["train_brier"] = train_plt.plot_train_brier(res_dir_list)
-    figures["train_entropy"] = train_plt.plot_train_entropy(res_dir_list)
-    # plt.show()
+    # # train data
+    # figures["train_accuracy"] = train_plt.plot_train_accuracy(res_dir_list)
+    # figures["train_loss"] = train_plt.plot_train_loss(res_dir_list)
+    # figures["train_brier"] = train_plt.plot_train_brier(res_dir_list)
+    # figures["train_entropy"] = train_plt.plot_train_entropy(res_dir_list)
+    # # plt.show()
 
     # # shifted data
     figures["rotated.png"] = shift_plt.plot_rotated(res_dir_list)
