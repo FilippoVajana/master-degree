@@ -20,7 +20,7 @@ DATA_DICT = {
     'no-mnist': './data/no-mnist'
 }
 DEVICE = 'cpu'
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 MAX_ITEMS = 1500
 
 
