@@ -20,15 +20,12 @@ class Tester():
         self.MC_DROPOUT_PASS = 25
 
         # test metrics
-        # TODO: MC dropout metrics
         self.test_logs = {
             "t_good_pred": [],
             "t_brier": [],
             "t_entropy": [],
             "t_confidence": [],
-            "t_nll": [],
-            "t_mc_mean": [],
-            "t_mc_std": []
+            "t_nll": []
         }
 
     def get_predicted_class(self, t_predictions):
@@ -93,6 +90,11 @@ class Tester():
         """
         log.info(f"Test dataset: {len(test_dataloader.dataset)}")
         self.model.eval()
+        if self.model.do_mcdropout:
+            # add MC dropout metrics to dictionary
+            self.test_logs["t_mc_mean"] = []
+            self.test_logs["t_mc_std"] = []
+
         with torch.no_grad():
             for batch in tqdm(test_dataloader):
                 t_examples, t_labels = batch
@@ -106,20 +108,19 @@ class Tester():
                 t_labels = t_labels.to(self.device)
 
                 # predict tensor
-                t_mc_mean = torch.tensor([0])
-                t_mc_std = torch.tensor([0])
                 if self.model.do_mcdropout == True:
                     mc_out = [self.model(t_examples)
                               for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
                     t_stack = torch.stack(mc_out, dim=2)
                     t_mc_mean = t_stack.mean(dim=2)
                     t_mc_std = t_stack.std(dim=2)
+
+                    self.test_logs["t_mc_mean"].extend(list(t_mc_mean.numpy()))
+                    self.test_logs["t_mc_std"].extend(list(t_mc_std.numpy()))
+
                     t_predictions = t_mc_mean
                 else:
                     t_predictions = self.model(t_examples)
-
-                self.test_logs["t_mc_mean"].extend(t_mc_mean.numpy())
-                self.test_logs["t_mc_std"].extend(t_mc_std.numpy())
 
                 t_accuracy = self.check_prediction(t_predictions, t_labels)
                 self.test_logs["t_good_pred"].extend(list(t_accuracy.numpy()))
