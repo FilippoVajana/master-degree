@@ -25,7 +25,25 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Testing",
+            "name": "Testing MC",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_model.py",
+            "args": [
+                "--mstate",
+                "./runs/TEST/LeNet5MCDropout/LeNet5MCDropout.pt",
+                "--mname",
+                "LeNet5MCDropout",
+                "--outdir",
+                "./runs/TEST/LeNet5MCDropout",
+                "--batch-size",
+                "1",
+                "-short"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Testing Lenet",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test_model.py",
@@ -37,7 +55,8 @@
                 "--outdir",
                 "./runs/TEST/LeNet5",
                 "--batch-size",
-                "1"
+                "1",
+                "-short"
             ],
             "console": "integratedTerminal"
         },

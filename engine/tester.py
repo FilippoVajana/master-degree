@@ -26,7 +26,9 @@ class Tester():
             "t_brier": [],
             "t_entropy": [],
             "t_confidence": [],
-            "t_nll": []
+            "t_nll": [],
+            "t_mc_mean": [],
+            "t_mc_std": []
         }
 
     def get_predicted_class(self, t_predictions):
@@ -104,7 +106,8 @@ class Tester():
                 t_labels = t_labels.to(self.device)
 
                 # predict tensor
-                # REVIEW: MC dropout loop
+                t_mc_mean = torch.tensor([0])
+                t_mc_std = torch.tensor([0])
                 if self.model.do_mcdropout == True:
                     mc_out = [self.model(t_examples)
                               for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
@@ -114,6 +117,9 @@ class Tester():
                     t_predictions = t_mc_mean
                 else:
                     t_predictions = self.model(t_examples)
+
+                self.test_logs["t_mc_mean"].extend(t_mc_mean.numpy())
+                self.test_logs["t_mc_std"].extend(t_mc_std.numpy())
 
                 t_accuracy = self.check_prediction(t_predictions, t_labels)
                 self.test_logs["t_good_pred"].extend(list(t_accuracy.numpy()))
@@ -132,9 +138,6 @@ class Tester():
                 else:
                     t_confidence = self.get_ood_confidence(t_predictions)
                 self.test_logs["t_confidence"].extend(list(t_confidence))
-
-                # for t in t_predictions:
-                #     self.test_logs["t_output"].append(t.numpy())
 
         # build dataframe from logs
         df = pd.DataFrame(data=self.test_logs)
