@@ -15,13 +15,10 @@ plt.rcParams["figure.figsize"] = [15, 5]
 log.basicConfig(level=log.DEBUG,
                 format='[%(asctime)s] %(message)s', datefmt='%H:%M:%S')
 
-
 DATA_DICT = {
     'mnist': './data/mnist',
     'no-mnist': './data/no-mnist'
 }
-
-
 DEVICE = 'cpu'
 BATCH_SIZE = 64
 MAX_ITEMS = 1500
@@ -42,7 +39,7 @@ def plot_sample(tensors):
     for idx, ax in enumerate(axs):
         t_img = tensors[idx][0].squeeze()
         ax.imshow(t_img, cmap='gray')
-        ax.set_xlabel(tensors[idx][1].item())
+        ax.set_xlabel(tensors[idx][1].item() - 65)
         ax.set_xlim(lim)
         ax.set_ylim(lim)
         ax.set_xticks(ticks)

@@ -24,7 +24,7 @@ RUN_ROOT = './runs'
 REFERENCE_CONFIG = 'transfer_runcfg.json'
 DO_SHORT = True
 DO_TEST = False
-MAX_ITEMS = 7500
+MAX_ITEMS = 1250
 DEVICE = 'cpu'
 R_ID = '0000_0000'
 
