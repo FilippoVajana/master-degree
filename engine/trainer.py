@@ -44,7 +44,6 @@ class GenericTrainer():
         }
 
         # validation metrics
-        # TODO: MC dropout metrics
         self.validation_logs = {
             "v_mean_accuracy": [],
             "v_mean_brier": [],
@@ -54,7 +53,6 @@ class GenericTrainer():
         }
 
         # out-of-distribution metrics and dataloader
-        # TODO: MC dropout metrics
         self.ood_logs = {
             "ov_mean_brier": [],
             "ov_mean_entropy": [],
@@ -114,7 +112,6 @@ class GenericTrainer():
             # VALIDATION LOOP
             with torch.no_grad():
                 for batch in validation_dataloader:
-                    # result === (accuracy, brier, entropy, loss)
                     result = self.__validate_batch(batch)
                     v_tmp_metrics.append(result)
 
@@ -133,16 +130,16 @@ class GenericTrainer():
             with torch.no_grad():
                 for batch in self.ood_dataloader[0]:
                     result = self.__validate_batch(batch)
-                    # result === (brier, entropy)
                     result = (result[1], result[2], result[4])
                     ov_tmp_metrics.append(result)
 
             # update ood log
             ov_metrics = np.vstack(ov_tmp_metrics)
             ov_metrics = np.median(ov_metrics, axis=0)  # epoch values
-            self.ood_logs["ov_mean_brier"].append(ov_metrics[0])
-            self.ood_logs["ov_mean_entropy"].append(ov_metrics[1])
-            self.ood_logs["ov_mean_nll"].append(ov_metrics[2])
+            ov_metrics_dict = dict(
+                zip(self.ood_logs.keys(), ov_metrics))
+            for k in self.ood_logs.keys():
+                self.ood_logs[k].append(ov_metrics_dict[k])
 
             # save checkpoint
             if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
@@ -225,7 +222,7 @@ class GenericTrainer():
         t_labels = t_labels.to(self.device)
 
         # forward
-        # REVIEW: MC dropout loop
+        # MC dropout loop
         if self.model.do_mcdropout == True:
             mc_out = [self.model(t_examples)for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
             t_stack = torch.stack(mc_out, dim=2)
