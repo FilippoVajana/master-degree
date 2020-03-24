@@ -37,8 +37,7 @@
                 "--outdir",
                 "./runs/TEST/LeNet5MCDropout",
                 "--batch-size",
-                "1",
-                "-short"
+                "128",
             ],
             "console": "integratedTerminal"
         },
@@ -55,8 +54,7 @@
                 "--outdir",
                 "./runs/TEST/LeNet5",
                 "--batch-size",
-                "1",
-                "-short"
+                "128",
             ],
             "console": "integratedTerminal"
         },
