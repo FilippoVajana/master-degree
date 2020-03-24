@@ -54,7 +54,7 @@
                 "--outdir",
                 "./runs/TEST/LeNet5",
                 "--batch-size",
-                "128",
+                "1",
             ],
             "console": "integratedTerminal"
         },

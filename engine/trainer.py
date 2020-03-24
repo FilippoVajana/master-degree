@@ -99,12 +99,14 @@ class GenericTrainer():
 
             # update train log
             t_metrics = np.vstack(t_tmp_metrics)
-            t_metrics = np.median(t_metrics, axis=0)  # epoch values
-            log.debug(f"mean epoch entropy : {t_metrics[2]}")
+            for idx, k in enumerate(self.train_logs.keys()):
+                self.train_logs[k].extend(list(t_metrics[:, idx]))
+            # t_metrics = np.median(t_metrics, axis=0)  # epoch values
+            # log.debug(f"mean epoch entropy : {t_metrics[2]}")
 
-            t_metrics_dict = dict(zip(self.train_logs.keys(), t_metrics))
-            for k in self.train_logs.keys():
-                self.train_logs[k].append(t_metrics_dict[k])
+            # t_metrics_dict = dict(zip(self.train_logs.keys(), t_metrics))
+            # for k in self.train_logs.keys():
+            #     self.train_logs[k].append(t_metrics_dict[k])
 
             self.model.eval()
             v_tmp_metrics = []
@@ -118,11 +120,13 @@ class GenericTrainer():
             # update validation log
             if len(v_tmp_metrics) > 0:
                 v_metrics = np.vstack(v_tmp_metrics)
-                v_metrics = np.median(v_metrics, axis=0)  # epoch values
-                v_metrics_dict = dict(
-                    zip(self.validation_logs.keys(), v_metrics))
-                for k in self.validation_logs.keys():
-                    self.validation_logs[k].append(v_metrics_dict[k])
+                # v_metrics = np.median(v_metrics, axis=0)  # epoch values
+                # v_metrics_dict = dict(
+                #     zip(self.validation_logs.keys(), v_metrics))
+                # for k in self.validation_logs.keys():
+                #     self.validation_logs[k].append(v_metrics_dict[k])
+                for idx, k in enumerate(self.validation_logs.keys()):
+                    self.validation_logs[k].extend(list(v_metrics[:, idx]))
 
             # OOD LOOP
             ov_tmp_metrics = []
@@ -135,11 +139,13 @@ class GenericTrainer():
 
             # update ood log
             ov_metrics = np.vstack(ov_tmp_metrics)
-            ov_metrics = np.median(ov_metrics, axis=0)  # epoch values
-            ov_metrics_dict = dict(
-                zip(self.ood_logs.keys(), ov_metrics))
-            for k in self.ood_logs.keys():
-                self.ood_logs[k].append(ov_metrics_dict[k])
+            # ov_metrics = np.median(ov_metrics, axis=0)  # epoch values
+            # ov_metrics_dict = dict(
+            #     zip(self.ood_logs.keys(), ov_metrics))
+            # for k in self.ood_logs.keys():
+            #     self.ood_logs[k].append(ov_metrics_dict[k])
+            for idx, k in enumerate(self.ood_logs.keys()):
+                self.ood_logs[k].extend(list(ov_metrics[:, idx]))
 
             # save checkpoint
             if best_loss is None or self.validation_logs["v_mean_loss"][-1] < best_loss:
@@ -147,16 +153,20 @@ class GenericTrainer():
                 best_model = copy(self.model)
                 # log.info(f"Update best model (loss: {best_loss})")
 
-        # merge train and validation logs
-        data = {"epoch": range(epochs)}
-        data.update(self.train_logs)
-        data.update(self.validation_logs)
-        data.update(self.ood_logs)
+        # build dataframes
+        t_data = {"batch": list(range(len(train_dataloader) * epochs))}
+        t_data.update(self.train_logs)
+        train_df = pd.DataFrame(data=t_data).set_index('batch')
 
-        # build dataframe from logs
-        df = pd.DataFrame(data=data)
+        v_data = {"batch": list(range(len(validation_dataloader) * epochs))}
+        v_data.update(self.validation_logs)
+        validation_df = pd.DataFrame(data=v_data).set_index('batch')
 
-        return best_model, df
+        ood_data = {"batch": list(range(len(self.ood_dataloader[0]) * epochs))}
+        ood_data.update(self.ood_logs)
+        ood_df = pd.DataFrame(data=ood_data).set_index('batch')
+
+        return best_model, train_df, validation_df, ood_df
 
     def labels_drop_v1(self, labels: torch.Tensor) -> torch.Tensor:
         '''Randomly change the labels for a part of the original labels.

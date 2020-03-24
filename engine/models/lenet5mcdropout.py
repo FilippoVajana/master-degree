@@ -68,10 +68,10 @@ class LeNet5MCDropout(torch.nn.Module):
         trainer = LeNet5Trainer(cfg, device)
 
         # run training
-        model, data = trainer.train(
+        model, train_df, valid_df, ood_df = trainer.train(
             epochs=cfg.epochs,
             train_dataloader=dataloader[0],
             validation_dataloader=dataloader[1]
         )
 
-        return model, data
+        return model, train_df, valid_df, ood_df

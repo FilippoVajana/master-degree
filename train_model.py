@@ -65,7 +65,7 @@ def do_train(model: Module, device: str, config: engine.RunConfig, directory: st
     The methods saves train logs as .csv and the final model state dict.     
     '''
     log.info(f"Started training phase for: {model.__class__.__name__}")
-    trained_model, train_df = model.start_training(config, device)
+    trained_model, train_df, valid_df, ood_df = model.start_training(config, device)
 
     # save model dict
     state_dict_path = os.path.join(
@@ -73,10 +73,19 @@ def do_train(model: Module, device: str, config: engine.RunConfig, directory: st
     save(trained_model.state_dict(), state_dict_path)
     log.info("Saved model state dict: %s", state_dict_path)
 
-    # save training logs
-    train_logs_path = os.path.join(directory, 'train_logs.csv')
-    train_df.to_csv(train_logs_path, index=True)
-    log.info("Saved train logs: %s", train_logs_path)
+    # save logs
+    path = os.path.join(directory, 'train_logs.csv')
+    train_df.to_csv(path, index=True)
+    log.info("Saved train logs: %s", path)
+
+    path = os.path.join(directory, 'validation_logs.csv')
+    valid_df.to_csv(path, index=True)
+    log.info("Saved train logs: %s", path)
+
+    path = os.path.join(directory, 'ood_logs.csv')
+    ood_df.to_csv(path, index=True)
+    log.info("Saved train logs: %s", path)
+
     return trained_model
 
 
