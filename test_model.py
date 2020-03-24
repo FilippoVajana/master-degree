@@ -1,15 +1,15 @@
-import argparse
-import datetime
-import logging as log
-import os
-import sys
-
-import torch
-import torchvision.transforms as transforms
-
-import engine
-import train_model as trmod
 from engine.tester import Tester
+import train_model as trmod
+import engine
+import torchvision.transforms as transforms
+import torch
+import sys
+import os
+import logging as log
+import datetime
+import argparse
+import matplotlib.pyplot as plt
+plt.rcParams["figure.figsize"] = [15, 5]
 
 
 log.basicConfig(level=log.DEBUG,
@@ -24,11 +24,32 @@ DATA_DICT = {
 
 DEVICE = 'cpu'
 BATCH_SIZE = 64
+MAX_ITEMS = 1500
 
 
 def get_device():
     DEVICE = trmod.get_device()
     return DEVICE
+
+
+def plot_sample(tensors):
+    plt.tight_layout()
+    fig = plt.figure(figsize=(15, 5), dpi=200)
+    lim = (0, 27)
+    ticks = [0, 14, 27]
+    labels = [0, 14, 28]
+    axs = fig.subplots(1, 3)
+    for idx, ax in enumerate(axs):
+        t_img = tensors[idx][0].squeeze()
+        ax.imshow(t_img, cmap='gray')
+        ax.set_xlabel(tensors[idx][1].item())
+        ax.set_xlim(lim)
+        ax.set_ylim(lim)
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+        ax.set_xticklabels(labels)
+        ax.set_yticklabels(labels)
+    plt.show()
 
 
 def load_model_state(model_cls: str, model_path: str, device: str):
@@ -109,6 +130,14 @@ def test_regular_data(model, dataset_name="mnist", max_items=-1):
         transformation=None
     ).build(train_mode=False, max_items=max_items, validation_ratio=0)
 
+    # dl_iter = iter(dataloader[0])
+    # samples = [
+    #     next(dl_iter),
+    #     next(dl_iter),
+    #     next(dl_iter)
+    # ]
+    # plot_sample(samples)
+
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
     df = tester.test(dataloader[0])
@@ -123,6 +152,14 @@ def test_ood_data(model, dataset_name="no-mnist", max_items=-1):
         shuffle=False,
         transformation=None
     ).build(train_mode=False, max_items=max_items, validation_ratio=0)
+
+    # dl_iter = iter(dataloader[0])
+    # samples = [
+    #     next(dl_iter),
+    #     next(dl_iter),
+    #     next(dl_iter)
+    # ]
+    # plot_sample(samples)
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=True)
@@ -145,6 +182,17 @@ def test_rotated_data(model, dataset_name="mnist", rotation_value=45, max_items=
         transformation=transformation
     ).build(train_mode=False, max_items=max_items, validation_ratio=.0)
 
+    # if rotation_value == 45:
+    #     dl_iter = iter(dataloader[0])
+    #     samples = [
+    #         next(dl_iter),
+    #         next(dl_iter),
+    #         next(dl_iter)
+    #     ]
+    #     plot_sample(samples)
+    # else:
+    #     return None
+
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
     df = tester.test(dataloader[0])
@@ -165,6 +213,17 @@ def test_shifted_data(model, dataset_name="mnist", shift_value=.5, max_items=-1)
         shuffle=False,
         transformation=transformation
     ).build(train_mode=False, max_items=max_items, validation_ratio=.0)
+
+    # if shift_value == (10 / 28):
+    #     dl_iter = iter(dataloader[0])
+    #     samples = [
+    #         next(dl_iter),
+    #         next(dl_iter),
+    #         next(dl_iter)
+    #     ]
+    #     plot_sample(samples)
+    # else:
+    #     return None
 
     # test model
     tester = Tester(model, device=DEVICE, is_ood=False)
