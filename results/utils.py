@@ -29,7 +29,7 @@ def side_legend(ax):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.85, box.height])
     # Put a legend to the right of the current axis
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
 
 
 def bottom_legend(ax, count=4):
@@ -38,7 +38,7 @@ def bottom_legend(ax, count=4):
                      box.width, box.height * 0.9])
 
     # Put a legend below current axis
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=count)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=count, frameon=False)
 
 
 def get_accuracy(df: pd.DataFrame):

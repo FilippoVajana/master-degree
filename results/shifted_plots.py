@@ -120,7 +120,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax1.set_ylabel("Accuracy")
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Pixels translation")
-    bottom_legend(ax2, len(shifted_df_dict.keys()))
+    side_legend(ax2)
     return fig
 
 
@@ -153,5 +153,5 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax1.set_ylabel("Accuracy")
     ax2.set_ylabel("Brier score")
     ax2.set_xlabel("Degrees of rotation")
-    bottom_legend(ax2, len(rotated_df_dict.keys()))
+    side_legend(ax2)
     return fig

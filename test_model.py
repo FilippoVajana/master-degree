@@ -39,7 +39,7 @@ def plot_sample(tensors):
     for idx, ax in enumerate(axs):
         t_img = tensors[idx][0].squeeze()
         ax.imshow(t_img, cmap='gray')
-        ax.set_xlabel(tensors[idx][1].item() - 65)
+        ax.set_xlabel(tensors[idx][1].item())
         ax.set_xlim(lim)
         ax.set_ylim(lim)
         ax.set_xticks(ticks)

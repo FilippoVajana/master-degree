@@ -8,8 +8,11 @@ from results import *
 import results as R
 from results.utils import *
 
+N = 6
+plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.coolwarm(np.linspace(0, 1, N)))
 
-def plot_entropy_ood(res_dir_list: List[str]):
+
+def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     R.LOGGER.info("plot_entropy_ood")
     # load nomnist dataframe
     df_dict = {
@@ -19,11 +22,11 @@ def plot_entropy_ood(res_dir_list: List[str]):
     res_df = pd.DataFrame()
 
     # count examples based on entropy value
-    ent_range = np.arange(1.9, 2.25, 0.005)
+    ent_range = np.arange(2.04, 2.31, 0.0025)
     for k in df_dict:
         count_list = list()
         for ev in ent_range:
-            count_df = df_dict[k].loc[df_dict[k] > ev]
+            count_df = df_dict[k].loc[df_dict[k] < ev]
             ratio = count_df.count() / df_dict[k].count()
             count_list.append(ratio)
 
@@ -41,12 +44,12 @@ def plot_entropy_ood(res_dir_list: List[str]):
     ax1.yaxis.set_major_formatter(y_formatter)
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
-    ax1.set_xlim(min(ent_range), max(ent_range))
+    # ax1.set_xlim(min(ent_range), max(ent_range))
 
     for k in res_df:
         ax1.scatter(res_df[k].index, res_df[k], label=k, s=8)
 
-    ax1.set_ylabel(r"Fraction of examples with $H > \tau$")
+    ax1.set_ylabel(r"Fraction of examples with $H < \tau$")
     ax1.set_xlabel("Entropy (Nats)")
     side_legend(ax1)
     return fig

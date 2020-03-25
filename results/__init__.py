@@ -9,9 +9,6 @@ import logging as log
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 plt.rcParams["figure.figsize"] = [10, 8]
-N = 10
-plt.rcParams["axes.prop_cycle"] = plt.cycler(
-    "color", plt.cm.coolwarm(np.linspace(0, 1, N)))
 
 LOG_MODE = log.INFO
 log.basicConfig(level=LOG_MODE,
