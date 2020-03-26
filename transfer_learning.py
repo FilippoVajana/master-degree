@@ -177,7 +177,7 @@ if __name__ == '__main__':
     models_dict = prepare_for_tl(models_dict)
 
     # CREATE LABELDROP CONFIGS
-    tl_range = np.arange(0.05, 0.40, 0.10)
+    tl_range = np.arange(0.15, 0.50, 0.30)
     models_dict = prepare_for_labeldrop(models_dict, tl_range)
 
     # TRAIN & TEST TR_LENET5

@@ -4,6 +4,9 @@ from results import train_plt
 from results import perf_plots
 from results import labeldrop_plots
 from results import labeldrop_compare_plots
+from results import id_vs_ood_plots
+from results import tr_labeldrop_plots
+from results import tr_labeldrop_compare_plots
 from results.utils import *
 import datetime as dt
 from typing import Dict, List
@@ -87,22 +90,31 @@ if __name__ == "__main__":
     # figures["ood_entropy.png"] = ood_plt.plot_entropy_ood(res_dir_list)
     # figures["ood_confidence.png"] = ood_plt.plot_confidence_ood(res_dir_list)
 
-    # # REVIEW: performance shift plots
+    # REVIEW: performance shift plots
     # perf_plots.main(run_id="perf_shift")
 
-    # # REVIEW: labeldrop sensitivity plots
+    # REVIEW: labeldrop sensitivity plots
     # labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5-")
     # labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5mc")
 
     # REVIEW: labeldrop sensitivity comparison plots
-    labeldrop_compare_plots.main(run_id="label_drop_compare")
+    # labeldrop_compare_plots.main(run_id="label_drop_compare")
 
-    log.info("cwd: %s", os.getcwd())
-    if ENABLE_SAVE_FIGURES:
-        log.info("Saving plots")
-        # create save folder
-        log.info("image path: %s", IMGS_PATH)
-        os.makedirs(IMGS_PATH, exist_ok=True)
-        # save loop
-        for fn in figures:
-            figures[fn].savefig(os.path.join(IMGS_PATH, fn))
+    # REVIEW: id vs ood entropy and confidence
+    # id_vs_ood_plots.main(run_id="id_vs_ood")
+
+    # REVIEW: labeldrop vs labeldrop TR
+    # tr_labeldrop_compare_plots.main(run_id="tr_compare")
+
+    # REVIEW: labeldrop + TR
+    tr_labeldrop_plots.main(run_id="tr_labeldrop")
+
+    # log.info("cwd: %s", os.getcwd())
+    # if ENABLE_SAVE_FIGURES:
+    #     log.info("Saving plots")
+    #     # create save folder
+    #     log.info("image path: %s", IMGS_PATH)
+    #     os.makedirs(IMGS_PATH, exist_ok=True)
+    #     # save loop
+    #     for fn in figures:
+    #         figures[fn].savefig(os.path.join(IMGS_PATH, fn))

@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     if ENABLE_DIRTY_LABELS:
         ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
-        values = np.arange(0.15, 0.35, 0.15)
+        values = np.arange(0.15, 0.55, 0.30)
         configs = create_labdrop_configs(ref_cfg, values)
         run_configurations.update(configs)
 
