@@ -7,6 +7,7 @@ from results import labeldrop_compare_plots
 from results import id_vs_ood_plots
 from results import tr_labeldrop_plots
 from results import tr_labeldrop_compare_plots
+from results import mc_drop_plots
 from results.utils import *
 import datetime as dt
 from typing import Dict, List
@@ -104,10 +105,13 @@ if __name__ == "__main__":
     # id_vs_ood_plots.main(run_id="id_vs_ood")
 
     # REVIEW: labeldrop vs labeldrop TR
-    # tr_labeldrop_compare_plots.main(run_id="tr_compare")
+    tr_labeldrop_compare_plots.main(run_id="tr_compare")
 
     # REVIEW: labeldrop + TR
-    tr_labeldrop_plots.main(run_id="tr_labeldrop")
+    # tr_labeldrop_plots.main(run_id="tr_labeldrop")
+
+    # REVIEW: mc dropout
+    mc_drop_plots.main(run_id='test')
 
     # log.info("cwd: %s", os.getcwd())
     # if ENABLE_SAVE_FIGURES:

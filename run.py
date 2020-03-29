@@ -54,13 +54,13 @@ def create_run_folder(model_name: str, run_id=None):
     return path
 
 
-def create_labdrop_configs(reference_cfg: engine.RunConfig, dropout_probs: np.ndarray) -> Dict[str, engine.RunConfig]:
+def create_labdrop_configs(cfg: engine.RunConfig, dropout_probs: np.ndarray) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
     for val in dropout_probs:
-        cfg = copy.copy(reference_cfg)
-        # hack the config
-        delattr(cfg, 'models')
-        setattr(cfg, 'model', engine.LeNet5())
+        cfg = copy.copy(cfg)
+        # # hack the config
+        # delattr(cfg, 'models')
+        # setattr(cfg, 'model', engine.LeNet5())
         cfg.dirty_labels = float("{0:.2f}".format(val))
         # save LD config
         key = f"{cfg.model.__class__.__name__}-labdrop{cfg.dirty_labels}"
@@ -100,12 +100,11 @@ if __name__ == '__main__':
         key = model.__class__.__name__
         run_configurations[key] = cfg
         log.info(f"Loaded configuration for {key}")
-
-    if ENABLE_DIRTY_LABELS:
-        ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
-        values = np.arange(0.15, 0.55, 0.30)
-        configs = create_labdrop_configs(ref_cfg, values)
-        run_configurations.update(configs)
+        if ENABLE_DIRTY_LABELS:
+            # ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
+            values = np.arange(0.45, 0.55, 0.30)
+            configs = create_labdrop_configs(cfg, values)
+            run_configurations.update(configs)
 
     # create run folders
     for k in run_configurations:
