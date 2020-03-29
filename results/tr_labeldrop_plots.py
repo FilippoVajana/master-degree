@@ -48,8 +48,8 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
         path, 'mnist_rotate60.csv')) for path in res_dir_list}
     res_df = pd.DataFrame()
 
-    X_MAX = .51
-    confidence_range = np.arange(0, X_MAX, .01)
+    X_MAX = 0.5
+    confidence_range = np.arange(0, X_MAX, .007)
     for k in df_dict:
         # select data based on confidence value
         acc_list = list()

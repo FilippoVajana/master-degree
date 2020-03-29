@@ -31,9 +31,9 @@ def main(run_id="perf_shift", model_prefix="lenet5"):
     # # shifted data
     model_prefix = model_prefix.replace('-', '')
     figures[f"ld-{model_prefix}-comp-rotated.png"] = plot_rotated(res_dir_list)
-    figures[f"ld-{model_prefix}-comp-shifted.png"] = plot_shifted(res_dir_list)
+    # figures[f"ld-{model_prefix}-comp-shifted.png"] = plot_shifted(res_dir_list)
     figures[f"ld-{model_prefix}-comp-count60.png"] = plot_confidence_vs_count_60(res_dir_list)
-    figures[f"ld-{model_prefix}-comp-acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
+    # figures[f"ld-{model_prefix}-comp-acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
 
     # figures[f"ld-{model_prefix}-comp-entropy.png"] = plot_entropy_ood(res_dir_list)
     # figures[f"ld-{model_prefix}-comp-confidence.png"] = plot_confidence_ood(res_dir_list)
@@ -156,7 +156,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
-    ax1.legend(loc='upper right', bbox_to_anchor=(1, 0.5), labels=["vanilla", "v-15%", "v-45%", "dropout", "d-15%", "d-45%"])
+    ax1.legend(loc='upper right', bbox_to_anchor=(1, 0.5), labels=["LeNet5", "LeNet5-15%", "LeNet5-45%", "MC LeNet5", "MC LeNet5-15%", "MC LeNet5-45%"])
     return fig
 
 
@@ -185,7 +185,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
-    ax1.legend(loc='lower right', labels=["vanilla", "v-15%", "v-45%", "dropout", "d-15%", "d-45%"])
+    ax1.legend(loc='lower right', labels=["LeNet5", "LeNet5-15%", "LeNet5-45%", "MC LeNet5", "MC LeNet5-15%", "MC LeNet5-45%"])
     return fig
 
 
