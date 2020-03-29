@@ -112,33 +112,37 @@ class Tester():
                     mc_out = [self.model(t_examples)
                               for _ in range(0, self.MC_DROPOUT_PASS + 1, 1)]
                     t_stack = torch.stack(mc_out, dim=2)
-                    t_mc_mean = t_stack.mean(dim=2)
-                    t_mc_std = t_stack.std(dim=2)
+                    t_mc_mean = torch.nn.Softmax(dim=1)(t_stack).mean(dim=2)
+                    t_mc_std = torch.nn.Softmax(dim=1)(t_stack).std(dim=2)
 
-                    self.test_logs["t_mc_mean"].extend(list(t_mc_mean.numpy()))
-                    self.test_logs["t_mc_std"].extend(list(t_mc_std.numpy()))
+                    # log mean and std for predicted class
+                    class_idx = t_mc_mean.argmax(dim=1)
+                    t_mean = [t_mc_mean[idx, l].item() for idx, l in enumerate(class_idx)]
+                    t_std = [t_mc_std[idx, l].item() for idx, l in enumerate(class_idx)]
+                    self.test_logs["t_mc_mean"].extend(t_mean)
+                    self.test_logs["t_mc_std"].extend(t_std)
 
                     t_predictions = t_mc_mean
                 else:
                     t_predictions = self.model(t_examples)
 
                 t_accuracy = self.check_prediction(t_predictions, t_labels)
-                self.test_logs["t_good_pred"].extend(list(t_accuracy.numpy()))
+                self.test_logs["t_good_pred"].extend(t_accuracy.numpy())
 
                 t_brier = self.get_brier_score(t_predictions, t_labels)
-                self.test_logs["t_brier"].extend(list(t_brier.numpy()))
+                self.test_logs["t_brier"].extend(t_brier.numpy())
 
                 t_entropy = self.get_entropy(t_predictions)
-                self.test_logs["t_entropy"].extend(list(t_entropy.numpy()))
+                self.test_logs["t_entropy"].extend(t_entropy.numpy())
 
                 t_nll = self.get_nll(t_predictions, t_labels)
-                self.test_logs["t_nll"].extend(list(t_nll.numpy()))
+                self.test_logs["t_nll"].extend(t_nll.numpy())
 
                 if self.is_ood == False:
                     t_confidence = self.get_confidence(t_predictions, t_labels)
                 else:
                     t_confidence = self.get_ood_confidence(t_predictions)
-                self.test_logs["t_confidence"].extend(list(t_confidence))
+                self.test_logs["t_confidence"].extend(t_confidence)
 
         # build dataframe from logs
         df = pd.DataFrame(data=self.test_logs)
