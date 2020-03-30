@@ -102,7 +102,7 @@ if __name__ == '__main__':
         log.info(f"Loaded configuration for {key}")
         if ENABLE_DIRTY_LABELS:
             # ref_cfg = engine.RunConfig.load(os.path.join(RUN_ROOT, RUN_CFG))
-            values = np.arange(0.45, 0.55, 0.30)
+            values = np.arange(0.05, 0.65, 0.10)
             configs = create_labdrop_configs(cfg, values)
             run_configurations.update(configs)
 
@@ -123,4 +123,4 @@ if __name__ == '__main__':
         pt_path = glob.glob(
             f"{run_dir}/{cfg.model.__class__.__name__}.pt")[0]
         tem.do_test(model_cls=cfg.model.__class__.__name__,
-                    state_dict_path=pt_path, device=r_device, directory=run_dir, max_items=MAX_ITEMS)
+                    state_dict_path=pt_path, device=r_device, directory=run_dir, max_items=cfg.max_items)

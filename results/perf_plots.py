@@ -42,7 +42,7 @@ def main(run_id="perf_shift"):
         os.makedirs(IMGS_PATH, exist_ok=True)
         # save loop
         for fn in figures:
-            figures[fn].savefig(os.path.join(IMGS_PATH, fn), dpi=200)
+            figures[fn].savefig(os.path.join(IMGS_PATH, fn), dpi=400)
 
 
 def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
@@ -54,6 +54,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     formatter = ticker.FormatStrFormatter("%dpx")
     fig, ax1 = plt.subplots()
     fig.suptitle("Traslazione (MNIST)")
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
     xticks = range(0, 16, 2)
@@ -62,7 +63,6 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 14)
-
     for k in shifted_df_dict:
         ax1.plot(xticks, shifted_df_dict[k]['accuracy'], label=k)
         ax2.plot(xticks, shifted_df_dict[k]['brier_score'], label=k, linestyle='dotted')
@@ -70,7 +70,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
-    ax1.legend(loc='upper right', bbox_to_anchor=(1, 0.9), labels=["vanilla", "dropout"])
+    ax1.legend(loc='upper right', bbox_to_anchor=(1, 0.9), labels=["LeNet5", "MC LeNet5"])
     return fig
 
 
@@ -82,6 +82,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%d°")
     fig, ax1 = plt.subplots()
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
     fig.suptitle("Rotazione (MNIST)")
 
     ax2 = ax1.twinx()
@@ -99,7 +100,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
-    ax1.legend(loc='upper right', labels=["vanilla", "dropout"])
+    ax1.legend(loc='upper right', labels=["LeNet5", "MC LeNet5"])
     return fig
 
 
@@ -125,8 +126,9 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
         res_df[k] = pd.Series(count_list, index=list(ent_range))
 
     # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
+
+    fig, ax1 = plt.subplots(nrows=1)
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.04, 0.03, 1, 0.97])
     fig.suptitle("Entropia (notMNIST)")
     x_formatter = ticker.FormatStrFormatter("%.2f")
     y_formatter = ticker.PercentFormatter(xmax=1.0)
@@ -142,7 +144,7 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.set_ylabel(r"Frazione di campioni con $H < \tau$")
     ax1.set_xlabel("Entropia (Nats)")
-    plt.legend(loc='upper left', labels=["vanilla", "dropout"])
+    plt.legend(loc='upper left', labels=["LeNet5", "MC LeNet5"])
     return fig
 
 
@@ -168,8 +170,8 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
         res_df[k] = pd.Series(count_list, index=list(confidence_range))
 
     # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
+    fig, ax1 = plt.subplots(nrows=1)
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.04, 0.03, 1, 0.97])
     fig.suptitle("Confidenza (notMNIST)")
     x_formatter = ticker.FormatStrFormatter("%.2f")
     y_formatter = ticker.PercentFormatter(xmax=1.0)
@@ -186,5 +188,5 @@ def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.set_ylabel(r"Frazione di campioni con $p(y|x) > \tau$")
     ax1.set_xlabel(r"Confidenza ($\tau$)")
-    plt.legend(loc='upper right', labels=["vanilla", "dropout"])
+    plt.legend(loc='upper right', labels=["LeNet5", "MC LeNet5"])
     return fig

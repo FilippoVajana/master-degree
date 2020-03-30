@@ -173,12 +173,12 @@ if __name__ == '__main__':
     # TRAIN & TEST LENET5 VANILLA
     models_dict = train_and_test(train_configs, DO_TEST, MAX_ITEMS)  # trained base model
 
-    # # PREPARE FOR TRANSFER LEARNING
-    # models_dict = prepare_for_tl(models_dict)
+    # PREPARE FOR TRANSFER LEARNING
+    models_dict = prepare_for_tl(models_dict)
 
-    # # CREATE LABELDROP CONFIGS
-    # tl_range = np.arange(0.15, 0.50, 0.30)
-    # models_dict = prepare_for_labeldrop(models_dict, tl_range)
+    # CREATE LABELDROP CONFIGS
+    tl_range = np.arange(0.45, 0.50, 0.30)
+    models_dict = prepare_for_labeldrop(models_dict, tl_range)
 
-    # # TRAIN & TEST TR_LENET5
-    # RESULTS = train_and_test(models_dict, do_test=DO_TEST, max_items=MAX_ITEMS)
+    # TRAIN & TEST TR_LENET5
+    RESULTS = train_and_test(models_dict, do_test=DO_TEST, max_items=MAX_ITEMS)
