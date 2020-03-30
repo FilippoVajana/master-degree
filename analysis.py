@@ -102,13 +102,13 @@ if __name__ == "__main__":
     # labeldrop_compare_plots.main(run_id="label_drop_compare")
 
     # REVIEW: id vs ood entropy and confidence
-    # id_vs_ood_plots.main(run_id="id_vs_ood")
+    id_vs_ood_plots.main(run_id="id_vs_ood")
 
     # REVIEW: labeldrop vs labeldrop TR
     # tr_labeldrop_compare_plots.main(run_id="tr_compare")
 
     # REVIEW: labeldrop + TR
-    tr_labeldrop_plots.main(run_id="tr_labeldrop")
+    # tr_labeldrop_plots.main(run_id="tr_labeldrop")
 
     # REVIEW: mc dropout
     # mc_drop_plots.main(run_id='mc_drop')
