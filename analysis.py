@@ -108,10 +108,10 @@ if __name__ == "__main__":
     # tr_labeldrop_compare_plots.main(run_id="tr_compare")
 
     # REVIEW: labeldrop + TR
-    # tr_labeldrop_plots.main(run_id="tr_labeldrop")
+    tr_labeldrop_plots.main(run_id="tr_labeldrop")
 
     # REVIEW: mc dropout
-    mc_drop_plots.main(run_id='mc_drop')
+    # mc_drop_plots.main(run_id='mc_drop')
 
     # log.info("cwd: %s", os.getcwd())
     # if ENABLE_SAVE_FIGURES:

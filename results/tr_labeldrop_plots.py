@@ -11,7 +11,7 @@ from results.utils import *
 
 def main(run_id="tr_labeldrop"):
     N = 3
-    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.coolwarm(np.linspace(0, 1, N)))
+    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(0, 1, N)))
     plt.rcParams.update({'font.size': 14})
 
     ENABLE_SAVE_FIGURES = True
@@ -38,7 +38,7 @@ def main(run_id="tr_labeldrop"):
         os.makedirs(IMGS_PATH, exist_ok=True)
         # save loop
         for fn in figures:
-            figures[fn].savefig(os.path.join(IMGS_PATH, fn), dpi=200)
+            figures[fn].savefig(os.path.join(IMGS_PATH, fn), dpi=400)
 
 
 def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
@@ -64,6 +64,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     # plot
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 1, 0.97])
     fig.suptitle("Confidenza vs Accuratezza (Rotazione 60°)")
     formatter = ticker.FormatStrFormatter("%.2f")
 
@@ -77,7 +78,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.set_ylabel(r"Accuratezza campioni con $p(y|x) > \tau$")
     ax1.set_xlabel(r"Confidenza ($\tau$)")
-    ax1.legend(labels=["MC LeNet5", "LS 15%", "LS 45%"])
+    ax1.legend(labels=["MC LeNet5", "TR LS-15%", "TR LS-45%"])
     return fig
 
 
@@ -88,37 +89,38 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
         os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
         for path in res_dir_list
     }
-    res_df = pd.DataFrame()
 
-    # count examples based on entropy value
-    ent_range = np.arange(2.0, 2.31, 0.0025)
-    for k in df_dict:
-        count_list = list()
-        for ev in ent_range:
-            count_df = df_dict[k].loc[df_dict[k] < ev]
-            ratio = count_df.count() / df_dict[k].count()
-            count_list.append(ratio)
+    # # count examples based on entropy value
+    # res_df = pd.DataFrame()
+    # ent_range = np.arange(2.0, 2.31, 0.0025)
+    # for k in df_dict:
+    #     count_list = list()
+    #     for ev in ent_range:
+    #         count_df = df_dict[k].loc[df_dict[k] < ev]
+    #         ratio = count_df.count() / df_dict[k].count()
+    #         count_list.append(ratio)
 
-        # save grouped data
-        res_df[k] = pd.Series(count_list, index=list(ent_range))
+    #     # save grouped data
+    #     res_df[k] = pd.Series(count_list, index=list(ent_range))
 
     # plot
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.97])
     fig.suptitle("Entropia (notMNIST)")
     x_formatter = ticker.FormatStrFormatter("%.2f")
-    y_formatter = ticker.PercentFormatter(xmax=1.0)
 
-    ax1.set_xlim(min(ent_range), max(ent_range))
+    ax1.set_xlim(2, 2.305)
     ax1.xaxis.set_major_formatter(x_formatter)
-    ax1.yaxis.set_major_formatter(y_formatter)
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
 
-    for k in res_df:
-        ax1.scatter(res_df[k].index, res_df[k], label=k, s=8)
+    # for k in res_df:
+    #     ax1.scatter(res_df[k].index, res_df[k], label=k, s=8)
+    for k in df_dict:
+        ax1.hist(df_dict[k], linewidth=1.5, alpha=0.35)
 
-    ax1.set_ylabel(r"Frazione di campioni con $H < \tau$")
-    ax1.set_xlabel("Entropia (Nats)")
-    plt.legend(loc='upper left', labels=["MC LeNet5", "LS 15%", "LS 45%"])
+    ax1.set_ylabel("Numero di campioni")
+    ax1.set_xlabel("Entropia")
+    plt.legend(loc='upper left', labels=["MC LeNet5", "TR LS-15%", "TR LS-45%"])
     return fig
