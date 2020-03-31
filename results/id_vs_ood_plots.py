@@ -29,7 +29,6 @@ def main(run_id="id_vs_ood"):
     figures = dict()
 
     # # shifted data
-    figures["id_ood_entropy.png"] = plot_entropy(res_dir_list)
     figures["id_ood_entropy2.png"] = plot_entropy2(res_dir_list)
     figures["id_ood_confidence.png"] = plot_confidence(res_dir_list)
 
@@ -88,72 +87,6 @@ def plot_entropy2(res_dir_list: List[str]) -> plt.Figure:
     ax2.set_xlabel("Entropia")
     # ax2.legend(labels=['notMNIST', 'MNIST'])
     ax2.legend()
-    return fig
-
-
-def plot_entropy(res_dir_list: List[str]) -> plt.Figure:
-    R.LOGGER.info("plot_entropy_ood")
-    # load nomnist dataframe
-    df_ood_dict = {
-        os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
-        for path in res_dir_list
-    }
-    df_id_dict = {
-        f"{os.path.basename(path)}-id": load_csv(os.path.join(path, 'mnist.csv'))['t_entropy']
-        for path in res_dir_list
-    }
-
-    # count examples based on entropy value
-    ent_min, ent_max = 1.95, 2.31
-    ent_range = np.arange(ent_min, ent_max, 0.0025)
-
-    # add OOD
-    ood_res_df = pd.DataFrame()
-    for k in df_ood_dict:
-        count_list = list()
-        for ev in ent_range:
-            count_df = df_ood_dict[k].loc[df_ood_dict[k] < ev]
-            ratio = count_df.count() / df_ood_dict[k].count()
-            count_list.append(ratio)
-
-        # save grouped data
-        ood_res_df[k] = pd.Series(count_list, index=list(ent_range))
-
-    # add ID
-    id_res_df = pd.DataFrame()
-    ent_range = np.arange(ent_min, 2.2, 0.005)
-    for k in df_id_dict:
-        count_list = list()
-        for ev in ent_range:
-            count_df = df_id_dict[k].loc[df_id_dict[k] < ev]
-            ratio = count_df.count() / df_id_dict[k].count()
-            count_list.append(ratio)
-
-        # save grouped data
-        id_res_df[k] = pd.Series(count_list, index=list(ent_range))
-
-    # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
-    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.03, 0.03, 1, 0.97])
-    fig.suptitle("Entropia")
-    x_formatter = ticker.FormatStrFormatter("%.2f")
-    y_formatter = ticker.PercentFormatter(xmax=1.0)
-
-    ax1.set_xlim(ent_min, ent_max)
-    ax1.xaxis.set_major_formatter(x_formatter)
-    ax1.yaxis.set_major_formatter(y_formatter)
-    ax1.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-
-    for k in ood_res_df:
-        ax1.scatter(ood_res_df[k].index, ood_res_df[k], label=k, s=8)
-    for k in id_res_df:
-        ax1.plot(id_res_df[k], label=k, linestyle="-.", linewidth=1.5, alpha=.5)
-
-    ax1.set_ylabel(r"Frazione di campioni con $H < \tau$")
-    ax1.set_xlabel("Entropia (Nats)")
-    plt.legend(loc='upper left', labels=["LeNet5", "MC LeNet5", "LeNet5 OOD", "MC LeNet5 OOD"])
     return fig
 
 
@@ -223,5 +156,5 @@ def plot_confidence(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.set_ylabel(r"Frazione di campioni con $p(y|x) > \tau$")
     ax1.set_xlabel(r"Confidenza ($\tau$)")
-    plt.legend(labels=["LeNet5", "MC LeNet5", "LeNet5-ood", "MC LeNet5-ood"])
+    plt.legend(labels=["LeNet5 ID", "MC LeNet5 ID", "LeNet5 OOD", "MC LeNet5 OOD"])
     return fig
