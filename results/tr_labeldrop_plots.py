@@ -109,3 +109,32 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     ax1.set_xlabel("Entropia")
     plt.legend(loc='upper left', labels=["MC LeNet5", "TL LS-15%", "TL LS-45%"])
     return fig
+
+
+def plot_entropy_id(res_dir_list: List[str]) -> plt.Figure:
+    R.LOGGER.info("plot_entropy_id")
+    # load mnist dataframe
+    df_dict = {
+        os.path.basename(path): load_csv(os.path.join(path, 'mnist.csv'))['t_entropy']
+        for path in res_dir_list
+    }
+
+    # plot
+    fig = plt.figure()
+    ax1 = fig.subplots(nrows=1)
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.97])
+    fig.suptitle("Entropia (notMNIST)")
+    x_formatter = ticker.FormatStrFormatter("%.2f")
+
+    ax1.set_xlim(2, 2.305)
+    ax1.xaxis.set_major_formatter(x_formatter)
+    ax1.grid(True)
+    ax1.tick_params(grid_linestyle='dotted')
+
+    for k in df_dict:
+        ax1.hist(df_dict[k], linewidth=1.5, alpha=0.35)
+
+    ax1.set_ylabel("Numero di campioni")
+    ax1.set_xlabel("Entropia")
+    plt.legend(loc='upper left', labels=["MC LeNet5", "TL LS-15%", "TL LS-45%"])
+    return fig
