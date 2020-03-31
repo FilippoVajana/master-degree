@@ -78,7 +78,7 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.set_ylabel(r"Accuratezza campioni con $p(y|x) > \tau$")
     ax1.set_xlabel(r"Confidenza ($\tau$)")
-    ax1.legend(labels=["MC LeNet5", "TR LS-15%", "TR LS-45%"])
+    ax1.legend(labels=["MC LeNet5", "TL LS-15%", "TL LS-45%"])
     return fig
 
 
@@ -89,19 +89,6 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
         os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
         for path in res_dir_list
     }
-
-    # # count examples based on entropy value
-    # res_df = pd.DataFrame()
-    # ent_range = np.arange(2.0, 2.31, 0.0025)
-    # for k in df_dict:
-    #     count_list = list()
-    #     for ev in ent_range:
-    #         count_df = df_dict[k].loc[df_dict[k] < ev]
-    #         ratio = count_df.count() / df_dict[k].count()
-    #         count_list.append(ratio)
-
-    #     # save grouped data
-    #     res_df[k] = pd.Series(count_list, index=list(ent_range))
 
     # plot
     fig = plt.figure()
@@ -115,12 +102,10 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
 
-    # for k in res_df:
-    #     ax1.scatter(res_df[k].index, res_df[k], label=k, s=8)
     for k in df_dict:
         ax1.hist(df_dict[k], linewidth=1.5, alpha=0.35)
 
     ax1.set_ylabel("Numero di campioni")
     ax1.set_xlabel("Entropia")
-    plt.legend(loc='upper left', labels=["MC LeNet5", "TR LS-15%", "TR LS-45%"])
+    plt.legend(loc='upper left', labels=["MC LeNet5", "TL LS-15%", "TL LS-45%"])
     return fig
