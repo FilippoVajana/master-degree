@@ -138,7 +138,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     formatter = ticker.FormatStrFormatter("%d°")
     fig, ax1 = plt.subplots()
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 1, 0.97])
-    fig.suptitle("Monte Carlo dropout (MNIST)")
+    fig.suptitle("(MNIST)")
 
     xticks = range(0, 195, 15)
     ax1.grid(True)
@@ -154,6 +154,6 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
 
     ax1.xaxis.set_major_formatter(formatter)
     ax1.set_ylabel("Confidenza")
-    ax1.set_xlabel("Rotazione")
+    # ax1.set_xlabel("Rotazione")
     ax1.legend(labels=["MC LeNet5", "MC LeNet5 LS-45%"])
     return fig
