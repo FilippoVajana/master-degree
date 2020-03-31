@@ -11,7 +11,7 @@ from results.utils import *
 
 def main(run_id="perf_shift"):
     N = 2
-    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.coolwarm(np.linspace(0, 1, N)))
+    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(0, 1, N)))
     plt.rcParams.update({'font.size': 14})
 
     ENABLE_SAVE_FIGURES = True
@@ -59,7 +59,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax2 = ax1.twinx()
     xticks = range(0, 16, 2)
     ax1.grid(True)
-    ax2.grid(True)
+    # ax2.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 14)
@@ -88,7 +88,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax2 = ax1.twinx()
     xticks = range(0, 195, 15)
     ax1.grid(True)
-    ax2.grid(True)
+    # ax2.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 180)
