@@ -10,7 +10,7 @@ from results.utils import *
 
 
 def main(run_id="perf_shift", model_prefix="lenet5"):
-    N = 6
+    N = 7
     plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(0, 1, N)))
     plt.rcParams.update({'font.size': 14})
 
@@ -70,6 +70,8 @@ def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidenza vs Conteggio (Rotazione 60°)")
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.04, 0.03, 1, 0.97])
+
     x_formatter = ticker.FormatStrFormatter("%.2f")
     y_formatter = ticker.PercentFormatter(xmax=1.0)
 
@@ -112,6 +114,8 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.suptitle("Confidenza vs Accuratezza (Rotazione 60°)")
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 1, 0.97])
+
     formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
@@ -136,22 +140,21 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%dpx")
     fig, ax1 = plt.subplots()
-    fig.suptitle("Traslazione (MNIST modificato)")
+    fig.suptitle("LabelShuffle Traslazione")
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
     xticks = range(0, 16, 2)
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
-    ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 14)
-    # ax1.set_ylim(0, 1)
-    # ax2.set_ylim(0, 1.1)
 
     for k in shifted_df_dict:
         ax1.plot(xticks, shifted_df_dict[k]['accuracy'], label=k)
-        ax2.plot(xticks, shifted_df_dict[k]['brier_score'], label=k, linestyle='dotted')
+        ax2.plot(xticks, shifted_df_dict[k]['brier_score'], label=k, linestyle='-.', alpha=0.5)
 
     ax1.xaxis.set_major_formatter(formatter)
+    ax1.set_xlabel("Traslazione")
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='upper right', bbox_to_anchor=(1, 0.75), labels=["5%", "15%", "25%", "35%", "45%", "55%"])
@@ -166,22 +169,21 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%d°")
     fig, ax1 = plt.subplots()
-    fig.suptitle("Rotazione (MNIST modificato)")
+    fig.suptitle("LabelShuffle Rotazione")
+    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
     xticks = range(0, 195, 15)
     ax1.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
-    ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 180)
-    # ax1.set_ylim(0, 1)
-    # ax2.set_ylim(0, 1.2)
 
     for k in rotated_df_dict:
         ax1.plot(xticks, rotated_df_dict[k]['accuracy'], label=k)
-        ax2.plot(xticks, rotated_df_dict[k]['brier_score'], label=k, linestyle='dotted')
+        ax2.plot(xticks, rotated_df_dict[k]['brier_score'], label=k, linestyle='-.', alpha=0.5)
 
     ax1.xaxis.set_major_formatter(formatter)
+    ax1.set_xlabel("Rotazione")
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='lower right', labels=["5%", "15%", "25%", "35%", "45%", "55%"])

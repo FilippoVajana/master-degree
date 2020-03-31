@@ -10,7 +10,7 @@ from results.utils import *
 
 
 def main(run_id="tr_labeldrop"):
-    N = 3
+    N = 4
     plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(0, 1, N)))
     plt.rcParams.update({'font.size': 14})
 

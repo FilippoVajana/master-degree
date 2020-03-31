@@ -94,24 +94,23 @@ if __name__ == "__main__":
     # REVIEW: performance shift plots
     # perf_plots.main(run_id="perf_shift")
 
+    # REVIEW: id vs ood entropy and confidence
+    # id_vs_ood_plots.main(run_id="id_vs_ood")
+
     # REVIEW: labeldrop sensitivity plots
     # labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5-")
-    # labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5mc")
 
     # REVIEW: labeldrop sensitivity comparison plots
-    # labeldrop_compare_plots.main(run_id="label_drop_compare")
+    labeldrop_compare_plots.main(run_id="label_drop_compare")
 
-    # REVIEW: id vs ood entropy and confidence
-    id_vs_ood_plots.main(run_id="id_vs_ood")
+    # REVIEW: mc dropout
+    # mc_drop_plots.main(run_id='mc_drop')
 
     # REVIEW: labeldrop vs labeldrop TR
     # tr_labeldrop_compare_plots.main(run_id="tr_compare")
 
     # REVIEW: labeldrop + TR
     # tr_labeldrop_plots.main(run_id="tr_labeldrop")
-
-    # REVIEW: mc dropout
-    # mc_drop_plots.main(run_id='mc_drop')
 
     # log.info("cwd: %s", os.getcwd())
     # if ENABLE_SAVE_FIGURES:

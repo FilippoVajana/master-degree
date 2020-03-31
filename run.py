@@ -57,7 +57,7 @@ def create_run_folder(model_name: str, run_id=None):
 def create_labdrop_configs(cfg: engine.RunConfig, dropout_probs: np.ndarray) -> Dict[str, engine.RunConfig]:
     dl_configs = dict()
     for val in dropout_probs:
-        cfg = copy.copy(cfg)
+        cfg = copy.deepcopy(cfg)
         # # hack the config
         # delattr(cfg, 'models')
         # setattr(cfg, 'model', engine.LeNet5())
