@@ -57,7 +57,6 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax2 = ax1.twinx()
     xticks = range(0, 16, 2)
     ax1.grid(True)
-    ax2.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 14)
@@ -69,7 +68,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax1.xaxis.set_major_formatter(formatter)
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
-    ax1.legend(loc='center right', labels=["MC LeNet5", "LS-45%", "TL LS-45%"])
+    ax1.legend(loc='upper right', labels=["MC LeNet5", "LS-45%", "TL LS-45%"])
     return fig
 
 
@@ -87,7 +86,6 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax2 = ax1.twinx()
     xticks = range(0, 195, 15)
     ax1.grid(True)
-    ax2.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 180)
