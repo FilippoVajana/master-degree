@@ -11,7 +11,7 @@ from results.utils import *
 
 def main(run_id="perf_shift", model_prefix="lenet5"):
     N = 6
-    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.coolwarm(np.linspace(0, 1, N)))
+    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(0, 1, N)))
     plt.rcParams.update({'font.size': 14})
 
     ENABLE_SAVE_FIGURES = True
@@ -34,9 +34,6 @@ def main(run_id="perf_shift", model_prefix="lenet5"):
     figures[f"ld-{model_prefix}-shifted.png"] = plot_shifted(res_dir_list)
     figures[f"ld-{model_prefix}-count60.png"] = plot_confidence_vs_count_60(res_dir_list)
     figures[f"ld-{model_prefix}-acc60.png"] = plot_confidence_vs_accuracy_60(res_dir_list)
-
-    # figures[f"ld-{model_prefix}-entropy.png"] = plot_entropy_ood(res_dir_list)
-    # figures[f"ld-{model_prefix}-confidence.png"] = plot_confidence_ood(res_dir_list)
 
     log.info("cwd: %s", os.getcwd())
     if ENABLE_SAVE_FIGURES:
@@ -144,7 +141,6 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     ax2 = ax1.twinx()
     xticks = range(0, 16, 2)
     ax1.grid(True)
-    ax2.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 14)
@@ -175,7 +171,6 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax2 = ax1.twinx()
     xticks = range(0, 195, 15)
     ax1.grid(True)
-    ax2.grid(True)
     ax1.tick_params(grid_linestyle='dotted')
     ax2.tick_params(grid_linestyle='dotted')
     ax1.set_xlim(0, 180)
@@ -190,91 +185,4 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='lower right', labels=["5%", "15%", "25%", "35%", "45%", "55%"])
-    return fig
-
-
-def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
-    R.LOGGER.info("plot_entropy_ood")
-    # load nomnist dataframe
-    df_dict = {
-        os.path.basename(path): load_csv(os.path.join(path, 'nomnist.csv'))['t_entropy']
-        for path in res_dir_list
-    }
-    res_df = pd.DataFrame()
-
-    # count examples based on entropy value
-    ent_range = np.arange(2.05, 2.30, 0.0025)
-    for k in df_dict:
-        count_list = list()
-        for ev in ent_range:
-            count_df = df_dict[k].loc[df_dict[k] < ev]
-            ratio = count_df.count() / df_dict[k].count()
-            count_list.append(ratio)
-
-        # save grouped data
-        res_df[k] = pd.Series(count_list, index=list(ent_range))
-
-    # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Entropia (notMNIST)")
-    x_formatter = ticker.FormatStrFormatter("%.2f")
-    y_formatter = ticker.PercentFormatter(xmax=1.0)
-
-    ax1.set_xlim(2.05, 2.3)
-    ax1.xaxis.set_major_formatter(x_formatter)
-    ax1.yaxis.set_major_formatter(y_formatter)
-    ax1.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-
-    for k in res_df:
-        ax1.scatter(res_df[k].index, res_df[k], label=k, s=8)
-
-    ax1.set_ylabel(r"Frazione di campioni con $H < \tau$")
-    ax1.set_xlabel("Entropia (Nats)")
-    plt.legend(loc='upper left', labels=["5%", "15%", "25%", "35%", "45%", "55%"])
-    return fig
-
-
-def plot_confidence_ood(res_dir_list: List[str]) -> plt.Figure:
-    R.LOGGER.info("plot_confidence_ood")
-    # load nomnist dataframe
-    df_dict = {os.path.basename(path): load_csv(
-        os.path.join(path, 'nomnist.csv')) for path in res_dir_list}
-    res_df = pd.DataFrame()
-
-    X_MIN = 0
-    confidence_range = np.arange(X_MIN, 1, .01)
-    for k in df_dict:
-        # select data based on confidence value
-        count_list = list()
-        for cv in confidence_range:
-            count_df = df_dict[k].loc[df_dict[k]['t_confidence'] > cv]
-            ratio = count_df.iloc[:, 0].count(
-            ) / df_dict[k]['t_confidence'].count()
-            count_list.append(ratio)
-
-        # save grouped data
-        res_df[k] = pd.Series(count_list, index=list(confidence_range))
-
-    # plot
-    fig = plt.figure()
-    ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Confidenza (notMNIST)")
-    x_formatter = ticker.FormatStrFormatter("%.2f")
-    y_formatter = ticker.PercentFormatter(xmax=1.0)
-
-    ax1.xaxis.set_major_formatter(x_formatter)
-    ax1.yaxis.set_major_formatter(y_formatter)
-    ax1.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-    ax1.set_xlim(X_MIN, 1)
-    xticks = confidence_range
-
-    for k in res_df:
-        ax1.scatter(xticks, res_df[k], label=k, s=8)
-
-    ax1.set_ylabel(r"Frazione di campioni con $p(y|x) > \tau$")
-    ax1.set_xlabel(r"Confidenza ($\tau$)")
-    plt.legend(loc='upper right', labels=["5%", "15%", "25%", "35%", "45%", "55%"])
     return fig
