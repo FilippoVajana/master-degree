@@ -71,28 +71,8 @@ if __name__ == "__main__":
     # PLOT
     figures = dict()
 
-    # # train data
-    # figures["train_accuracy"] = train_plt.plot_train_accuracy(res_dir_list)
-    # figures["train_loss"] = train_plt.plot_train_loss(res_dir_list)
-    # figures["train_brier"] = train_plt.plot_train_brier(res_dir_list)
-    # figures["train_entropy"] = train_plt.plot_train_entropy(res_dir_list)
-    # # plt.show()
-
-    # # shifted data
-    # figures["rotated.png"] = shift_plt.plot_rotated(res_dir_list)
-    # figures["shifted.png"] = shift_plt.plot_shifted(res_dir_list)
-    # figures["conf_acc60.png"] = shift_plt.plot_confidence_vs_accuracy_60(
-    #     res_dir_list)
-    # figures["count_acc60.png"] = shift_plt.plot_confidence_vs_count_60(
-    #     res_dir_list)
-    # # plt.show()
-
-    # # ood data
-    # figures["ood_entropy.png"] = ood_plt.plot_entropy_ood(res_dir_list)
-    # figures["ood_confidence.png"] = ood_plt.plot_confidence_ood(res_dir_list)
-
     # REVIEW: performance shift plots
-    # perf_plots.main(run_id="perf_shift")
+    perf_plots.main(run_id="perf_shift")
 
     # REVIEW: id vs ood entropy and confidence
     # id_vs_ood_plots.main(run_id="id_vs_ood")
@@ -101,7 +81,7 @@ if __name__ == "__main__":
     # labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5-")
 
     # REVIEW: labeldrop sensitivity comparison plots
-    labeldrop_compare_plots.main(run_id="label_drop_compare")
+    # labeldrop_compare_plots.main(run_id="label_drop_compare")
 
     # REVIEW: mc dropout
     # mc_drop_plots.main(run_id='mc_drop')
@@ -111,13 +91,3 @@ if __name__ == "__main__":
 
     # REVIEW: labeldrop + TR
     # tr_labeldrop_plots.main(run_id="tr_labeldrop")
-
-    # log.info("cwd: %s", os.getcwd())
-    # if ENABLE_SAVE_FIGURES:
-    #     log.info("Saving plots")
-    #     # create save folder
-    #     log.info("image path: %s", IMGS_PATH)
-    #     os.makedirs(IMGS_PATH, exist_ok=True)
-    #     # save loop
-    #     for fn in figures:
-    #         figures[fn].savefig(os.path.join(IMGS_PATH, fn))
