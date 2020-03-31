@@ -60,7 +60,7 @@ def plot_entropy2(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1, ax2 = fig.subplots(nrows=1, ncols=2, sharey=True)
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.94])
-    fig.suptitle("Entropia")
+    # fig.suptitle("Entropia")
     x_formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.set_xlim(2, 2.5)
@@ -138,7 +138,7 @@ def plot_confidence(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.03, 0.03, 1, 0.94])
-    fig.suptitle("Confidenza")
+    fig.suptitle("(MNIST e notMNIST)")
     x_formatter = ticker.FormatStrFormatter("%.2f")
     y_formatter = ticker.PercentFormatter(xmax=1.0)
 
