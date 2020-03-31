@@ -69,7 +69,8 @@ def plot_confidence_vs_count_60(res_dir_list: List[str]) -> plt.Figure:
     # plot
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Confidenza vs Conteggio (Rotazione 60°)")
+    # fig.suptitle("Confidenza vs Conteggio (Rotazione 60°)")
+    fig.suptitle("(Rotazione 60°)")
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.04, 0.03, 1, 0.97])
 
     x_formatter = ticker.FormatStrFormatter("%.2f")
@@ -113,7 +114,8 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     # plot
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
-    fig.suptitle("Confidenza vs Accuratezza (Rotazione 60°)")
+    # fig.suptitle("Confidenza vs Accuratezza (Rotazione 60°)")
+    fig.suptitle("(Rotazione 60°)")
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 1, 0.97])
 
     formatter = ticker.FormatStrFormatter("%.2f")
@@ -140,7 +142,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%dpx")
     fig, ax1 = plt.subplots()
-    fig.suptitle("LabelShuffle Traslazione")
+    fig.suptitle("(MNIST)")
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
@@ -154,7 +156,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
         ax2.plot(xticks, shifted_df_dict[k]['brier_score'], label=k, linestyle='-.', alpha=0.5)
 
     ax1.xaxis.set_major_formatter(formatter)
-    ax1.set_xlabel("Traslazione")
+    # ax1.set_xlabel("Traslazione")
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='upper right', bbox_to_anchor=(1, 0.75), labels=["5%", "15%", "25%", "35%", "45%", "55%"])
@@ -169,7 +171,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%d°")
     fig, ax1 = plt.subplots()
-    fig.suptitle("LabelShuffle Rotazione")
+    fig.suptitle("(MNIST)")
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
@@ -183,7 +185,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
         ax2.plot(xticks, rotated_df_dict[k]['brier_score'], label=k, linestyle='-.', alpha=0.5)
 
     ax1.xaxis.set_major_formatter(formatter)
-    ax1.set_xlabel("Rotazione")
+    # ax1.set_xlabel("Rotazione")
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='lower right', labels=["5%", "15%", "25%", "35%", "45%", "55%"])
