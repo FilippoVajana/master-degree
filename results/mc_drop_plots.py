@@ -31,9 +31,6 @@ def main(run_id="mc_drop", model_prefix="lenet5"):
 
     figures[f"mc-rotated.png"] = plot_rotated(res_dir_list)
     figures[f"mc-id-ood.png"] = plot_id_ood(res_dir_list)
-    # figures[f"mc-ood.png"] = plot_ood(res_dir_list)
-    # figures[f"mc-id.png"] = plot_id(res_dir_list)
-    # plt.show()
 
     log.info("cwd: %s", os.getcwd())
     if ENABLE_SAVE_FIGURES:
@@ -129,60 +126,6 @@ def plot_id_ood(res_dir_list: List[str]) -> plt.Figure:
     ax22.set_xlabel('Deviazione standard')
     ax11.legend(labels=['MC LeNet5', 'MC LeNet5 LS-45%'])
 
-    return fig
-
-
-def plot_ood(res_dir_list: List[str]) -> plt.Figure:
-    # load nomnist dataframe
-    ood_df_dict = {
-        f"ood_{os.path.basename(path)}": load_csv(os.path.join(path, 'nomnist.csv'))[['t_mc_mean', 't_mc_std']]
-        for path in res_dir_list
-    }
-
-    # plot
-    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True)
-    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.97])
-    fig.suptitle("Media e Varianza di MC dropout su notMNIST")
-
-    for k in ood_df_dict:
-        ax1.hist(ood_df_dict[k]['t_mc_mean'], linewidth=1.5, linestyle='solid', alpha=0.35)
-        ax2.hist(ood_df_dict[k]['t_mc_std'], linewidth=1.5, linestyle='solid', alpha=0.35)
-
-    ax1.grid(True)
-    ax2.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-    ax2.tick_params(grid_linestyle='dotted')
-    ax1.set_xlabel("Confidenza")
-    ax1.set_ylabel("Numero campioni")
-    ax2.set_xlabel("Varianza")
-    ax2.legend(labels=['MC LeNet5', 'MC LeNet5 LS-45%'])
-    return fig
-
-
-def plot_id(res_dir_list: List[str]) -> plt.Figure:
-    # load mnist dataframe
-    id_df_dict = {
-        f"id_{os.path.basename(path)}": load_csv(os.path.join(path, 'mnist.csv'))[['t_mc_mean', 't_mc_std']]
-        for path in res_dir_list
-    }
-
-    # plot
-    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True)
-    fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.97])
-    fig.suptitle("Media e Varianza di MC dropout su MNIST")
-
-    for k in id_df_dict:
-        ax1.hist(id_df_dict[k]['t_mc_mean'], linewidth=1.5, linestyle='solid', alpha=0.35)
-        ax2.hist(id_df_dict[k]['t_mc_std'], linewidth=1.5, linestyle='solid', alpha=0.35)
-
-    ax1.grid(True)
-    ax2.grid(True)
-    ax1.tick_params(grid_linestyle='dotted')
-    ax2.tick_params(grid_linestyle='dotted')
-    ax1.set_xlabel("Confidenza")
-    ax1.set_ylabel("Numero campioni")
-    ax2.set_xlabel("Varianza")
-    ax2.legend(labels=['MC LeNet5', 'MC LeNet5 LS-45%'])
     return fig
 
 
