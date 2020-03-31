@@ -51,7 +51,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%dpx")
     fig, ax1 = plt.subplots()
-    fig.suptitle("Traslazione (MNIST)")
+    fig.suptitle("(MNIST)")
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
@@ -65,7 +65,7 @@ def plot_shifted(res_dir_list: List[str]) -> plt.Figure:
         ax2.plot(xticks, shifted_df_dict[k]['brier_score'], label=k, linestyle='-.', alpha=0.5)
 
     ax1.xaxis.set_major_formatter(formatter)
-    ax1.set_xlabel("Traslazione")
+    # ax1.set_xlabel("Traslazione")
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='upper right', labels=["MC LeNet5", "TL LS-15%", "TL LS-45%"])
@@ -80,7 +80,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
     # plot
     formatter = ticker.FormatStrFormatter("%d°")
     fig, ax1 = plt.subplots()
-    fig.suptitle("Rotazione (MNIST)")
+    fig.suptitle("(MNIST)")
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 0.97, 0.97])
 
     ax2 = ax1.twinx()
@@ -94,7 +94,7 @@ def plot_rotated(res_dir_list: List[str]) -> plt.Figure:
         ax2.plot(xticks, rotated_df_dict[k]['brier_score'], label=k, linestyle='-.', alpha=0.5)
 
     ax1.xaxis.set_major_formatter(formatter)
-    ax1.set_xlabel("Rotazione")
+    # ax1.set_xlabel("Rotazione")
     ax1.set_ylabel("Accuratezza")
     ax2.set_ylabel("Brier score")
     ax1.legend(loc='upper right', labels=["MC LeNet5", "TL LS-15%", "TL LS-45%"])

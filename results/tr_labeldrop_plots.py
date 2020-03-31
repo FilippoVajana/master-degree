@@ -65,7 +65,8 @@ def plot_confidence_vs_accuracy_60(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.015, 0.03, 1, 0.97])
-    fig.suptitle("Confidenza vs Accuratezza (Rotazione 60°)")
+    # fig.suptitle("Confidenza vs Accuratezza (Rotazione 60°)")
+    fig.suptitle("(Rotazione 60°)")
     formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.xaxis.set_major_formatter(formatter)
@@ -94,7 +95,7 @@ def plot_entropy_ood(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.97])
-    fig.suptitle("Entropia (notMNIST)")
+    fig.suptitle("(notMNIST)")
     x_formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.set_xlim(2, 2.305)
@@ -123,7 +124,7 @@ def plot_entropy_id(res_dir_list: List[str]) -> plt.Figure:
     fig = plt.figure()
     ax1 = fig.subplots(nrows=1)
     fig.tight_layout(h_pad=None, w_pad=None, rect=[0.025, 0.03, 1, 0.97])
-    fig.suptitle("Entropia (notMNIST)")
+    fig.suptitle("(notMNIST)")
     x_formatter = ticker.FormatStrFormatter("%.2f")
 
     ax1.set_xlim(2, 2.305)

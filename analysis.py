@@ -75,19 +75,19 @@ if __name__ == "__main__":
     perf_plots.main(run_id="perf_shift")
 
     # REVIEW: id vs ood entropy and confidence
-    # id_vs_ood_plots.main(run_id="id_vs_ood")
+    id_vs_ood_plots.main(run_id="id_vs_ood")
 
     # REVIEW: labeldrop sensitivity plots
-    # labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5-")
+    labeldrop_plots.main(run_id="label_drop", model_prefix="lenet5-")
 
     # REVIEW: labeldrop sensitivity comparison plots
-    # labeldrop_compare_plots.main(run_id="label_drop_compare")
+    labeldrop_compare_plots.main(run_id="label_drop_compare")
 
     # REVIEW: mc dropout
-    # mc_drop_plots.main(run_id='mc_drop')
+    mc_drop_plots.main(run_id='mc_drop')
 
     # REVIEW: labeldrop vs labeldrop TR
-    # tr_labeldrop_compare_plots.main(run_id="tr_compare")
+    tr_labeldrop_compare_plots.main(run_id="tr_compare")
 
     # REVIEW: labeldrop + TR
-    # tr_labeldrop_plots.main(run_id="tr_labeldrop")
+    tr_labeldrop_plots.main(run_id="tr_labeldrop")
