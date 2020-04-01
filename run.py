@@ -18,7 +18,7 @@ log.basicConfig(level=log.DEBUG,
 
 RUN_ROOT = './runs'
 RUN_CFG = 'default_runcfg.json'
-MAX_ITEMS = 1000
+MAX_ITEMS = 1001
 
 
 def get_id() -> str:
